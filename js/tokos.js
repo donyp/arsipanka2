@@ -50,7 +50,7 @@ async function loadTokos() {
     showLoading('main-content');
 
     try {
-        const { toko: data } = await API.get('/api/toko');
+        const { tokos: data } = await API.get('/api/toko');
         tokos = data || [];
         applyTokoFilter(); // Use initial render
         updateTokoStats();

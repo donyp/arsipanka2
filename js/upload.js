@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ---- Load ALL Tokos (for filename auto-detection) ----
 async function loadAllTokos() {
     try {
-        const { toko } = await API.get('/api/toko');
+        const { tokos: toko } = await API.get('/api/toko');
         window._allTokos = toko || [];
     } catch (err) {
         window._allTokos = [];
