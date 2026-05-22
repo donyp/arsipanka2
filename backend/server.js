@@ -423,7 +423,7 @@ app.get('/api/files/trash', authenticateToken, requirePermission('restore_trash'
 // GET /api/toko — list tokos (filtered by zona)
 app.get('/api/toko', authenticateToken, async (req, res) => {
     try {
-        let query = supabase.from('toko').select('id, kode, nama').order('nama', { ascending: true });
+        let query = supabase.from('toko').select('id, kode, nama, zona_id').order('nama', { ascending: true });
 
         let targetZona = req.query.zona_id;
         if (req.user.role === 'admin_zona') {
@@ -1855,25 +1855,6 @@ app.put('/api/zonas/:id', authenticateToken, requirePermission('manage_zonas'), 
     }
 });
 
-// GET /api/toko — List all shops
-app.get('/api/toko', authenticateToken, async (req, res) => {
-    try {
-        let query = supabase.from('toko').select('*').order('nama');
-
-        // Security: admin_zona only sees shops in their zone
-        if (req.user.role === 'admin_zona') {
-            query = query.eq('zona_id', req.user.zona_id);
-        } else if (req.query.zona_id) {
-            query = query.eq('zona_id', parseInt(req.query.zona_id));
-        }
-
-        const { data, error } = await query;
-        if (error) throw error;
-        res.json({ toko: data });
-    } catch (err) {
-        res.status(500).json({ error: 'Gagal memuat daftar toko: ' + err.message });
-    }
-});
 
 // POST /api/toko â€” Create new shop
 app.post('/api/toko', authenticateToken, requirePermission('manage_toko'), async (req, res) => {
