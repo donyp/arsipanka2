@@ -201,6 +201,23 @@
                 modal.remove();
             };
 
+            // Render details as list if array, otherwise string
+            let detailsHtml = '';
+            if (Array.isArray(result.details)) {
+                detailsHtml = `
+                    <ul class="space-y-2 text-[11px] text-gray-300 leading-relaxed italic mx-auto inline-block text-left">
+                        ${result.details.map(item => `
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 mt-1">•</span>
+                                <span>${item}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            } else {
+                detailsHtml = `<p class="text-gray-300 text-xs leading-relaxed italic">"${result.details || 'Kami telah melakukan pembaruan teknis untuk meningkatkan performa sistem.'}"</p>`;
+            }
+
             modal.innerHTML = `
                 <div class="glass-card rounded-3xl p-8 max-w-md w-full border border-emerald-500/20 shadow-2xl shadow-emerald-500/10 animate-scale-in relative text-center">
                     <!-- Close button (X) -->
@@ -220,8 +237,10 @@
                     <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6">Sistem Kembali Online</p>
                     
                     <div class="bg-emerald-500/5 rounded-2xl p-6 border border-emerald-500/10 mb-8 text-center ring-1 ring-emerald-500/10">
-                        <h3 class="text-sm font-bold text-white mb-2 underline decoration-emerald-500/30 underline-offset-4">${result.title}</h3>
-                        <p class="text-gray-300 text-xs leading-relaxed italic">"${result.details || 'Kami telah melakukan pembaruan teknis untuk meningkatkan performa sistem.'}"</p>
+                        <h3 class="text-sm font-bold text-white mb-3 underline decoration-emerald-500/30 underline-offset-4">${result.title}</h3>
+                        <div class="flex justify-center">
+                            ${detailsHtml}
+                        </div>
                     </div>
 
                     <button id="btn-maint-ok" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] mb-6">

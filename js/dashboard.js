@@ -1377,10 +1377,16 @@ async function toggleMaintenance() {
                         <option value="Lainnya">Lainnya</option>
                     </select>
                 </div>
-                <div>
+                <div id="maint-details-container" class="space-y-3">
                     <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1 font-bold">Detail Perbaikan</label>
-                    <textarea id="maint-res-details" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 h-24 transition-all" placeholder="Apa saja yang telah diperbaiki?"></textarea>
+                    <div class="maint-detail-item flex gap-2">
+                        <input type="text" class="maint-detail-input w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Contoh: Loading halaman lebih cepat">
+                    </div>
                 </div>
+                <button type="button" id="btn-add-detail" class="w-full py-3 rounded-xl border border-dashed border-white/10 hover:border-indigo-500/30 hover:bg-indigo-500/5 text-gray-400 hover:text-indigo-400 text-xs transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah Detail
+                </button>
             </div>
         `;
 
@@ -1389,11 +1395,17 @@ async function toggleMaintenance() {
             formHtml,
             async () => {
                 const title = document.getElementById('maint-res-title').value.trim();
-                const details = document.getElementById('maint-res-details').value.trim();
+                const inputs = document.querySelectorAll('.maint-detail-input');
+                const details = Array.from(inputs).map(i => i.value.trim()).filter(v => v !== '');
 
                 if (!title) {
                     Toast.error('Harap pilih judul perbaikan');
-                    return false; // Keep modal open
+                    return false;
+                }
+
+                if (details.length === 0) {
+                    Toast.error('Harap isi minimal satu detail perbaikan');
+                    return false;
                 }
 
                 try {
@@ -1405,18 +1417,36 @@ async function toggleMaintenance() {
                     if (res && res.success) {
                         updateMaintenanceUI(false);
                         Toast.success('Perbaikan selesai dan diumumkan!');
-                        return true; // Success, close modal
+                        return true;
                     } else {
                         throw new Error(res?.error || 'Gagal merespon status sistem');
                     }
                 } catch (err) {
                     console.error('Maintenance deactivation error:', err);
                     Toast.error('Gagal: ' + err.message);
-                    return false; // Keep modal open
+                    return false;
                 }
             },
             'Simpan & Selesaikan'
         );
+
+        setTimeout(() => {
+            const addBtn = document.getElementById('btn-add-detail');
+            const container = document.getElementById('maint-details-container');
+            if (addBtn && container) {
+                addBtn.onclick = () => {
+                    const div = document.createElement('div');
+                    div.className = 'maint-detail-item flex gap-2 animate-fade-in';
+                    div.innerHTML = `
+                        <input type="text" class="maint-detail-input w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Detail tambahan...">
+                        <button onclick="this.parentElement.remove()" class="p-3 text-gray-500 hover:text-red-400 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    `;
+                    container.appendChild(div);
+                };
+            }
+        }, 100);
     } else {
         showConfirm(
             'Aktifkan Perbaikan',
