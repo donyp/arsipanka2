@@ -89,8 +89,14 @@ const API = {
         // Handle Maintenance Mode (503)
         if (res.status === 503) {
             this.clearAuth();
-            window.location.href = 'index.html?reason=maintenance';
-            throw new Error('Sistem sedang dalam perbaikan.');
+            if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+                window.location.href = 'index.html?reason=maintenance';
+            }
+            const errBody = await res.json().catch(() => ({}));
+            const error = new Error(errBody.message || 'Sistem sedang dalam perbaikan.');
+            error.status = 503;
+            error.data = errBody;
+            throw error;
         }
 
         if (!res.ok) {

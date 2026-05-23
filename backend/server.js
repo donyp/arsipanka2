@@ -260,7 +260,15 @@ app.post('/api/auth/login', async (req, res) => {
             })
         });
 
-
+        // --- MAINTENANCE MODE ENFORCEMENT ---
+        const sys = getMaintenanceStatus();
+        if (sys.isMaintenance && user.role === 'admin_zona') {
+            return res.status(503).json({
+                error: 'Sistem Sedang Perbaikan',
+                message: 'Akses Admin Zona ditangguhkan sementara untuk pemeliharaan teknis. Silakan coba lagi nanti.',
+                updatedAt: sys.updatedAt
+            });
+        }
 
         res.json({
             success: true,
