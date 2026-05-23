@@ -455,34 +455,59 @@
         </div>
     </div>
 
-    <!-- Dispute Modal -->
+    <!-- Dispute Modal (Revisi) -->
     <div id="dispute-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDisputeModal()"></div>
         <div
-            class="relative bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-scale-in">
-            <h3 class="text-lg font-bold text-white mb-1">Ajukan Revisi</h3>
-            <p class="text-sm text-gray-400 mb-4">Dokumen: <span id="dispute-file-name"
-                    class="text-indigo-400 font-medium"></span></p>
+            class="relative bg-[#0f172a]/95 border border-white/10 rounded-3xl shadow-2xl w-full max-w-md mx-4 p-8 animate-scale-in backdrop-blur-md">
 
-            <label class="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Alasan Revisi</label>
-            <select id="dispute-reason" class="input-field w-full mb-4">
-                <option value="">-- Pilih Alasan --</option>
-                <option value="Kualitas Buruk">Kualitas Buruk</option>
-                <option value="Dokumen Duplikat">Dokumen Duplikat</option>
-                <option value="Salah Nominal">Salah Nominal</option>
-                <option value="Lainnya">Lainnya</option>
-            </select>
+            <!-- Header Icon -->
+            <div class="modal-header-icon bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+            </div>
 
-            <label class="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Catatan (Opsional)</label>
-            <textarea id="dispute-note" rows="3" placeholder="Jelaskan masalahnya secara singkat..."
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white mb-5 focus:outline-none focus:border-amber-500/50 resize-none"></textarea>
+            <h3 class="text-xl font-bold text-white mb-1">Ajukan Revisi</h3>
+            <p class="text-xs text-gray-400 mb-6">Dokumen: <span id="dispute-file-name"
+                    class="text-indigo-400 font-semibold italic"></span></p>
 
-            <div class="flex justify-end gap-3">
-                <button onclick="closeDisputeModal()"
-                    class="px-4 py-2 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all">Batal</button>
+            <div class="space-y-4 mb-8">
+                <div>
+                    <label
+                        class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Alasan
+                        Revisi</label>
+                    <select id="dispute-reason" class="input-field w-full">
+                        <option value="">-- Pilih Alasan --</option>
+                        <option value="Kualitas Buruk">Kualitas Buruk</option>
+                        <option value="Dokumen Duplikat">Dokumen Duplikat</option>
+                        <option value="Salah Nominal">Salah Nominal</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label
+                        class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Catatan
+                        (Opsional)</label>
+                    <textarea id="dispute-note" rows="3"
+                        placeholder="Berikan detail tambahan agar Pusat lebih mengerti..."
+                        class="input-field w-full p-3 resize-none text-sm"></textarea>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
                 <button onclick="submitDispute()"
-                    class="px-5 py-2 rounded-xl text-sm font-medium bg-amber-500 text-black hover:bg-amber-400 transition-all">Kirim
-                    Revisi</button>
+                    class="w-full py-3.5 rounded-2xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-black hover:from-amber-400 hover:to-orange-500 shadow-lg shadow-amber-500/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Kirim Permintaan Revisi
+                </button>
+                <button onclick="closeDisputeModal()"
+                    class="w-full py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all text-center">Batal</button>
             </div>
         </div>
     </div>
@@ -509,8 +534,7 @@
             </div>
             <div class="p-6">
                 <label class="block text-sm font-medium text-gray-300 mb-2">Pesan Request</label>
-                <textarea id="request-input" rows="4"
-                    class="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                <textarea id="request-input" rows="4" class="input-field w-full p-4 resize-none text-sm"
                     placeholder="Misal: Invoice Toko A Dengan Nominal 1.000.000 Belum Ada"></textarea>
             </div>
             <div class="p-6 border-t border-white/5 bg-black/20 flex justify-end gap-3" style="z-index: 60">
