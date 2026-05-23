@@ -205,17 +205,17 @@
             let detailsHtml = '';
             if (Array.isArray(result.details)) {
                 detailsHtml = `
-                    <ul class="space-y-2 text-[11px] text-gray-300 leading-relaxed italic mx-auto inline-block text-left">
+                    <ul class="space-y-3 text-sm text-gray-200 leading-relaxed text-left w-full">
                         ${result.details.map(item => `
-                            <li class="flex items-start gap-2">
-                                <span class="text-emerald-500 mt-1">•</span>
-                                <span>${item}</span>
+                            <li class="flex items-start gap-3">
+                                <span class="text-emerald-400 text-lg leading-none">•</span>
+                                <span class="font-medium">${item}</span>
                             </li>
                         `).join('')}
                     </ul>
                 `;
             } else {
-                detailsHtml = `<p class="text-gray-300 text-xs leading-relaxed italic">"${result.details || 'Kami telah melakukan pembaruan teknis untuk meningkatkan performa sistem.'}"</p>`;
+                detailsHtml = `<p class="text-gray-200 text-sm leading-relaxed italic">"${result.details || 'Kami telah melakukan pembaruan teknis untuk meningkatkan performa sistem.'}"</p>`;
             }
 
             modal.innerHTML = `
