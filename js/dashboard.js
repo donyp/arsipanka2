@@ -1319,13 +1319,9 @@ function closeRequestHistoryModal() {
 
 // ---- Maintenance Mode ----
 async function loadMaintenanceStatus() {
-    const btn = document.getElementById('maintenance-btn');
-    if (!btn || !hasPermission('manage_system')) return; // Extra check
-
     try {
-        const status = await API.get('/api/system/maintenance');
-        updateMaintenanceUI(status.isMaintenance);
-        btn.classList.remove('hidden');
+        const sys = await API.get('/api/system/maintenance');
+        updateMaintenanceUI(sys.isMaintenance);
     } catch (err) {
         console.warn('Failed to load maintenance status:', err);
     }

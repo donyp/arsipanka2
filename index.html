@@ -201,6 +201,17 @@
                 modal.remove();
             };
 
+            // Helper to prevent XSS
+            const escapeHTML = (str) => {
+                if (!str) return "";
+                return String(str)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            };
+
             // Render details as list if array, otherwise string
             let detailsHtml = '';
             if (Array.isArray(result.details)) {
@@ -209,13 +220,13 @@
                         ${result.details.map(item => `
                             <li class="flex items-start gap-3">
                                 <span class="text-emerald-400 text-lg leading-none">•</span>
-                                <span class="font-medium">${item}</span>
+                                <span class="font-medium">${escapeHTML(item)}</span>
                             </li>
                         `).join('')}
                     </ul>
                 `;
             } else {
-                detailsHtml = `<p class="text-gray-200 text-sm leading-relaxed italic">"${result.details || 'Kami telah melakukan pembaruan teknis untuk meningkatkan performa sistem.'}"</p>`;
+                detailsHtml = `<p class="text-gray-200 text-sm leading-relaxed italic">"${escapeHTML(result.details) || 'Kami telah melakukan pembaruan teknis untuk meningkatkan performa sistem.'}"</p>`;
             }
 
             modal.innerHTML = `
@@ -237,7 +248,7 @@
                     <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6">Sistem Kembali Online</p>
                     
                     <div class="bg-emerald-500/5 rounded-2xl p-6 border border-emerald-500/10 mb-8 text-center ring-1 ring-emerald-500/10">
-                        <h3 class="text-sm font-bold text-white mb-3 underline decoration-emerald-500/30 underline-offset-4">${result.title}</h3>
+                        <h3 class="text-sm font-bold text-white mb-3 underline decoration-emerald-500/30 underline-offset-4">${escapeHTML(result.title)}</h3>
                         <div class="flex justify-center">
                             ${detailsHtml}
                         </div>
