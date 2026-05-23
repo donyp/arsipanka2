@@ -106,9 +106,37 @@ function showConfirm(title, message, onConfirm, okText = 'Konfirmasi', cancelTex
     document.body.appendChild(overlay);
 
     overlay.querySelector('#confirm-cancel').addEventListener('click', () => overlay.remove());
-    overlay.querySelector('#confirm-ok').addEventListener('click', () => {
-        overlay.remove();
-        onConfirm();
+
+    const okBtn = overlay.querySelector('#confirm-ok');
+    okBtn.addEventListener('click', async () => {
+        try {
+            // Add loading state
+            const originalContent = okBtn.innerHTML;
+            okBtn.disabled = true;
+            okBtn.innerHTML = `
+                <div class="flex items-center justify-center gap-2">
+                    <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Memproses...</span>
+                </div>
+            `;
+
+            const result = await onConfirm();
+
+            // If callback specifically returns false, don't close (useful for validation errors)
+            if (result !== false) {
+                overlay.remove();
+            } else {
+                // Restore button if we stay open
+                okBtn.disabled = false;
+                okBtn.innerHTML = originalContent;
+            }
+        } catch (err) {
+            console.error('[showConfirm] Error in callback:', err);
+            // okBtn.disabled = false; // Restore button on error?
+            // Actually, stay open but restore button
+            okBtn.disabled = false;
+            okBtn.innerHTML = originalContent;
+        }
     });
 }
 

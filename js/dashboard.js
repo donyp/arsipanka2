@@ -1339,6 +1339,9 @@ function updateMaintenanceUI(isActive) {
 
     if (!btn) return;
 
+    // Set data attribute for reliable state tracking
+    btn.dataset.maintenance = isActive ? 'active' : 'inactive';
+
     if (isActive) {
         btn.className = 'flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all duration-300 shadow-lg shadow-red-500/20 cursor-pointer';
         text.textContent = 'PERBAIKAN AKTIF';
@@ -1354,7 +1357,10 @@ function updateMaintenanceUI(isActive) {
 
 async function toggleMaintenance() {
     const btn = document.getElementById('maintenance-btn');
-    const isActive = document.getElementById('maintenance-text').textContent === 'PERBAIKAN AKTIF';
+    if (!btn) return;
+
+    const currentStatus = btn.dataset.maintenance || (document.getElementById('maintenance-text').textContent === 'PERBAIKAN AKTIF' ? 'active' : 'inactive');
+    const isActive = currentStatus === 'active';
 
     if (isActive) {
         // Show form for results before finishing
@@ -1386,24 +1392,27 @@ async function toggleMaintenance() {
                 const details = document.getElementById('maint-res-details').value.trim();
 
                 if (!title) {
-                    Toast.error('Harap isi judul perbaikan');
-                    return;
+                    Toast.error('Harap pilih judul perbaikan');
+                    return false; // Keep modal open
                 }
 
                 try {
-                    btn.disabled = true;
                     const res = await API.post('/api/system/maintenance', {
                         isMaintenance: false,
                         result: { title, details }
                     });
-                    if (res.success) {
-                        updateMaintenanceUI(res.status.isMaintenance);
+
+                    if (res && res.success) {
+                        updateMaintenanceUI(false);
                         Toast.success('Perbaikan selesai dan diumumkan!');
+                        return true; // Success, close modal
+                    } else {
+                        throw new Error(res?.error || 'Gagal merespon status sistem');
                     }
                 } catch (err) {
+                    console.error('Maintenance deactivation error:', err);
                     Toast.error('Gagal: ' + err.message);
-                } finally {
-                    btn.disabled = false;
+                    return false; // Keep modal open
                 }
             },
             'Simpan & Selesaikan'
@@ -1414,16 +1423,18 @@ async function toggleMaintenance() {
             'Sistem akan masuk ke mode perbaikan. Semua Admin Zona akan otomatis diperintahkan logout.',
             async () => {
                 try {
-                    btn.disabled = true;
                     const res = await API.post('/api/system/maintenance', { isMaintenance: true });
-                    if (res.success) {
-                        updateMaintenanceUI(res.status.isMaintenance);
+                    if (res && res.success) {
+                        updateMaintenanceUI(true);
                         Toast.success('Mode Perbaikan diaktifkan');
+                        return true;
+                    } else {
+                        throw new Error(res?.error || 'Gagal mengaktifkan perbaikan');
                     }
                 } catch (err) {
+                    console.error('Maintenance activation error:', err);
                     Toast.error('Gagal: ' + err.message);
-                } finally {
-                    btn.disabled = false;
+                    return false;
                 }
             },
             'Aktifkan Sekarang'
