@@ -1646,6 +1646,41 @@ app.get('/api/admin/login-history', authenticateToken, requirePermission('view_a
     }
 });
 
+// POST /api/files/:id/dispute — Admin Zona flags invoice as incorrect
+app.post('/api/files/:id/dispute', authenticateToken, async (req, res) => {
+    try {
+        const { reason, note } = req.body;
+        if (!reason) return res.status(400).json({ error: 'Alasan sanggahan wajib diisi.' });
+
+        // Update file status and metadata
+        const { error } = await supabase
+            .from('files')
+            .update({
+                status: 'Disputed',
+                dispute_reason: reason,
+                dispute_note: note || '',
+                disputed_at: new Date().toISOString(),
+                disputed_by: req.user.id
+            })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+
+        // Log to audit
+        await supabase.from('audit_logs').insert({
+            user_id: req.user.id,
+            action: 'File Disputed',
+            details: `Invoice disputed. Reason: ${reason}. Note: ${note || '-'}`,
+            target_id: req.params.id
+        });
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Dispute Error:', err);
+        res.status(500).json({ error: 'Gagal mengajukan sanggahan.' });
+    }
+});
+
 // GET /api/admin/activity-logs
 app.get('/api/admin/activity-logs', authenticateToken, requirePermission('view_activity_logs'), async (req, res) => {
     try {

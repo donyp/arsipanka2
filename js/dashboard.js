@@ -348,6 +348,7 @@ function renderTable() {
                             ${isSuperAdmin() && a.status === 'Unread' && !isAnomali ? '<span class="px-2 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium tracking-wide">BELUM DIBACA</span>' : ''}
                             ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ? '<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold tracking-wide">✓ TELAH DIBACA</span>' : ''}
                             ${isAnomali ? '<span class="px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-500 border border-red-500/30 font-bold tracking-wide whitespace-nowrap">⚠️ ANOMALI</span>' : ''}
+                            ${a.status === 'Disputed' ? '<span class="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold tracking-wide whitespace-nowrap" title="Alasan: ' + (a.dispute_reason || '-') + '&#10;Catatan: ' + (a.dispute_note || '-') + '">⚠ DISANGGAH</span>' : ''}
                         </div>
                     </div>
                 </div>
@@ -376,6 +377,13 @@ function renderTable() {
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 Download
                             </a>
+                            ${currentUser?.role === 'admin_zona' && a.category === 'INVOICE' && a.status !== 'Disputed' ? `
+                                <button onclick="openDisputeModal('${a.id}', '${a.nama_file.replace(/'/g, "\\'")}')"
+                                    class="flex items-center gap-2 px-4 py-2.5 text-[13px] text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 w-full text-left transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                                    Sanggah
+                                </button>
+                            ` : ''}
                             ${isSuperAdmin() ? `
                                 <button onclick="copyFileLink('${a.id}', this)" class="flex items-center gap-2 px-4 py-2.5 text-[13px] text-gray-300 hover:text-white hover:bg-white/5 w-full text-left transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -455,6 +463,56 @@ function acknowledgeFile(fileId) {
                 renderTable();
             }
         }).catch(err => console.error('Acknowledge Error:', err));
+    }
+}
+
+// ---- Dispute (Sanggah) System ----
+let _disputeFileId = null;
+let _disputeFileName = null;
+
+function openDisputeModal(fileId, fileName) {
+    _disputeFileId = fileId;
+    _disputeFileName = fileName;
+    const modal = document.getElementById('dispute-modal');
+    if (!modal) return;
+    document.getElementById('dispute-file-name').textContent = fileName;
+    document.getElementById('dispute-reason').value = '';
+    document.getElementById('dispute-note').value = '';
+    modal.classList.remove('hidden');
+}
+
+function closeDisputeModal() {
+    const modal = document.getElementById('dispute-modal');
+    if (modal) modal.classList.add('hidden');
+    _disputeFileId = null;
+    _disputeFileName = null;
+}
+
+async function submitDispute() {
+    if (!_disputeFileId) return;
+    const reason = document.getElementById('dispute-reason').value;
+    const note = document.getElementById('dispute-note').value.trim();
+
+    if (!reason) {
+        Toast.warning('Pilih alasan sanggahan terlebih dahulu.');
+        return;
+    }
+
+    try {
+        await API.post(`/api/files/${_disputeFileId}/dispute`, { reason, note });
+        Toast.success('Sanggahan berhasil diajukan!');
+        closeDisputeModal();
+
+        // Update local data
+        const index = filteredArchives.findIndex(a => a.id === _disputeFileId);
+        if (index !== -1) {
+            filteredArchives[index].status = 'Disputed';
+            filteredArchives[index].dispute_reason = reason;
+            filteredArchives[index].dispute_note = note;
+            renderTable();
+        }
+    } catch (err) {
+        Toast.error('Gagal mengajukan sanggahan: ' + err.message);
     }
 }
 
