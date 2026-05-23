@@ -124,7 +124,14 @@ async function submitRequest() {
     }
 
     const originalText = btnSubmit.innerHTML;
-    btnSubmit.innerHTML = `<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Menyimpan...`;
+    btnSubmit.innerHTML = `
+        <div class="loader-mini">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+        </div>
+        Menyimpan...
+    `;
     btnSubmit.disabled = true;
 
     try {
@@ -194,7 +201,13 @@ async function submitReject() {
     }
 
     const originalText = btn.innerHTML;
-    btn.innerHTML = `<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>`;
+    btn.innerHTML = `
+        <div class="loader-mini">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+        </div>
+    `;
     btn.disabled = true;
 
     try {

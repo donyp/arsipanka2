@@ -299,7 +299,14 @@ function setupForm() {
 
         const btn = document.getElementById('upload-btn');
         btn.disabled = true;
-        btn.innerHTML = '<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span class="ml-2">Mengupload...</span>';
+        btn.innerHTML = `
+            <div class="loader-mini">
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+            </div>
+            <span class="ml-2">Mengupload...</span>
+        `;
 
         const progressContainer = document.getElementById('upload-progress-container');
         const progressPct = document.getElementById('upload-progress-pct');

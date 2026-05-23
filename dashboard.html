@@ -326,15 +326,15 @@
 
                     <!-- Infinite Scroll Sentinel & Loader -->
                     <div id="infinite-scroll-trigger" class="w-full h-1"></div>
-                    <div id="scroll-loader" class="hidden py-6 flex justify-center items-center gap-2 text-indigo-400">
-                        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-                                fill="none"></circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
-                        <span class="text-xs font-medium tracking-wide">Memuat...</span>
+                    <div id="scroll-loader" class="hidden py-8 flex justify-center w-full">
+                        <div class="premium-loader">
+                            <div class="loader-rings">
+                                <div class="loader-ring"></div>
+                                <div class="loader-ring"></div>
+                                <div class="loader-ring"></div>
+                            </div>
+                            <span class="loader-text text-[10px]">Memuat...</span>
+                        </div>
                     </div>
                 </div>
 
@@ -465,8 +465,7 @@
                     class="text-indigo-400 font-medium"></span></p>
 
             <label class="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Alasan Revisi</label>
-            <select id="dispute-reason"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white mb-4 focus:outline-none focus:border-amber-500/50">
+            <select id="dispute-reason" class="input-field w-full mb-4">
                 <option value="">-- Pilih Alasan --</option>
                 <option value="Kualitas Buruk">Kualitas Buruk</option>
                 <option value="Dokumen Duplikat">Dokumen Duplikat</option>
@@ -557,10 +556,15 @@
                         <!-- Injected via JS -->
                     </tbody>
                 </table>
-                <div id="history-loading" class="flex flex-col items-center justify-center py-10 hidden">
-                    <div class="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3">
+                <div id="history-loading" class="flex flex-col items-center justify-center py-12 hidden">
+                    <div class="premium-loader">
+                        <div class="loader-rings">
+                            <div class="loader-ring"></div>
+                            <div class="loader-ring"></div>
+                            <div class="loader-ring"></div>
+                        </div>
+                        <span class="loader-text">Memuat riwayat...</span>
                     </div>
-                    <span class="text-sm text-gray-400">Memuat riwayat...</span>
                 </div>
                 <div id="history-empty" class="text-center py-16 hidden">
                     <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">

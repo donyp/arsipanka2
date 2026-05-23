@@ -83,9 +83,13 @@ async function openNoticePanel(batchId) {
 
     modal.classList.remove('hidden');
     container.innerHTML = `
-        <div class="flex items-center justify-center py-12">
-            <div class="w-6 h-6 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
-            <span class="ml-3 text-gray-400 text-sm">Memuat data batch...</span>
+        <div class="premium-loader py-12">
+            <div class="loader-rings">
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+            </div>
+            <span class="loader-text">Memuat data batch...</span>
         </div>
     `;
 

@@ -630,7 +630,7 @@ async function openManageBroadcasts() {
     const list = document.getElementById('broadcast-list');
     if (!modal || !list) return;
 
-    list.innerHTML = '<div class="py-10 flex justify-center"><div class="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div>';
+    list.innerHTML = '<div class="py-10 flex justify-center"><div class="premium-loader"><div class="loader-rings"><div class="loader-ring"></div><div class="loader-ring"></div><div class="loader-ring"></div></div></div></div>';
     modal.classList.remove('hidden');
 
     try {
@@ -1119,7 +1119,14 @@ async function downloadSelected() {
             Toast.success('Download dimulai.');
         } else {
             // ZIP Bulk Download via Backend
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span>Zipping...</span>';
+            btn.innerHTML = `
+                <div class="loader-mini">
+                    <div class="loader-ring"></div>
+                    <div class="loader-ring"></div>
+                    <div class="loader-ring"></div>
+                </div>
+                <span>Zipping...</span>
+            `;
 
             const token = API.getToken();
             const downloadUrl = `${CONFIG.API_URL}/api/files/bulk-download?token=${token}`;
@@ -1223,7 +1230,13 @@ async function submitRequest() {
     }
 
     const originalText = btnSubmit.innerHTML;
-    btnSubmit.innerHTML = `<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>`;
+    btnSubmit.innerHTML = `
+        <div class="loader-mini">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+        </div>
+    `;
     btnSubmit.disabled = true;
 
     try {

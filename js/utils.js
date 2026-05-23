@@ -90,9 +90,13 @@ function showLoading(targetId = 'main-content') {
     loader.id = 'loading-overlay';
     loader.className = 'absolute inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm rounded-2xl';
     loader.innerHTML = `
-        <div class="flex flex-col items-center gap-3">
-            <div class="w-10 h-10 border-3 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-            <span class="text-sm text-gray-400">Memuat data...</span>
+        <div class="premium-loader">
+            <div class="loader-rings">
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+            </div>
+            <span class="loader-text">Memuat data...</span>
         </div>
     `;
     target.style.position = 'relative';

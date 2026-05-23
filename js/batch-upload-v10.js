@@ -258,7 +258,13 @@ function renderBatchTable() {
 
 function getStatusIcon(status) {
     if (status === 'success') return '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    if (status === 'uploading') return '<div class="w-3.5 h-3.5 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>';
+    if (status === 'uploading') return `
+        <div class="loader-mini">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+        </div>
+    `;
     if (status === 'ready') return '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>';
     if (status === 'error') return '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     return '<div class="w-2 h-2 rounded-full bg-gray-600"></div>';

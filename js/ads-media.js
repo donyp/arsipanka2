@@ -568,7 +568,14 @@ async function deleteSelected() {
             const btn = document.getElementById('btn-bulk-delete');
             const originalContent = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span>Menghapus...</span>';
+            btn.innerHTML = `
+                <div class="loader-mini">
+                    <div class="loader-ring"></div>
+                    <div class="loader-ring"></div>
+                    <div class="loader-ring"></div>
+                </div>
+                <span>Menghapus...</span>
+            `;
 
             try {
                 const token = localStorage.getItem('jwt_token');
