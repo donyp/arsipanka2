@@ -1646,17 +1646,17 @@ app.get('/api/admin/login-history', authenticateToken, requirePermission('view_a
     }
 });
 
-// POST /api/files/:id/dispute — Admin Zona flags invoice as incorrect
+// POST /api/files/:id/dispute — Admin Zona flags invoice as incorrect (Revision Request)
 app.post('/api/files/:id/dispute', authenticateToken, async (req, res) => {
     try {
         const { reason, note } = req.body;
-        if (!reason) return res.status(400).json({ error: 'Alasan sanggahan wajib diisi.' });
+        if (!reason) return res.status(400).json({ error: 'Alasan revisi wajib diisi.' });
 
         // Update file status and metadata
         const { error } = await supabase
             .from('files')
             .update({
-                status: 'Disputed',
+                status: 'Revision',
                 dispute_reason: reason,
                 dispute_note: note || '',
                 disputed_at: new Date().toISOString(),
@@ -1669,15 +1669,15 @@ app.post('/api/files/:id/dispute', authenticateToken, async (req, res) => {
         // Log to audit
         await supabase.from('audit_logs').insert({
             user_id: req.user.id,
-            action: 'File Disputed',
-            details: `Invoice disputed. Reason: ${reason}. Note: ${note || '-'}`,
+            action: 'Revision Requested',
+            details: `Invoice revision requested. Reason: ${reason}. Note: ${note || '-'}`,
             target_id: req.params.id
         });
 
         res.json({ success: true });
     } catch (err) {
-        console.error('Dispute Error:', err);
-        res.status(500).json({ error: 'Gagal mengajukan sanggahan.' });
+        console.error('Revision Error:', err);
+        res.status(500).json({ error: 'Gagal mengajukan revisi.' });
     }
 });
 
