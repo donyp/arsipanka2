@@ -503,14 +503,25 @@ async function submitDispute() {
         Toast.success('Permintaan revisi berhasil diajukan!');
         closeDisputeModal();
 
-        // Update local data
-        const index = filteredArchives.findIndex(a => a.id === _disputeFileId);
-        if (index !== -1) {
-            filteredArchives[index].status = 'Revision';
-            filteredArchives[index].dispute_reason = reason;
-            filteredArchives[index].dispute_note = note;
-            renderTable();
+        // 1. Update the 'archives' (True Source)
+        const archivesIdx = archives.findIndex(a => a.id == _disputeFileId);
+        if (archivesIdx !== -1) {
+            archives[archivesIdx].status = 'Revision';
+            archives[archivesIdx].dispute_reason = reason;
+            archives[archivesIdx].dispute_note = note;
         }
+
+        // 2. Update the 'filteredArchives' (Current View)
+        const filteredIdx = filteredArchives.findIndex(a => a.id == _disputeFileId);
+        if (filteredIdx !== -1) {
+            filteredArchives[filteredIdx].status = 'Revision';
+            filteredArchives[filteredIdx].dispute_reason = reason;
+            filteredArchives[filteredIdx].dispute_note = note;
+        }
+
+        // 3. Re-render UI
+        renderTable();
+        updateStats();
     } catch (err) {
         Toast.error('Gagal mengajukan revisi: ' + err.message);
     }
