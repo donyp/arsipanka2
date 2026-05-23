@@ -136,6 +136,12 @@
                     isSystemMaintenance = true;
                     maintenanceTime = sys.updatedAt;
                     showMaintenancePopup(maintenanceTime);
+                } else if (sys.lastResult) {
+                    // Check if user has seen this specific announcement
+                    const seenId = localStorage.getItem('seen_maintenance_id');
+                    if (seenId !== sys.lastResult.id) {
+                        showMaintenanceFinishedPopup(sys.lastResult);
+                    }
                 }
             } catch (err) {
                 console.warn('System status check failed:', err);
@@ -183,6 +189,50 @@
                 </div>
             `;
             document.body.appendChild(modal);
+        }
+
+        function showMaintenanceFinishedPopup(result) {
+            const modal = document.createElement('div');
+            modal.id = 'maint-finished-popup';
+            modal.className = 'fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-md animate-fade-in';
+
+            const markSeenAndClose = () => {
+                localStorage.setItem('seen_maintenance_id', result.id);
+                modal.remove();
+            };
+
+            modal.innerHTML = `
+                <div class="glass-card rounded-3xl p-8 max-w-md w-full border border-emerald-500/20 shadow-2xl shadow-emerald-500/10 animate-scale-in relative">
+                    <!-- Close button (X) -->
+                    <button id="maint-close-x" class="absolute top-6 right-6 p-2 text-gray-500 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30 mx-auto mb-6 flex items-center justify-center">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold text-white mb-2">Perbaikan Selesai</h2>
+                    <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-4">Sistem Kembali Online</p>
+                    
+                    <div class="bg-black/20 rounded-2xl p-6 border border-white/5 mb-8 text-left">
+                        <h3 class="text-sm font-bold text-white mb-2">${result.title}</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed whitespace-pre-wrap">${result.details || 'Kami telah melakukan beberapa pembaruan teknis untuk meningkatkan performa sistem.'}</p>
+                    </div>
+
+                    <button id="btn-maint-ok" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                        Oke, Lanjut Login
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('btn-maint-ok').onclick = markSeenAndClose;
+            document.getElementById('maint-close-x').onclick = markSeenAndClose;
         }
 
         // Toggle password visibility

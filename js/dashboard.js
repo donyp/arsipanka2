@@ -1356,26 +1356,71 @@ async function toggleMaintenance() {
     const btn = document.getElementById('maintenance-btn');
     const isActive = document.getElementById('maintenance-text').textContent === 'PERBAIKAN AKTIF';
 
-    const confirmMsg = isActive
-        ? 'Matikan mode perbaikan?'
-        : 'Aktifkan mode perbaikan?\n\nSemua Admin Zona akan otomatis diperintahkan logout.';
+    if (isActive) {
+        // Show form for results before finishing
+        const formHtml = `
+            <div class="space-y-4 text-left">
+                <p class="text-[11px] text-gray-400 leading-relaxed">Dokumentasikan perbaikan ini agar user tahu apa saja yang telah diperbarui saat mereka login nanti.</p>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1 font-bold">Judul Perbaikan</label>
+                    <input type="text" id="maint-res-title" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Contoh: Optimasi Server Pesan">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1 font-bold">Detail Perbaikan</label>
+                    <textarea id="maint-res-details" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 h-24 transition-all" placeholder="Apa saja yang telah diperbaiki?"></textarea>
+                </div>
+            </div>
+        `;
 
-    showConfirm(
-        isActive ? 'Nonaktifkan Perbaikan' : 'Aktifkan Perbaikan',
-        confirmMsg,
-        async () => {
-            try {
-                btn.disabled = true;
-                const res = await API.post('/api/system/maintenance', { isMaintenance: !isActive });
-                if (res.success) {
-                    updateMaintenanceUI(res.status.isMaintenance);
-                    Toast.success(res.status.isMaintenance ? 'Mode Perbaikan diaktifkan' : 'Mode Perbaikan dimatikan');
+        showConfirm(
+            'Selesaikan Perbaikan',
+            formHtml,
+            async () => {
+                const title = document.getElementById('maint-res-title').value.trim();
+                const details = document.getElementById('maint-res-details').value.trim();
+
+                if (!title) {
+                    Toast.error('Harap isi judul perbaikan');
+                    return;
                 }
-            } catch (err) {
-                Toast.error('Gagal mengubah status: ' + err.message);
-            } finally {
-                btn.disabled = false;
-            }
-        }
-    );
+
+                try {
+                    btn.disabled = true;
+                    const res = await API.post('/api/system/maintenance', {
+                        isMaintenance: false,
+                        result: { title, details }
+                    });
+                    if (res.success) {
+                        updateMaintenanceUI(res.status.isMaintenance);
+                        Toast.success('Perbaikan selesai dan diumumkan!');
+                    }
+                } catch (err) {
+                    Toast.error('Gagal: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                }
+            },
+            'Simpan & Selesaikan'
+        );
+    } else {
+        showConfirm(
+            'Aktifkan Perbaikan',
+            'Sistem akan masuk ke mode perbaikan. Semua Admin Zona akan otomatis diperintahkan logout.',
+            async () => {
+                try {
+                    btn.disabled = true;
+                    const res = await API.post('/api/system/maintenance', { isMaintenance: true });
+                    if (res.success) {
+                        updateMaintenanceUI(res.status.isMaintenance);
+                        Toast.success('Mode Perbaikan diaktifkan');
+                    }
+                } catch (err) {
+                    Toast.error('Gagal: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                }
+            },
+            'Aktifkan Sekarang'
+        );
+    }
 }

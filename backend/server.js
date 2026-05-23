@@ -1508,12 +1508,28 @@ app.get('/api/system/maintenance', async (req, res) => {
 // POST /api/system/maintenance — Toggle maintenance mode
 app.post('/api/system/maintenance', authenticateToken, authorizeRole('super_admin', 'moderator'), async (req, res) => {
     try {
-        const { isMaintenance } = req.body;
+        const { isMaintenance, result } = req.body;
+
+        // Read current status to merge with lastResult
+        const currentStatus = getMaintenanceStatus();
+
         const status = {
+            ...currentStatus,
             isMaintenance: !!isMaintenance,
             updatedBy: req.user.name || req.user.email,
             updatedAt: new Date().toISOString()
         };
+
+        // If finishing maintenance, store the result
+        if (!isMaintenance && result) {
+            status.lastResult = {
+                id: 'maint_' + Date.now(),
+                title: result.title,
+                details: result.details,
+                completedAt: new Date().toISOString()
+            };
+        }
+
         fs.writeFileSync(MAINTENANCE_FILE, JSON.stringify(status, null, 4));
 
         // Audit Log
