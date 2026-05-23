@@ -55,25 +55,56 @@ const Toast = {
     info(msg) { this.show(msg, 'info'); }
 };
 
-// ---- Confirmation Modal ----
-function showConfirmModal(title, message, onConfirm, confirmText = 'Konfirmasi', cancelText = 'Batal') {
+// ---- Standardized Modals (Replacement for alert/confirm) ----
+function showAlert(title, message, onOk) {
     const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 z-[9998] flex items-center justify-center p-4';
+    overlay.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-md animate-fade-in';
     overlay.innerHTML = `
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="confirm-backdrop"></div>
-        <div class="relative bg-gray-900/95 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-scale-in">
-            <h3 class="text-lg font-semibold text-white mb-2">${title}</h3>
-            <p class="text-gray-400 text-sm mb-6">${message}</p>
-            <div class="flex gap-3 justify-end">
-                <button id="confirm-cancel" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200">${cancelText}</button>
-                <button id="confirm-ok" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/25 transition-all duration-200">${confirmText}</button>
+        <div class="relative bg-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-scale-in text-center">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">${title}</h3>
+            <p class="text-gray-400 text-sm mb-8 leading-relaxed">${message}</p>
+            <button id="alert-ok" class="w-full py-3.5 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 shadow-lg shadow-indigo-500/25 transition-all duration-200">
+                Lanjutkan
+            </button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#alert-ok').addEventListener('click', () => {
+        overlay.remove();
+        if (onOk) onOk();
+    });
+}
+
+function showConfirm(title, message, onConfirm, okText = 'Konfirmasi', cancelText = 'Batal') {
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-md animate-fade-in';
+    overlay.innerHTML = `
+        <div class="relative bg-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-1">${title}</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">${message}</p>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button id="confirm-cancel" class="flex-1 py-3.5 rounded-2xl text-sm font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200">${cancelText}</button>
+                <button id="confirm-ok" class="flex-2 px-8 py-3.5 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/25 transition-all duration-200">${okText}</button>
             </div>
         </div>
     `;
 
     document.body.appendChild(overlay);
 
-    overlay.querySelector('#confirm-backdrop').addEventListener('click', () => overlay.remove());
     overlay.querySelector('#confirm-cancel').addEventListener('click', () => overlay.remove());
     overlay.querySelector('#confirm-ok').addEventListener('click', () => {
         overlay.remove();

@@ -153,27 +153,35 @@ async function updateRequestStatus(id, newStatus) {
         return;
     }
 
-    if (!confirm(`Konfirmasi penandaan tiket menjadi: Selesai?`)) return;
-
-    try {
-        await API.put(`/api/requests/${id}`, { status: newStatus });
-        Toast.success(`Status tiket diubah menjadi Selesai`);
-        loadRequests();
-    } catch (err) {
-        Toast.error('Gagal mengubah status: ' + err.message);
-    }
+    showConfirm(
+        'Konfirmasi Selesai',
+        'Tandai tiket permintaan ini sebagai Selesai?',
+        async () => {
+            try {
+                await API.put(`/api/requests/${id}`, { status: newStatus });
+                Toast.success(`Status tiket diubah menjadi Selesai`);
+                loadRequests();
+            } catch (err) {
+                Toast.error('Gagal mengubah status: ' + err.message);
+            }
+        }
+    );
 }
 
 async function deleteRequest(id) {
-    if (!confirm('Apakah Anda yakin ingin menghapus tiket request ini secara permanen? Data juga akan terhapus dari log Admin Zona.')) return;
-
-    try {
-        await API.delete(`/api/requests/${id}`);
-        Toast.success('Tiket request berhasil dihapus permanen.');
-        loadRequests();
-    } catch (err) {
-        Toast.error('Gagal menghapus tiket: ' + err.message);
-    }
+    showConfirm(
+        'Hapus Tiket',
+        'Apakah Anda yakin ingin menghapus tiket request ini secara permanen? Data juga akan terhapus dari log Admin Zona.',
+        async () => {
+            try {
+                await API.delete(`/api/requests/${id}`);
+                Toast.success('Tiket request berhasil dihapus permanen.');
+                loadRequests();
+            } catch (err) {
+                Toast.error('Gagal menghapus tiket: ' + err.message);
+            }
+        }
+    );
 }
 
 let currentRejectId = null;

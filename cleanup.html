@@ -296,30 +296,38 @@
             const ids = lastScanResults[type].map(f => f.id);
             if (ids.length === 0) return;
 
-            if (!confirm(`Hapus ${ids.length} record ${type} dari database?`)) return;
-
-            try {
-                await API.post('/api/files/cleanup-bulk', { ids });
-                Toast.success(`${ids.length} record telah dibersihkan.`);
-                startScan(); // Rescan
-            } catch (err) {
-                Toast.error('Gagal membersihkan data.');
-            }
+            showConfirm(
+                'Konfirmasi Pembersihan',
+                `Hapus ${ids.length} record ${type} dari database? Tindakan ini permanen.`,
+                async () => {
+                    try {
+                        await API.post('/api/files/cleanup-bulk', { ids });
+                        Toast.success(`${ids.length} record telah dibersihkan.`);
+                        startScan(); // Rescan
+                    } catch (err) {
+                        Toast.error('Gagal membersihkan data.');
+                    }
+                }
+            );
         }
 
         async function cleanupAll() {
             const ids = [...lastScanResults.duplicates, ...lastScanResults.ghosts, ...lastScanResults.candidates].map(f => f.id);
             if (ids.length === 0) return;
 
-            if (!confirm(`AI menyarankan menghapus ${ids.length} file. Lanjutkan pembersihan total?`)) return;
-
-            try {
-                await API.post('/api/files/cleanup-bulk', { ids });
-                Toast.success(`Audit Selesai. ${ids.length} record dibersihkan.`);
-                startScan();
-            } catch (err) {
-                Toast.error('Gagal membersihkan data.');
-            }
+            showConfirm(
+                'Pembersihan Total',
+                `AI menyarankan menghapus ${ids.length} file. Lanjutkan pembersihan total secara permanen?`,
+                async () => {
+                    try {
+                        await API.post('/api/files/cleanup-bulk', { ids });
+                        Toast.success(`Audit Selesai. ${ids.length} record dibersihkan.`);
+                        startScan();
+                    } catch (err) {
+                        Toast.error('Gagal membersihkan data.');
+                    }
+                }
+            );
         }
     </script>
 </body>

@@ -665,18 +665,22 @@ function closeBroadcastManage() {
 }
 
 async function deleteBroadcast(id) {
-    if (!confirm('Hapus pengumuman ini?')) return;
-
-    try {
-        await API.del(`/api/broadcasts/${id}`);
-        Toast.success('Pengumuman dihapus');
-        openManageBroadcasts(); // Refresh list
-        if (typeof window.loadGlobalBroadcast === 'function') {
-            await window.loadGlobalBroadcast();
+    showConfirm(
+        'Hapus Pengumuman',
+        'Apakah Anda yakin ingin menghapus pengumuman ini? Tindakan ini tidak dapat dibatalkan.',
+        async () => {
+            try {
+                await API.del(`/api/broadcasts/${id}`);
+                Toast.success('Pengumuman dihapus');
+                openManageBroadcasts(); // Refresh list
+                if (typeof window.loadGlobalBroadcast === 'function') {
+                    await window.loadGlobalBroadcast();
+                }
+            } catch (err) {
+                Toast.error('Gagal menghapus: ' + err.message);
+            }
         }
-    } catch (err) {
-        Toast.error('Gagal menghapus: ' + err.message);
-    }
+    );
 }
 
 // ---- Storage Stats ----
@@ -1352,19 +1356,26 @@ async function toggleMaintenance() {
     const btn = document.getElementById('maintenance-btn');
     const isActive = document.getElementById('maintenance-text').textContent === 'PERBAIKAN AKTIF';
 
-    const action = isActive ? 'Matikan mode perbaikan?' : 'Aktifkan mode perbaikan?\n\nSemua Admin Zona akan otomatis diperintahkan logout.';
-    if (!confirm(action)) return;
+    const confirmMsg = isActive
+        ? 'Matikan mode perbaikan?'
+        : 'Aktifkan mode perbaikan?\n\nSemua Admin Zona akan otomatis diperintahkan logout.';
 
-    try {
-        btn.disabled = true;
-        const res = await API.post('/api/system/maintenance', { isMaintenance: !isActive });
-        if (res.success) {
-            updateMaintenanceUI(res.status.isMaintenance);
-            Toast.success(res.status.isMaintenance ? 'Mode Perbaikan diaktifkan' : 'Mode Perbaikan dimatikan');
+    showConfirm(
+        isActive ? 'Nonaktifkan Perbaikan' : 'Aktifkan Perbaikan',
+        confirmMsg,
+        async () => {
+            try {
+                btn.disabled = true;
+                const res = await API.post('/api/system/maintenance', { isMaintenance: !isActive });
+                if (res.success) {
+                    updateMaintenanceUI(res.status.isMaintenance);
+                    Toast.success(res.status.isMaintenance ? 'Mode Perbaikan diaktifkan' : 'Mode Perbaikan dimatikan');
+                }
+            } catch (err) {
+                Toast.error('Gagal mengubah status: ' + err.message);
+            } finally {
+                btn.disabled = false;
+            }
         }
-    } catch (err) {
-        Toast.error('Gagal mengubah status: ' + err.message);
-    } finally {
-        btn.disabled = false;
-    }
+    );
 }
