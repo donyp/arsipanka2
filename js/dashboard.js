@@ -1363,7 +1363,13 @@ async function toggleMaintenance() {
                 <p class="text-[11px] text-gray-400 leading-relaxed">Dokumentasikan perbaikan ini agar user tahu apa saja yang telah diperbarui saat mereka login nanti.</p>
                 <div>
                     <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1 font-bold">Judul Perbaikan</label>
-                    <input type="text" id="maint-res-title" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Contoh: Optimasi Server Pesan">
+                    <select id="maint-res-title" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all cursor-pointer">
+                        <option value="" disabled selected>Pilih Kategori...</option>
+                        <option value="Update Website">Update Website</option>
+                        <option value="Perbaikan Bug">Perbaikan Bug</option>
+                        <option value="Optimalisasi Sistem">Optimalisasi Sistem</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1 font-bold">Detail Perbaikan</label>
