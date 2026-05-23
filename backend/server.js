@@ -1492,8 +1492,8 @@ app.get('/api/broadcasts/latest', authenticateToken, async (req, res) => {
     }
 });
 
-// GET /api/system/maintenance — Get current system status
-app.get('/api/system/maintenance', authenticateToken, async (req, res) => {
+// GET /api/system/maintenance — Get current system status (Public)
+app.get('/api/system/maintenance', async (req, res) => {
     res.json(getMaintenanceStatus());
 });
 
