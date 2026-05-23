@@ -146,8 +146,12 @@
                 const errorText = document.getElementById('login-error-text');
                 if (errorDiv && errorText) {
                     errorDiv.classList.remove('hidden');
-                    errorText.innerHTML = '<strong>Sistem Sedang Perbaikan:</strong> Akses ditangguhkan sementara. Silakan coba lagi nanti.';
+                    errorText.innerHTML = '<strong>Sistem Sedang Perbaikan:</strong> Akses ditangguhkan sementara.';
                     window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                // Also trigger the popup if we don't have isSystemMaintenance status yet
+                if (!isSystemMaintenance) {
+                    showMaintenancePopup(new Date().toISOString());
                 }
             } else if (token) {
                 window.location.href = 'dashboard.html';
