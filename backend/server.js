@@ -1458,8 +1458,8 @@ app.get('/api/broadcasts/latest', authenticateToken, async (req, res) => {
             .order('created_at', { ascending: false });
 
         // Filter: Target the user's specific zone OR show global (null)
-        if (req.user.role !== 'super_admin' && req.user.zonaId) {
-            query = query.or(`target_zona_id.is.null,target_zona_id.eq.${req.user.zonaId}`);
+        if (req.user.role !== 'super_admin' && req.user.zona_id) {
+            query = query.or(`target_zona_id.is.null,target_zona_id.eq.${req.user.zona_id}`);
         }
 
         const { data, error } = await query.limit(1).maybeSingle();
