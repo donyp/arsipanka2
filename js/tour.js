@@ -61,6 +61,12 @@ const Tour = {
         }, 100);
     },
 
+    getZoom() {
+        // Detect zoom level from body (default to 1)
+        const zoom = parseFloat(getComputedStyle(document.body).zoom) || 1;
+        return zoom;
+    },
+
     showStep(index) {
         if (index < 0 || index >= this.steps.length) {
             this.stop();
@@ -78,14 +84,16 @@ const Tour = {
             return;
         }
 
+        const zoom = this.getZoom();
+
         // --- 1. Positioning Spotlight ---
         const rect = target.getBoundingClientRect();
         const padding = 10;
 
-        this.spotlight.style.width = `${rect.width + padding * 2}px`;
-        this.spotlight.style.height = `${rect.height + padding * 2}px`;
-        this.spotlight.style.left = `${rect.left - padding}px`;
-        this.spotlight.style.top = `${rect.top - padding}px`;
+        this.spotlight.style.width = `${(rect.width + padding * 2) / zoom}px`;
+        this.spotlight.style.height = `${(rect.height + padding * 2) / zoom}px`;
+        this.spotlight.style.left = `${(rect.left - padding) / zoom}px`;
+        this.spotlight.style.top = `${(rect.top - padding) / zoom}px`;
 
         // --- 2. Update Content ---
         document.getElementById('tour-counter').textContent = `Langkah ${index + 1} / ${this.steps.length}`;
@@ -101,19 +109,19 @@ const Tour = {
         const tooltipRect = this.tooltip.getBoundingClientRect();
         const gap = 20;
 
-        let top = rect.bottom + gap;
-        let left = rect.left;
+        let top = (rect.bottom + gap) / zoom;
+        let left = rect.left / zoom;
 
         // Overflow check (y-axis)
-        if (top + tooltipRect.height > window.innerHeight) {
-            top = rect.top - tooltipRect.height - gap;
+        if ((top * zoom) + tooltipRect.height > window.innerHeight) {
+            top = (rect.top - tooltipRect.height - gap) / zoom;
         }
 
         // Overflow check (x-axis)
-        if (left + tooltipRect.width > window.innerWidth) {
-            left = window.innerWidth - tooltipRect.width - 20;
+        if ((left * zoom) + tooltipRect.width > window.innerWidth) {
+            left = (window.innerWidth - tooltipRect.width - (20 * zoom)) / zoom;
         }
-        if (left < 0) left = 20;
+        if (left < 0) left = 20 / zoom;
 
         this.tooltip.style.left = `${left}px`;
         this.tooltip.style.top = `${top}px`;
