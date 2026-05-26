@@ -18,12 +18,6 @@ window._zonaCache = [];
 
 // ---- Initialize Dashboard ----
 document.addEventListener('DOMContentLoaded', async () => {
-    // URL-based Reset Tour Debugger
-    if (window.location.search.includes('reset_tour=1')) {
-        localStorage.removeItem('tour_completed');
-        console.log('[Tour] Tour reset triggered by URL flag.');
-    }
-
     const user = await initAuth();
     if (!user) return;
 
@@ -47,66 +41,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     setupEventListeners();
     setupIntersectionObserver();
-
-    // Guided Tour for New Users (Only for Admin Zona)
-    if (user.role === 'admin_zona') {
-        setTimeout(() => {
-            loadTour();
-        }, 1500); // Small delay to let animations finish
-    }
 });
 
-function loadTour() {
-    if (localStorage.getItem('tour_completed') === 'true') return;
-
-    const tourSteps = [
-        {
-            target: null,
-            title: 'Selamat Datang!',
-            content: 'Halo! Mari kita keliling sejenak untuk mengenal fitur-fitur di dashboard zona Anda agar kerja lebih efisien.'
-        },
-        {
-            target: '#search-input',
-            title: 'Pencarian Dokumen',
-            content: 'Gunakan kolom ini untuk mencari dokumen dengan cepat berdasarkan nama file atau nomor invoice.'
-        },
-        {
-            target: '#filter-category',
-            title: 'Kategori Dokumen',
-            content: 'Kategori ini sudah dikunci sesuai akses Anda (Invoice Merah).'
-        },
-        {
-            target: '#filter-toko',
-            title: 'Saring Toko',
-            content: 'Anda bisa melihat dokumen khusus untuk toko tertentu di dalam zona Anda.'
-        },
-        {
-            target: '#filter-date-start',
-            title: 'Pilih Tanggal',
-            content: 'Saring arsip berdasarkan rentang tanggal dokumen untuk pencarian yang lebih spesifik.'
-        },
-        {
-            target: '#archive-table',
-            title: 'Daftar Arsip',
-            content: 'Semua berkas Anda ditampilkan di sini. Klik pada baris untuk preview atau mengunduh file.'
-        },
-        {
-            target: '#header-request-btn',
-            title: 'Tiket Request',
-            content: 'Jika ada dokumen yang belum tersedia, silakan klik tombol ini untuk meminta Admin Pusat mengunggahnya.'
-        },
-        {
-            target: '#header-logout-btn',
-            title: 'Sesi & Keamanan',
-            content: 'Jangan lupa untuk logout setelah selesai bekerja demi keamanan data akun Anda.'
-        }
-    ];
-
-    if (window.Tour) {
-        Tour.init(tourSteps);
-        Tour.start();
-    }
-}
 
 // ---- Set Current Date ----
 function setCurrentDate() {
