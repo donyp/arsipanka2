@@ -72,6 +72,7 @@ const Tour = {
         const target = document.querySelector(step.target);
 
         if (!target || target.offsetParent === null) {
+            console.warn(`[Tour] Skipping step ${index + 1}: Target "${step.target}" is missing or hidden.`);
             // If target is hidden or missing, skip to next
             this.next();
             return;

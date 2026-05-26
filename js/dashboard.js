@@ -18,6 +18,12 @@ window._zonaCache = [];
 
 // ---- Initialize Dashboard ----
 document.addEventListener('DOMContentLoaded', async () => {
+    // URL-based Reset Tour Debugger
+    if (window.location.search.includes('reset_tour=1')) {
+        localStorage.removeItem('tour_completed');
+        console.log('[Tour] Tour reset triggered by URL flag.');
+    }
+
     const user = await initAuth();
     if (!user) return;
 
@@ -55,36 +61,31 @@ function loadTour() {
 
     const tourSteps = [
         {
-            target: '#sidebar',
-            title: 'Navigasi Utama',
-            content: 'Gunakan sidebar ini untuk berpindah antar halaman seperti Manajemen User, Toko, dan Sampah Arsip.'
-        },
-        {
             target: '#search-input',
-            title: 'Pencarian Cepat',
-            content: 'Cari berkas atau dokumen tertentu dengan mengetikkan nama file di sini.'
+            title: 'Pencarian Dokumen',
+            content: 'Cari dokumen atau berkas tertentu dengan mengetikkan nama file di sini.'
         },
         {
-            target: '#stats-grid',
-            title: 'Statistik Sistem',
-            content: 'Pantau jumlah invoice merah, piutang, hingga kapasitas penyimpanan zona Anda secara real-time.'
+            target: '#filter-toko',
+            title: 'Filter Toko',
+            content: 'Saring arsip berdasarkan toko tertentu yang ada di zona Anda.'
+        },
+        {
+            target: '#filter-date-start',
+            title: 'Rentang Tanggal',
+            content: 'Saring dokumen berdasarkan tanggal dokumen untuk pencarian yang lebih akurat.'
         },
         {
             target: '#archive-table',
-            title: 'Daftar Arsip',
-            content: 'Semua dokumen yang sudah diunggah akan muncul di sini. Anda bisa melakukan preview atau revisi.'
+            title: 'Tabel Pengelolaan',
+            content: 'Semua dokumen yang Anda kelola tampil di sini. Klik pada baris untuk melihat detail atau preview.'
+        },
+        {
+            target: '#header-request-btn',
+            title: 'Tiket Request',
+            content: 'Gunakan fitur ini untuk meminta Pusat (Admin) mengunggah dokumen yang belum ada.'
         }
     ];
-
-    // Add extra step for Admin/Pusat
-    const maintBtn = document.getElementById('maintenance-btn');
-    if (maintBtn && !maintBtn.classList.contains('hidden')) {
-        tourSteps.push({
-            target: '#maintenance-btn',
-            title: 'Mode Perbaikan',
-            content: 'Khusus Admin/Moderator: Gunakan tombol ini untuk mengaktifkan mode pemeliharaan sistem.'
-        });
-    }
 
     if (window.Tour) {
         Tour.init(tourSteps);
