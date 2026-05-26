@@ -42,10 +42,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     setupIntersectionObserver();
 
-    // Guided Tour for New Users
-    setTimeout(() => {
-        loadTour();
-    }, 1500); // Small delay to let animations finish
+    // Guided Tour for New Users (Only for Admin Zona)
+    if (user.role === 'admin_zona') {
+        setTimeout(() => {
+            loadTour();
+        }, 1500); // Small delay to let animations finish
+    }
 });
 
 function loadTour() {
