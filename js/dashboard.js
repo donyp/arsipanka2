@@ -41,7 +41,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     setupEventListeners();
     setupIntersectionObserver();
+
+    // Guided Tour for New Users
+    setTimeout(() => {
+        loadTour();
+    }, 1500); // Small delay to let animations finish
 });
+
+function loadTour() {
+    if (localStorage.getItem('tour_completed') === 'true') return;
+
+    const tourSteps = [
+        {
+            target: '#sidebar',
+            title: 'Navigasi Utama',
+            content: 'Gunakan sidebar ini untuk berpindah antar halaman seperti Manajemen User, Toko, dan Sampah Arsip.'
+        },
+        {
+            target: '#search-input',
+            title: 'Pencarian Cepat',
+            content: 'Cari berkas atau dokumen tertentu dengan mengetikkan nama file di sini.'
+        },
+        {
+            target: '#stats-grid',
+            title: 'Statistik Sistem',
+            content: 'Pantau jumlah invoice merah, piutang, hingga kapasitas penyimpanan zona Anda secara real-time.'
+        },
+        {
+            target: '#archive-table',
+            title: 'Daftar Arsip',
+            content: 'Semua dokumen yang sudah diunggah akan muncul di sini. Anda bisa melakukan preview atau revisi.'
+        }
+    ];
+
+    // Add extra step for Admin/Pusat
+    const maintBtn = document.getElementById('maintenance-btn');
+    if (maintBtn && !maintBtn.classList.contains('hidden')) {
+        tourSteps.push({
+            target: '#maintenance-btn',
+            title: 'Mode Perbaikan',
+            content: 'Khusus Admin/Moderator: Gunakan tombol ini untuk mengaktifkan mode pemeliharaan sistem.'
+        });
+    }
+
+    if (window.Tour) {
+        Tour.init(tourSteps);
+        Tour.start();
+    }
+}
 
 // ---- Set Current Date ----
 function setCurrentDate() {
