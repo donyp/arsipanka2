@@ -88,12 +88,35 @@ const Tour = {
 
         // --- 1. Positioning Spotlight ---
         const rect = target.getBoundingClientRect();
-        const padding = 10;
+        const padding = 15; // Increased padding for better alignment
 
-        this.spotlight.style.width = `${(rect.width + padding * 2) / zoom}px`;
-        this.spotlight.style.height = `${(rect.height + padding * 2) / zoom}px`;
-        this.spotlight.style.left = `${(rect.left - padding) / zoom}px`;
-        this.spotlight.style.top = `${(rect.top - padding) / zoom}px`;
+        const x = (rect.left - padding) / zoom;
+        const y = (rect.top - padding) / zoom;
+        const w = (rect.width + padding * 2) / zoom;
+        const h = (rect.height + padding * 2) / zoom;
+
+        this.spotlight.style.width = `${w}px`;
+        this.spotlight.style.height = `${h}px`;
+        this.spotlight.style.left = `${x}px`;
+        this.spotlight.style.top = `${y}px`;
+
+        // Update Overlay Mask (Hole)
+        // Using clip-path polygon to create a clear window in the blurred overlay
+        const vw = window.innerWidth / zoom;
+        const vh = window.innerHeight / zoom;
+
+        this.overlay.style.clipPath = `polygon(
+            0% 0%, 
+            0% 100%, 
+            ${x}px 100%, 
+            ${x}px ${y}px, 
+            ${x + w}px ${y}px, 
+            ${x + w}px ${y + h}px, 
+            ${x}px ${y + h}px, 
+            ${x}px 100%, 
+            100% 100%, 
+            100% 0%
+        )`;
 
         // --- 2. Update Content ---
         document.getElementById('tour-counter').textContent = `Langkah ${index + 1} / ${this.steps.length}`;
