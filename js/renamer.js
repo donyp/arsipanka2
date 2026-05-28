@@ -104,6 +104,14 @@ async function processQueue() {
 
         pending.result = metadata;
         pending.status = 'done';
+
+        if (metadata.needsReview) {
+            if (typeof Toast !== 'undefined') {
+                Toast.warning(`[${pending.file.name}] Perlu Dicek: ${metadata.fallbackCause}`, 6000);
+            } else {
+                console.warn(`[${pending.file.name}]`, metadata.fallbackCause);
+            }
+        }
     } catch (err) {
         console.error(err);
         pending.status = 'error';
@@ -163,34 +171,43 @@ function analyzeText(text, originalName) {
 
     // 2. Store Name Detection (Contextual)
     let detectedToko = "UNKNOWN";
+    let needsReview = false;
+    let fallbackCause = "";
 
     if (isPPN) {
-        // Find best matching rule
-        let bestMatch = null;
-        let highestPriority = -1;
+        // Find all rules matching the PT
+        const ptMatches = PT_MAPPING.filter(r => ythText.includes(r.pt.toUpperCase()));
 
-        for (const rule of PT_MAPPING) {
-            if (ythText.includes(rule.pt.toUpperCase())) {
-                // Priority 2: PT matches AND Secondary keyword matches
-                if (rule.secondary && upperText.includes(rule.secondary.toUpperCase())) {
-                    bestMatch = rule.store;
-                    highestPriority = 2;
-                    break; // Strongest match found
-                }
-                // Priority 1: PT matches (no secondary keyword required)
-                if (!rule.secondary && highestPriority < 1) {
-                    bestMatch = rule.store;
-                    highestPriority = 1;
-                }
+        if (ptMatches.length === 1) {
+            // Only 1 rule for this PT, use it directly (if secondary is filled, ideally it should match, but we trust the single mapping)
+            const rule = ptMatches[0];
+            if (rule.secondary && !upperText.includes(rule.secondary.toUpperCase())) {
+                detectedToko = "Cek Manual (Secondary Tidak Cocok)";
+                needsReview = true;
+                fallbackCause = `PT '${rule.pt}' terdeteksi, tapi kata kunci sekunder '${rule.secondary}' tidak ditemukan.`;
+            } else {
+                detectedToko = rule.store;
             }
-        }
+        } else if (ptMatches.length > 1) {
+            // Multiple rules for this PT. Must disambiguate via secondary keyword!
+            const exactMatches = ptMatches.filter(r => r.secondary && upperText.includes(r.secondary.toUpperCase()));
 
-        if (bestMatch) {
-            detectedToko = bestMatch;
+            if (exactMatches.length === 1) {
+                detectedToko = exactMatches[0].store;
+            } else {
+                // Ambiguous! More than one matched, or NONE matched secondary keyword.
+                detectedToko = "Cek Manual (Ambigu)";
+                needsReview = true;
+                fallbackCause = `PT ini memiliki ${ptMatches.length} cabang tujuan. Sistem gagal mencari kata kunci sekunder yang unik.`;
+            }
         } else {
             // Fallback: If PT not in mapping, take the PT name
             const ptMatch = ythText.match(/PT\.\s*([^,]+)/i);
             detectedToko = ptMatch ? ptMatch[1].trim() : "PT_UNKNOWN";
+            if (detectedToko !== "PT_UNKNOWN") {
+                needsReview = true;
+                fallbackCause = `Pemetaan untuk '${detectedToko}' belum ada di sistem. Ditambahkan nama awal saja.`;
+            }
         }
     } else {
         // NON-PPN logic: "MEGA BAJA KOMSEN" -> "KOMSEN"
@@ -234,7 +251,9 @@ function analyzeText(text, originalName) {
         nominal: nominal,
         date: dateStr,
         type: type,
-        suggestion: suggestion.toUpperCase()
+        suggestion: suggestion.toUpperCase(),
+        needsReview: needsReview,
+        fallbackCause: fallbackCause
     };
 }
 
