@@ -206,6 +206,11 @@
             mainContent.prepend(bar);
             loadGlobalBroadcast();
         }
+
+        // --- NEW: Trigger UI Update to process guards (data-role/data-permission) ---
+        if (typeof updateUserUI === 'function') {
+            updateUserUI();
+        }
     }
 
     async function loadGlobalBroadcast() {
