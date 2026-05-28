@@ -162,28 +162,55 @@ async function extractTextFromPDF(file) {
 
 function analyzeText(text, originalName) {
     console.log("[AI] Raw Text:", text);
-    const upperText = text.toUpperCase();
+    // Normalize OCR quirks: collapse multiple spaces, fix common OCR errors
+    const cleanText = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ');
+    const upperText = cleanText.toUpperCase();
+    const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l);
 
-    // 1. Extract PT name line (Kepada Yth)
-    const ythSection = text.match(/Kepada Yth\s*:\s*([^\n]+)/i);
-    const ythText = ythSection ? ythSection[1].trim().toUpperCase() : "";
-    const isPPN = ythText.includes("PT.") || ythText.includes("CV.");
+    // ========== 1. PPN Detection ==========
+    // Strategy: Search the ENTIRE text for PT. or CV., not just the "Kepada Yth" line
+    // OCR may produce "Kepada Yth", "KepadeYth", "Kepade Yth", etc.
+    let isPPN = false;
+    let ythText = "";
+
+    // Try strict "Kepada Yth" first
+    const ythMatch = cleanText.match(/[Kk]epad[ae]\s*[Yy]th\s*[:.;]?\s*([^\n]+)/i);
+    if (ythMatch) {
+        ythText = ythMatch[1].trim().toUpperCase();
+        isPPN = ythText.includes("PT") || ythText.includes("CV");
+    }
+
+    // Fallback: scan ALL lines for PT. or CV. pattern
+    if (!isPPN) {
+        for (const line of lines) {
+            const up = line.toUpperCase();
+            if (up.match(/\b(PT\.|CV\.)\s*\w/)) {
+                isPPN = true;
+                if (!ythText) ythText = up;
+                break;
+            }
+        }
+    }
     const type = isPPN ? 'PPN' : 'NON';
 
-    // 2. Store Name Detection (Contextual)
+    // ========== 2. Store Name Detection ==========
     let detectedToko = "UNKNOWN";
     let needsReview = false;
     let fallbackCause = "";
 
-    if (isPPN) {
-        // Find all rules matching the PT
-        const ptMatches = PT_MAPPING.filter(r => ythText.includes(r.pt.toUpperCase()));
+    // Helper: check if any comma-separated secondary keyword is found in text
+    const checkSecondary = (rule, searchText) => {
+        if (!rule.secondary) return false;
+        const keywords = rule.secondary.split(',').map(k => k.trim().toUpperCase()).filter(k => k);
+        return keywords.some(k => searchText.includes(k));
+    };
 
-        const checkSecondary = (rule, text) => {
-            if (!rule.secondary) return false;
-            const keywords = rule.secondary.split(',').map(k => k.trim().toUpperCase());
-            return keywords.some(k => text.includes(k));
-        };
+    if (isPPN) {
+        // Search mapping against the FULL text (not just ythText) for PT name matching
+        const ptMatches = PT_MAPPING.filter(r => {
+            const ptName = r.pt.toUpperCase();
+            return upperText.includes(ptName);
+        });
 
         if (ptMatches.length === 1) {
             const rule = ptMatches[0];
@@ -195,6 +222,7 @@ function analyzeText(text, originalName) {
                 detectedToko = rule.store;
             }
         } else if (ptMatches.length > 1) {
+            // Multiple rules for this PT. Must disambiguate via secondary keyword!
             const exactMatches = ptMatches.filter(r => checkSecondary(r, upperText));
 
             if (exactMatches.length === 1) {
@@ -202,54 +230,71 @@ function analyzeText(text, originalName) {
             } else {
                 detectedToko = "Cek Manual (Ambigu)";
                 needsReview = true;
-                fallbackCause = `PT ini memiliki ${ptMatches.length} cabang. Sistem gagal mencari kata kunci sekunder yang unik.`;
+                fallbackCause = `PT ini memiliki ${ptMatches.length} cabang. Gagal mencocokkan kata kunci sekunder.`;
             }
         } else {
-            // Fallback: If PT/CV not in mapping, take the PT/CV name
-            const ptMatch = ythText.match(/(?:PT|CV)\.\s*([^,]+)/i);
-            detectedToko = ptMatch ? ptMatch[1].trim() : "PT_UNKNOWN";
+            // Fallback: If PT/CV not in mapping, extract PT/CV name from text
+            const ptExtract = upperText.match(/(?:PT|CV)[.\s]+([A-Z][A-Z0-9\s]{2,30})/);
+            detectedToko = ptExtract ? ptExtract[1].trim() : "PT_UNKNOWN";
             if (detectedToko !== "PT_UNKNOWN") {
                 needsReview = true;
-                fallbackCause = `Pemetaan untuk '${detectedToko}' belum ada di sistem. Ditambahkan nama awal saja.`;
+                fallbackCause = `Pemetaan untuk '${detectedToko}' belum ada di sistem.`;
             }
         }
     } else {
         // NON-PPN logic: "MEGA BAJA KOMSEN" -> "KOMSEN"
-        const mbMatch = ythText.match(/MEGA BAJA\s+([A-Za-z0-9]+)/i);
+        const mbMatch = upperText.match(/MEGA\s*BAJA\s+([A-Z0-9]+)/);
         if (mbMatch) {
             detectedToko = mbMatch[1].trim();
-        } else {
-            detectedToko = ythText.split(/[,\s]/)[0]; // Fallback
+        } else if (ythText) {
+            detectedToko = ythText.split(/[,\s]/)[0];
         }
     }
 
-    // 3. Nominal Detection
-    const nominalMatch = text.match(/Total Bayar\s*:\s*([\d\.,\-]+)/i);
+    // ========== 3. Nominal Detection ==========
+    // Try multiple patterns for OCR flexibility
     let nominal = "0";
-    if (nominalMatch) {
-        let rawNum = nominalMatch[1].split(',')[0].replace(/[^0-9]/g, '');
-        nominal = Number(rawNum).toLocaleString('id-ID'); // e.g. 390000 -> 390.000
+    const nominalPatterns = [
+        /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*([\d][[\d\.,\-\s]+)/,
+        /[Bb]ayar\s*[:;.]?\s*([\d][\d\.,\-\s]+)/,
+        /[Tt]otal\s*[:;.]?\s*([\d][\d\.,\-\s]+)/,
+        /Rp\.?\s*([\d][\d\.,\-\s]+)/i
+    ];
+    for (const pat of nominalPatterns) {
+        const m = cleanText.match(pat);
+        if (m) {
+            let rawNum = m[1].split(',')[0].replace(/[^0-9]/g, '');
+            if (rawNum && Number(rawNum) > 0) {
+                nominal = Number(rawNum).toLocaleString('id-ID');
+                break;
+            }
+        }
     }
 
-    // 4. Date Detection
-    let dateMatch = text.match(/Cetak\s*[:;]?\s*(\d{1,2})[-/\s.,]+([A-Za-z]{3,9})/i);
-    if (!dateMatch) {
-        // Fallback robust regex
-        dateMatch = text.match(/(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9})\b/i);
-    }
+    // ========== 4. Date Detection ==========
     let dateStr = "00-Unknown";
-    if (dateMatch) {
-        const day = dateMatch[1];
-        const rawMonth = dateMatch[2].substring(0, 3).toUpperCase();
-
-        const indMonthMap = {
-            'JAN': 'Januari', 'FEB': 'Februari', 'MAR': 'Maret', 'APR': 'April',
-            'MEI': 'Mei', 'MAY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
-            'AGU': 'Agustus', 'AUG': 'Agustus', 'SEP': 'September', 'OKT': 'Oktober',
-            'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember'
-        };
-        const month = indMonthMap[rawMonth] || rawMonth;
-        dateStr = `${day} ${month}`;
+    const datePatterns = [
+        /[Cc]etak\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9})/,
+        /[Tt]anggal\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9})/,
+        /(\d{1,2})\s*[-/]\s*([A-Za-z]{3,9})\s*[-/]\s*\d{2,4}/
+    ];
+    for (const pat of datePatterns) {
+        const m = cleanText.match(pat);
+        if (m) {
+            const day = m[1];
+            const rawMonth = m[2].substring(0, 3).toUpperCase();
+            const indMonthMap = {
+                'JAN': 'Januari', 'FEB': 'Februari', 'MAR': 'Maret', 'APR': 'April',
+                'MEI': 'Mei', 'MAY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
+                'AGU': 'Agustus', 'AUG': 'Agustus', 'SEP': 'September', 'OKT': 'Oktober',
+                'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember'
+            };
+            const month = indMonthMap[rawMonth];
+            if (month) {
+                dateStr = `${day} ${month}`;
+                break;
+            }
+        }
     }
 
     const suggestion = `${type} ${detectedToko} ${nominal} ${dateStr}.pdf`.replace(/\s+/g, ' ');
@@ -261,7 +306,8 @@ function analyzeText(text, originalName) {
         type: type,
         suggestion: suggestion.toUpperCase(),
         needsReview: needsReview,
-        fallbackCause: fallbackCause
+        fallbackCause: fallbackCause,
+        rawText: cleanText.substring(0, 500) // Debug: first 500 chars of OCR text
     };
 }
 
@@ -270,13 +316,17 @@ function renderResults() {
     const body = document.getElementById('result-body');
     body.innerHTML = filesToProcess.map((item, i) => {
         const res = item.result;
+        const reviewClass = res?.needsReview ? 'text-amber-400' : 'text-white';
+        const tokoClass = (res?.toko === 'UNKNOWN' || res?.needsReview) ? 'text-amber-400' : 'text-white';
         return `
             <tr class="hover:bg-white/5 transition-all">
                 <td class="py-4 pr-4">
                     <p class="text-xs text-gray-300 font-medium truncate w-48">${item.file.name}</p>
+                    ${res?.rawText ? `<button onclick="showDebugText(${i})" class="text-[9px] text-indigo-500 hover:text-indigo-400 mt-1 transition-all">🔍 Lihat Teks OCR</button>` : ''}
                 </td>
-                <td class="py-4 px-4 font-['Outfit'] font-bold ${res?.toko === 'UNKNOWN' ? 'text-amber-400' : 'text-white'}">
+                <td class="py-4 px-4 font-['Outfit'] font-bold ${tokoClass}">
                     ${res?.toko || '--'}
+                    ${res?.needsReview ? `<p class="text-[9px] text-amber-500/70 font-normal mt-1">⚠ ${res.fallbackCause}</p>` : ''}
                 </td>
                 <td class="py-4 px-4">
                     <p class="text-[10px] text-gray-300">💰 ${res?.nominal || '--'}</p>
@@ -293,6 +343,25 @@ function renderResults() {
             </tr>
         `;
     }).join('');
+}
+
+function showDebugText(index) {
+    const item = filesToProcess[index];
+    if (!item?.result?.rawText) return;
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md';
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    modal.innerHTML = `
+        <div class="premium-card rounded-3xl p-8 w-full max-w-3xl max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white">🔍 Teks OCR: ${item.file.name}</h3>
+                <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white transition-all text-xl">&times;</button>
+            </div>
+            <pre class="flex-1 overflow-auto text-xs text-gray-300 bg-[#0a0f1a] rounded-2xl p-4 font-mono whitespace-pre-wrap custom-scrollbar">${item.result.rawText}</pre>
+            <p class="text-[10px] text-gray-600 mt-3 text-center">Gunakan teks ini sebagai referensi untuk mengisi kata kunci di Pemetaan.</p>
+        </div>
+    `;
+    document.body.appendChild(modal);
 }
 
 function renderStatus(item, i) {
