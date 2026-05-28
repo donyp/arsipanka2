@@ -138,9 +138,10 @@ async function extractTextFromPDF(file) {
         fullText += pageText + "\n";
     }
 
-    // If text is minimal, it's likely a scan. Use OCR on first page.
-    if (fullText.trim().length < 50) {
-        console.log(`[AI] Page text too short (${fullText.length}), trigger OCR fallback...`);
+    // If text is minimal or missing key anchor words, it's likely a scan. Use OCR on first page.
+    const lowerText = fullText.toLowerCase();
+    if (fullText.trim().length < 50 || (!lowerText.includes('yth') && !lowerText.includes('bayar'))) {
+        console.log(`[AI] Page text too short or garbled (${fullText.length}), trigger OCR fallback...`);
         const page = await pdf.getPage(1);
         const viewport = page.getViewport({ scale: 2.0 });
         const canvas = document.createElement('canvas');
@@ -231,7 +232,11 @@ function analyzeText(text, originalName) {
     }
 
     // 4. Date Detection
-    const dateMatch = text.match(/Tgl Cetak\s*:\s*(\d{1,2})[-/\s]([A-Za-z]{3,9})/i);
+    let dateMatch = text.match(/Cetak\s*[:;]?\s*(\d{1,2})[-/\s.,]+([A-Za-z]{3,9})/i);
+    if (!dateMatch) {
+        // Fallback robust regex
+        dateMatch = text.match(/(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9})\b/i);
+    }
     let dateStr = "00-Unknown";
     if (dateMatch) {
         const day = dateMatch[1];
@@ -391,9 +396,20 @@ function saveMapping() {
     renderMappingUI();
     closeMapping();
 
+    // Auto re-analyze ALL files already in the queue
+    if (filesToProcess.length > 0) {
+        filesToProcess.forEach(f => {
+            f.status = 'pending';
+            f.result = null;
+        });
+        const dlBtn = document.getElementById('download-all-btn');
+        if (dlBtn) dlBtn.classList.add('hidden');
+        if (!isProcessing) processQueue();
+    }
+
     if (typeof Toast !== 'undefined') {
-        Toast.success('Pemetaan berhasil disimpan!');
+        Toast.success('Pemetaan disimpan & file dianalisa ulang!');
     } else {
-        alert('Pemetaan berhasil disimpan!');
+        alert('Pemetaan disimpan & file dianalisa ulang!');
     }
 }
