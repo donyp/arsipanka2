@@ -143,7 +143,7 @@ async function extractTextFromPDF(file) {
     if (fullText.trim().length < 50 || (!lowerText.includes('yth') && !lowerText.includes('bayar'))) {
         console.log(`[AI] Page text too short or garbled (${fullText.length}), trigger OCR fallback...`);
         const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 2.0 });
+        const viewport = page.getViewport({ scale: 3.0 }); // Higher scale for better OCR on full A4
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         canvas.height = viewport.height;
@@ -343,7 +343,7 @@ function analyzeText(text, originalName) {
         suggestion: suggestion.toUpperCase(),
         needsReview: needsReview,
         fallbackCause: fallbackCause,
-        rawText: cleanText.substring(0, 500) // Debug: first 500 chars of OCR text
+        rawText: cleanText.substring(0, 1500) // Debug: first 1500 chars of OCR text
     };
 }
 
