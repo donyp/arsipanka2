@@ -364,19 +364,31 @@ function analyzeText(text, originalName) {
             if (matches.length === 1) {
                 const rule = matches[0];
                 store = rule.store;
-                // Double check: if there are secondary keywords, scan the WHOLE document for them
                 if (rule.secondary && !checkSec(rule, upperText)) {
                     review = true; cause = `PT '${rule.pt}' OK, tapi '${rule.secondary}' tidak ditemukan.`;
                 }
             } else if (matches.length > 1) {
                 // Disambiguate: search the WHOLE document for secondary names
-                const exact = matches.filter(r => checkSec(r, upperText));
-                if (exact.length === 1) store = exact[0].store;
-                else {
-                    // Try to find recipient anywhere in text
+                let exact = matches.filter(r => checkSec(r, upperText));
+
+                // If secondary fails, check if the STORE NAME itself is mentioned in text
+                if (exact.length === 0) {
+                    exact = matches.filter(r => {
+                        const cleanStore = r.store.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        return cleanStore && upperText.replace(/[^A-Z0-9]/g, '').includes(cleanStore);
+                    });
+                }
+
+                if (exact.length === 1) {
+                    store = exact[0].store;
+                } else {
                     const bpk = cleanText.match(/(?:BPK|IBU|BAPAK|SDR|ATTN|UP|BP|PENERIMA)[.,:\s]+([A-Z\s]{3,20})/i);
-                    store = bpk ? `Cek Manual (${bpk[1].trim()})` : "Cek Manual (Ambigu)";
-                    review = true; cause = `${matches.length} cabang PT sama.`;
+                    // Fallback to first match if we can't decide, but keep review flag
+                    if (exact.length > 1) store = exact[0].store;
+                    else store = matches[0].store;
+
+                    review = true;
+                    cause = bpk ? `Cabang Ambigu, Deteksi: ${bpk[1].trim()}` : `${matches.length} cabang PT sama.`;
                 }
             }
         } else {
@@ -398,23 +410,32 @@ function analyzeText(text, originalName) {
             }
         }
 
-        // 3. Nominal
+        // 3. Nominal (With Blacklist)
         let nominal = "0";
         let cands = [];
+
+        // Remove Invoice and NPWP segments from nominal consideration
+        let nominalText = cleanText;
+        if (invNum && invNum.length > 5) {
+            nominalText = nominalText.replace(new RegExp(invNum, 'g'), '[INV_HIDDEN]');
+        }
+        // Remove phone numbers or long digits (>10)
+        nominalText = nominalText.replace(/\d{11,}/g, '[LONG_DIGITS_HIDDEN]');
+
         const pats = [
             /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
             /(?:[Bb]ayar|sayar|ayar)\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/i,
             /[Rr][Pp][\s.]*(\d[\d.,\s-]+)/i
         ];
         for (const p of pats) {
-            const mArr = cleanText.matchAll(new RegExp(p, 'g'));
+            const mArr = nominalText.matchAll(new RegExp(p, 'g'));
             for (const m of mArr) {
                 const v = m[1].replace(/[\s-]+/g, '').split(',')[0].replace(/[^0-9]/g, '');
                 if (v.length >= 4 && v.length <= 9) cands.push(Number(v));
             }
         }
         if (cands.length === 0) {
-            const bf = cleanText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
+            const bf = nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
             for (const b of bf) {
                 const v = b[1].replace(/[^0-9]/g, '');
                 if (v.length >= 5 && v.length <= 9) cands.push(Number(v));
@@ -466,7 +487,7 @@ function analyzeText(text, originalName) {
                 const context = cleanText.substring(Math.max(0, m.index - 60), m.index + 60).toLowerCase();
 
                 if (context.includes('cetak') || context.includes('tanggal')) score += 50;
-                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 80;
+                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 200;
                 if (m.index < cleanText.length * 0.3) score += 40; // top of page high priority
 
                 dateCandidates.push({ match: m, score });
