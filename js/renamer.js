@@ -268,10 +268,18 @@ async function extractTextFromPDF(file) {
     }
 
     const lowerText = fullText.toLowerCase();
-    if (fullText.trim().length < 50 || (!lowerText.includes('yth') && !lowerText.includes('bayar'))) {
-        console.log(`[AI] Page text too short, using OCR (Scale 3.0)...`);
+    // Rescue OCR: if PDF text layer is present but suspiciously missing financial keywords
+    let needsRescue = false;
+    if (fullText.trim().length > 100) {
+        const hasBayar = lowerText.includes('bayar') || lowerText.includes('total') || lowerText.includes('jumlah');
+        const hasYth = lowerText.includes('yth') || lowerText.includes('kepada');
+        if (!hasBayar || !hasYth) needsRescue = true;
+    }
+
+    if (fullText.trim().length < 50 || needsRescue) {
+        console.log(`[AI] Using OCR (Rescue Mode)...`);
         const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 3.0 });
+        const viewport = page.getViewport({ scale: 3.5 });
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         canvas.height = viewport.height;
@@ -442,33 +450,34 @@ function analyzeText(text, originalName) {
         const bayarPos = findLabelPos(/[Bb]\s*[Aa]\s*[Yy]\s*[Aa]\s*[Rr]/i);
         const nettoPos = findLabelPos(/[Nn]\s*[Ee]\s*[Tt]\s*[Tt]\s*[Oo]/i);
 
-        // Strategy: In A4 invoices, the total is almost always the LAST large number.
-        const brute = [...nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g)];
+        // Strategy: In A4 invoices, look for the LARGEST number that has a currency suffix (,00 or .-)
+        // or the physically LAST large number.
+        const brute = [...nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+(?:,\d{2}|[,-]+)?)/g)];
         for (const b of brute) {
-            const v = b[1].replace(/[^0-9]/g, '');
+            const v = b[1].replace(/[^-0-9]/g, '').split('-')[0].split(',')[0];
             if (v.length >= 4 && v.length <= 9) {
                 const num = Number(v);
                 let score = 0;
-                // Physical position scoring
+                // Physical position
                 const posRatio = b.index / cleanText.length;
-                if (posRatio > 0.8) score += 1000; // Bottom 20% gets huge boost
-                else if (posRatio > 0.6) score += 500; // Bottom half
+                if (posRatio > 0.7) score += 1000;
+                else if (posRatio > 0.5) score += 500;
 
-                // Labels nearby
-                if (totalPos !== -1 && Math.abs(b.index - totalPos) < 150) score += 300;
-                if (bayarPos !== -1 && Math.abs(b.index - bayarPos) < 150) score += 300;
+                // Labels & Suffixes
+                if (b[1].includes(',00') || b[1].includes(',-')) score += 500;
+                if (totalPos !== -1 && Math.abs(b.index - totalPos) < 200) score += 400;
+                if (bayarPos !== -1 && Math.abs(b.index - bayarPos) < 200) score += 400;
 
                 nominalCands.push({ val: num, score, index: b.index });
             }
         }
 
         if (nominalCands.length > 0) {
-            nominalCands.sort((a, b) => b.score - a.score);
+            nominalCands.sort((a, b) => b.score - a.score || b.index - a.index);
             const topScore = nominalCands[0].score;
-            const topCands = nominalCands.filter(c => c.score === topScore);
-            // Tie-breaker: physically last one (highest index) usually the total
-            topCands.sort((a, b) => b.index - a.index);
-            nominal = topCands[0].val.toLocaleString('id-ID');
+            const topCands = nominalCands.filter(c => c.score >= topScore - 100);
+            // From the top-scoring group, pick the LARGEST value
+            nominal = Math.max(...topCands.map(c => c.val)).toLocaleString('id-ID');
         }
 
         // 4. Date
@@ -483,39 +492,32 @@ function analyzeText(text, originalName) {
             '07': 'Juli', '7': 'Juli', '08': 'Agustus', '8': 'Agustus', '09': 'September', '9': 'September',
             '10': 'Oktober', '11': 'November', '12': 'Desember'
         };
-        const dPat = /\b(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})\b/ig;
+        // 2-digit or 4-digit years
+        const dPat = /\b(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{2,4})\b/ig;
         const allD = [...cleanText.matchAll(dPat)];
-        // Broaden prefix search to catch OCR typos: Tgl, Iyl, Tgi, Tg1, Tcl, Tcl., etc.
-        const exp = cleanText.match(/(?:[Cc]etak|[Tt]gl|[Tt]gi|[Tt]g1|[Ii]yl|[Tt]cl|[Tt]anggal)\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})/i);
 
-        // Priority Score Table
+        // Multi-level Scoring for Dates
         let dateCandidates = [];
         for (const m of allD) {
             const dayNum = parseInt(m[1], 10);
             const mStr = m[2].substring(0, 3).toUpperCase();
+            const yearStr = m[3];
             if (dayNum > 0 && dayNum <= 31 && monMap[mStr]) {
-                let score = 50;
-                const context = cleanText.substring(Math.max(0, m.index - 60), m.index + 60).toLowerCase();
+                let score = 100;
+                const context = cleanText.substring(Math.max(0, m.index - 80), m.index + 80).toLowerCase();
 
-                if (context.includes('cetak') || context.includes('tanggal') || context.includes('tgl') || context.includes('iyl')) score += 500;
-                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 2000;
+                if (context.includes('cetak') || context.includes('tanggal') || context.includes('tgl') || context.includes('iyl')) score += 1000;
+                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 3000;
 
-                // Zonal Priority: Top 40% of the page
                 const posRatio = m.index / cleanText.length;
-                if (posRatio < 0.4) {
-                    score += 1000;
-                    // Extra bonus for the very first date found
-                    if (m === allD[0]) score += 500;
-                } else {
-                    score -= 1000;
-                }
+                if (posRatio < 0.35) score += 2000; // Top zone is massive signal
+                if (posRatio > 0.65) score -= 1000; // Footer zone penalty
+
+                // Favor 4-digit years
+                if (yearStr.length === 4) score += 200;
 
                 dateCandidates.push({ match: m, score, index: m.index });
             }
-        }
-
-        if (exp && parseInt(exp[1], 10) > 0 && parseInt(exp[1], 10) <= 31 && monMap[exp[2].substring(0, 3).toUpperCase()]) {
-            dateCandidates.push({ match: exp, score: 200 }); // Explicit label is king
         }
 
         let chs = null;
