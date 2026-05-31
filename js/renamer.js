@@ -268,22 +268,34 @@ function analyzeText(text, originalName) {
 
     // ========== 3. Nominal Detection ==========
     let nominal = "0";
-    // More aggressive patterns: look for large denominations or total-like structures
+
+    // Strategy 1: Look for "Total Bayar" or similar labels
     const nominalPatterns = [
-        /(?:Total|Bayar|Total\s*Bayar|Netto|Billed)\s*[:;.]?\s*Rp?[\s.]*([\d][\d\.,\-\s]{3,15})/i,
-        /Rp?[\s.]*([\d][\d\.,\-\s]{3,15})(?=\s*(?:Lunas|Bayar|Total))/i,
-        /([\d][\d\.,\-\s]{3,15})\s*(?=Total\s*Bayar)/i,
-        /Rp?[\s.]*([\d][\d\.,\-\s]{3,15})/i
+        /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
+        /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*(\d[\d.,\s-]+)/,
+        /[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
+        /[Nn]etto\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
+        /[Tt]otal\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
+        /[Rr][Pp][\s.]*(\d[\d.,\s-]+)/
     ];
 
-    // Find all potential candidates
     let candidates = [];
     for (const pat of nominalPatterns) {
-        let regex = new RegExp(pat, 'gi');
-        let m;
-        while ((m = regex.exec(cleanText)) !== null) {
-            let rawNum = m[1].split(',')[0].replace(/[^0-9]/g, '');
-            if (rawNum && rawNum.length >= 4) { // Minimally 1.000
+        const allMatches = cleanText.matchAll(new RegExp(pat, 'g'));
+        for (const m of allMatches) {
+            let rawNum = m[1].replace(/[\s-]+/g, '').split(',')[0].replace(/[^0-9]/g, '');
+            if (rawNum && rawNum.length >= 4) {
+                candidates.push(Number(rawNum));
+            }
+        }
+    }
+
+    // Strategy 2: Brute-force fallback — find ALL large numbers in text
+    if (candidates.length === 0) {
+        const allNums = cleanText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
+        for (const m of allNums) {
+            let rawNum = m[1].replace(/[^0-9]/g, '');
+            if (rawNum && rawNum.length >= 5) { // At least 10.000
                 candidates.push(Number(rawNum));
             }
         }
