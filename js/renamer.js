@@ -499,6 +499,7 @@ function analyzeText(text, originalName) {
         /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
         /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*(\d[\d.,\s-]+)/,
         /[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
+        /sayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/i,
         /ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/i,
         /[Nn]etto\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
         /[Tt]otal\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
@@ -521,9 +522,9 @@ function analyzeText(text, originalName) {
         const allNums = cleanText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
         for (const m of allNums) {
             let rawNum = m[1].replace(/[^0-9]/g, '');
-            // Limit to < 10 digits to avoid grabbing NPWP (15 digits) or Phone Numbers (12-13 digits)
-            // Even an OCR-mangled NPWP (e.g. 11 digits: 31460440641) should be filtered. Maximum 9,999,999,999
-            if (rawNum && rawNum.length >= 5 && rawNum.length <= 10) {
+            // Limit to 9 digits (max 999 million) to strictly avoid NPWP/Phone numbers.
+            // Steel invoices rarely exceed 999M; if they do, 'Terbilang' or 'Total Bayar' will catch them.
+            if (rawNum && rawNum.length >= 5 && rawNum.length <= 9) {
                 candidates.push(Number(rawNum));
             }
         }
@@ -604,10 +605,24 @@ function analyzeText(text, originalName) {
     const explicitMatch = cleanText.match(/(?:[Cc]etak|[Tt]gl|[Tt]anggal)\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})/i);
 
     if (explicitMatch) {
-        chosenDateMatch = explicitMatch;
-    } else if (allDates.length > 0) {
-        // Just take the first 4-digit date found (usually at the very top of invoice)
-        chosenDateMatch = allDates[0];
+        const d = parseInt(explicitMatch[1], 10);
+        const mSub = explicitMatch[2].substring(0, 3).toUpperCase();
+        // Only accept if day is 1-31 and month is valid (not 0 or NaN from OCR quirks)
+        if (d > 0 && d <= 31 && indMonthMap[mSub]) {
+            chosenDateMatch = explicitMatch;
+        }
+    }
+
+    if (!chosenDateMatch) {
+        // Fallback to searching all dates, but skip mangled "0" or "32+" days or months not in map
+        for (const m of allDates) {
+            const d = parseInt(m[1], 10);
+            const mSub = m[2].substring(0, 3).toUpperCase();
+            if (d > 0 && d <= 31 && indMonthMap[mSub]) {
+                chosenDateMatch = m;
+                break;
+            }
+        }
     }
 
     if (chosenDateMatch) {
@@ -615,7 +630,7 @@ function analyzeText(text, originalName) {
         const rawMonth = chosenDateMatch[2].substring(0, 3).toUpperCase();
         const indMonthMap = {
             'JAN': 'Januari', 'FEB': 'Februari', 'MAR': 'Maret', 'APR': 'April',
-            'MEI': 'Mei', 'MAY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
+            'MEI': 'Mei', 'MAY': 'Mei', 'MEL': 'Mei', 'MEY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
             'AGU': 'Agustus', 'AUG': 'Agustus', 'SEP': 'September', 'OKT': 'Oktober',
             'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember',
             '01': 'Januari', '1': 'Januari', '02': 'Februari', '2': 'Februari',
