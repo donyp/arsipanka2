@@ -442,30 +442,33 @@ function analyzeText(text, originalName) {
         const bayarPos = findLabelPos(/[Bb]\s*[Aa]\s*[Yy]\s*[Aa]\s*[Rr]/i);
         const nettoPos = findLabelPos(/[Nn]\s*[Ee]\s*[Tt]\s*[Tt]\s*[Oo]/i);
 
-        // Strategy: Look for the largest number in the BOTTOM half of the document, 
-        // especially after one of the "Total" labels.
-        const brute = nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
+        // Strategy: In A4 invoices, the total is almost always the LAST large number.
+        const brute = [...nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g)];
         for (const b of brute) {
             const v = b[1].replace(/[^0-9]/g, '');
             if (v.length >= 4 && v.length <= 9) {
                 const num = Number(v);
-                let score = 50;
-                // Bonuses
-                if (b.index > cleanText.length * 0.6) score += 500; // Likely near bottom
-                if (totalPos !== -1 && b.index > totalPos) score += 300;
-                if (nettoPos !== -1 && b.index > nettoPos) score += 300;
-                if (bayarPos !== -1 && b.index > bayarPos) score += 300;
+                let score = 0;
+                // Physical position scoring
+                const posRatio = b.index / cleanText.length;
+                if (posRatio > 0.8) score += 1000; // Bottom 20% gets huge boost
+                else if (posRatio > 0.6) score += 500; // Bottom half
 
-                nominalCands.push({ val: num, score });
+                // Labels nearby
+                if (totalPos !== -1 && Math.abs(b.index - totalPos) < 150) score += 300;
+                if (bayarPos !== -1 && Math.abs(b.index - bayarPos) < 150) score += 300;
+
+                nominalCands.push({ val: num, score, index: b.index });
             }
         }
 
         if (nominalCands.length > 0) {
             nominalCands.sort((a, b) => b.score - a.score);
-            // If scores are tied (common at bottom), pick the LARGEST number
             const topScore = nominalCands[0].score;
             const topCands = nominalCands.filter(c => c.score === topScore);
-            nominal = Math.max(...topCands.map(c => c.val)).toLocaleString('id-ID');
+            // Tie-breaker: physically last one (highest index) usually the total
+            topCands.sort((a, b) => b.index - a.index);
+            nominal = topCands[0].val.toLocaleString('id-ID');
         }
 
         // 4. Date
@@ -491,15 +494,23 @@ function analyzeText(text, originalName) {
             const dayNum = parseInt(m[1], 10);
             const mStr = m[2].substring(0, 3).toUpperCase();
             if (dayNum > 0 && dayNum <= 31 && monMap[mStr]) {
-                let score = 50; // default
+                let score = 50;
                 const context = cleanText.substring(Math.max(0, m.index - 60), m.index + 60).toLowerCase();
 
                 if (context.includes('cetak') || context.includes('tanggal') || context.includes('tgl') || context.includes('iyl')) score += 500;
                 if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 2000;
-                if (m.index < cleanText.length * 0.3) score += 1000; // TOP OF PAGE IS KING for Dates
-                if (m.index > cleanText.length * 0.7) score -= 1000; // Penalty for footer dates
 
-                dateCandidates.push({ match: m, score });
+                // Zonal Priority: Top 40% of the page
+                const posRatio = m.index / cleanText.length;
+                if (posRatio < 0.4) {
+                    score += 1000;
+                    // Extra bonus for the very first date found
+                    if (m === allD[0]) score += 500;
+                } else {
+                    score -= 1000;
+                }
+
+                dateCandidates.push({ match: m, score, index: m.index });
             }
         }
 
