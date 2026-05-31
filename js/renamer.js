@@ -269,9 +269,9 @@ async function extractTextFromPDF(file) {
 
     const lowerText = fullText.toLowerCase();
     if (fullText.trim().length < 50 || (!lowerText.includes('yth') && !lowerText.includes('bayar'))) {
-        console.log(`[AI] Page text too short, using OCR...`);
+        console.log(`[AI] Page text too short, using OCR (Scale 4.0)...`);
         const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 2.5 });
+        const viewport = page.getViewport({ scale: 4.0 }); // Higher scale for better OCR on small A4 text
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         canvas.height = viewport.height;
@@ -339,10 +339,14 @@ function analyzeText(text, originalName) {
 
         const checkSec = (rule, txt) => {
             if (!rule.secondary) return false;
-            return rule.secondary.split(',').some(k => txt.includes(k.trim().toUpperCase()));
+            const cleanTxt = txt.replace(/[^A-Z0-9]/g, '');
+            return rule.secondary.split(',').some(k => {
+                const cleanK = k.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+                return cleanK && cleanTxt.includes(cleanK);
+            });
         };
         const getPTMatch = (scope) => PT_MAPPING.filter(r => {
-            const clean = r.pt.replace(/\b(PT\.?|CV\.?)\b/gi, '').replace(/[()]/g, '').trim().toUpperCase();
+            const clean = r.pt.replace(/\b(PT\.?|P[T1]\.?|CV\.?|[O0C][VF]\.?|C[TY7]\.?|NV\.?|C[TN1]\.?)\b/gi, '').replace(/[()]/g, '').trim().toUpperCase();
             return clean.length > 2 && scope.includes(clean);
         });
 
@@ -443,7 +447,8 @@ function analyzeText(text, originalName) {
         };
         const dPat = /\b(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})\b/ig;
         const allD = [...cleanText.matchAll(dPat)];
-        const exp = cleanText.match(/(?:[Cc]etak|[Tt]gl|[Tt]anggal)\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})/i);
+        // Broaden prefix search to catch OCR typos: Tgl, Iyl, Tgi, Tg1, Tcl, Tcl., etc.
+        const exp = cleanText.match(/(?:[Cc]etak|[Tt]gl|[Tt]gi|[Tt]g1|[Ii]yl|[Tt]cl|[Tt]anggal)\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})/i);
 
         // Priority Score Table
         let dateCandidates = [];
