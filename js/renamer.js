@@ -303,7 +303,9 @@ function analyzeText(text, originalName) {
         const allNums = cleanText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
         for (const m of allNums) {
             let rawNum = m[1].replace(/[^0-9]/g, '');
-            if (rawNum && rawNum.length >= 5) {
+            // Limit to < 12 digits to avoid grabbing NPWP (15 digits) or Phone Numbers (12-13 digits).
+            // 11 digits allows up to 99 billion, which is extremely safe for invoices. 
+            if (rawNum && rawNum.length >= 5 && rawNum.length <= 11) {
                 candidates.push(Number(rawNum));
             }
         }
@@ -329,7 +331,8 @@ function analyzeText(text, originalName) {
     // Strategy 4: (Ultimate Fallback) Terbilang Parser
     // Often amounts are explicitly spelled out as "empat juta sembilan ratus ribu rupiah"
     if (candidates.length === 0 || Math.max(...candidates) < 1000) {
-        const terbilangMatch = cleanText.match(/(?:[Tt]erbilang|[Tt]erbilang\s*:)\s*([^0-9\n;]+)(?:rupiah|rp|$)/i);
+        // Use [^0-9]{10,150} to allow multiline matching (OCR often breaks this into multiple lines)
+        const terbilangMatch = cleanText.match(/(?:[Tt]erbilang|[Tt]erbilang\s*:)\s*([^0-9]{10,150})(?:rupiah|rp|$)/i);
         if (terbilangMatch) {
             let parseTerbilang = (text) => {
                 const map = {
