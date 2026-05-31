@@ -426,10 +426,16 @@ function analyzeText(text, originalName) {
         // Remove Invoice and NPWP segments from nominal consideration
         let nominalText = cleanText;
         if (invNum && invNum.length > 5) {
-            nominalText = nominalText.replace(new RegExp(invNum, 'g'), '[INV_HIDDEN]');
+            // Mask the whole number
+            nominalText = nominalText.replace(new RegExp(invNum, 'g'), ' [INV_MASK] ');
+            // ALSO Mask segments of the invoice (to catch fragmented OCR)
+            const segments = invNum.match(/\d{5,}/g) || [];
+            segments.forEach(seg => {
+                nominalText = nominalText.replace(new RegExp(seg, 'g'), ' [INV_SEG_MASK] ');
+            });
         }
         // Remove phone numbers or long digits (>10)
-        nominalText = nominalText.replace(/\d{11,}/g, '[LONG_DIGITS_HIDDEN]');
+        nominalText = nominalText.replace(/\d{11,}/g, ' [LONG_DIGITS_MASK] ');
 
         const pats = [
             /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
@@ -495,9 +501,9 @@ function analyzeText(text, originalName) {
                 let score = 50; // default
                 const context = cleanText.substring(Math.max(0, m.index - 60), m.index + 60).toLowerCase();
 
-                if (context.includes('cetak') || context.includes('tanggal')) score += 50;
-                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 200;
-                if (m.index < cleanText.length * 0.3) score += 40; // top of page high priority
+                if (context.includes('cetak') || context.includes('tanggal') || context.includes('tgl') || context.includes('iyl')) score += 100;
+                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 500;
+                if (m.index < cleanText.length * 0.25) score += 100; // Top of page is likely the real date
 
                 dateCandidates.push({ match: m, score });
             }
