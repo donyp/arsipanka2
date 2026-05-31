@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadMapping() {
-    const saved = localStorage.getItem('pt_mapping_v4');
+    const saved = localStorage.getItem('pt_mapping_final');
     if (saved) {
         try {
             PT_MAPPING = JSON.parse(saved);
@@ -289,7 +289,16 @@ async function extractTextFromPDF(file) {
 
 function analyzeText(text, originalName) {
     try {
-        const cleanText = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ');
+        console.log("[AI] Analyzing:", originalName);
+
+        // --- NPWP Immunity ---
+        // Catch NPWP even if dots are mangled (e.g. 31.460.440...)
+        const npwpFullPat = /\d{2}[.\s]?\d{3}[.\s]?\d{3}[.\s]?\d[.\s-]?\d{3}[.\s]?\d{3}/g;
+        let sanitizedText = text.replace(npwpFullPat, ' [NPWP_HIDDEN] ');
+        // Hide labeled NPWP too
+        sanitizedText = sanitizedText.replace(/(?:NPWP|NWP|NPP)\s*[:;.]?\s*[\d. \t-]+/gi, ' [NPWP_LABELED_HIDDEN] ');
+
+        const cleanText = sanitizedText.replace(/\r/g, '').replace(/[ \t]+/g, ' ');
         const upperText = cleanText.toUpperCase();
 
         // 1. PPN/NON
@@ -343,14 +352,18 @@ function analyzeText(text, originalName) {
             if (matches.length === 0) matches = getPTMatch(upperText).filter(r => !r.pt.includes("GARUDA GEMILANG"));
 
             if (matches.length === 1) {
-                store = matches[0].store;
-                if (matches[0].secondary && !checkSec(matches[0], upperText)) {
-                    review = true; cause = `PT '${matches[0].pt}' OK, tapi '${matches[0].secondary}' tidak ada.`;
+                const rule = matches[0];
+                store = rule.store;
+                // Double check: if there are secondary keywords, scan the WHOLE document for them
+                if (rule.secondary && !checkSec(rule, upperText)) {
+                    review = true; cause = `PT '${rule.pt}' OK, tapi '${rule.secondary}' tidak ditemukan.`;
                 }
             } else if (matches.length > 1) {
+                // Disambiguate: search the WHOLE document for secondary names
                 const exact = matches.filter(r => checkSec(r, upperText));
                 if (exact.length === 1) store = exact[0].store;
                 else {
+                    // Try to find recipient anywhere in text
                     const bpk = cleanText.match(/(?:BPK|IBU|BAPAK|SDR|ATTN|UP|BP|PENERIMA)[.,:\s]+([A-Z\s]{3,20})/i);
                     store = bpk ? `Cek Manual (${bpk[1].trim()})` : "Cek Manual (Ambigu)";
                     review = true; cause = `${matches.length} cabang PT sama.`;
@@ -363,9 +376,15 @@ function analyzeText(text, originalName) {
                 const rule = PT_MAPPING.find(r => r.store.toUpperCase() === city.toUpperCase());
                 if (rule) store = rule.store;
                 else {
+                    // Even for NON, scan whole document for secondary keywords
                     const sec = PT_MAPPING.filter(r => checkSec(r, upperText));
                     store = sec.length === 1 ? sec[0].store : city;
                 }
+            } else if (ythText) {
+                // Final effort for NON: scan whole text for any secondary keywords
+                const globalSec = PT_MAPPING.filter(r => checkSec(r, upperText));
+                if (globalSec.length === 1) store = globalSec[0].store;
+                else store = ythText.replace(/^(BPK|IBU|BAPAK|BP)\s*/i, '').trim().split(/[,\n]/)[0].trim();
             }
         }
 
@@ -425,10 +444,32 @@ function analyzeText(text, originalName) {
         const dPat = /\b(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})\b/ig;
         const allD = [...cleanText.matchAll(dPat)];
         const exp = cleanText.match(/(?:[Cc]etak|[Tt]gl|[Tt]anggal)\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})/i);
+
+        // Priority Score Table
+        let dateCandidates = [];
+        for (const m of allD) {
+            const dayNum = parseInt(m[1], 10);
+            const mStr = m[2].substring(0, 3).toUpperCase();
+            if (dayNum > 0 && dayNum <= 31 && monMap[mStr]) {
+                let score = 50; // default
+                const context = cleanText.substring(Math.max(0, m.index - 60), m.index + 60).toLowerCase();
+
+                if (context.includes('cetak') || context.includes('tanggal')) score += 50;
+                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 80;
+                if (m.index < cleanText.length * 0.3) score += 40; // top of page high priority
+
+                dateCandidates.push({ match: m, score });
+            }
+        }
+
+        if (exp && parseInt(exp[1], 10) > 0 && parseInt(exp[1], 10) <= 31 && monMap[exp[2].substring(0, 3).toUpperCase()]) {
+            dateCandidates.push({ match: exp, score: 200 }); // Explicit label is king
+        }
+
         let chs = null;
-        if (exp && parseInt(exp[1], 10) > 0 && parseInt(exp[1], 10) <= 31 && monMap[exp[2].substring(0, 3).toUpperCase()]) chs = exp;
-        if (!chs) {
-            for (const m of allD) if (parseInt(m[1], 10) > 0 && parseInt(m[1], 10) <= 31 && monMap[m[2].substring(0, 3).toUpperCase()]) { chs = m; break; }
+        if (dateCandidates.length > 0) {
+            dateCandidates.sort((a, b) => b.score - a.score);
+            chs = dateCandidates[0].match;
         }
         if (chs) {
             const mon = monMap[chs[2].substring(0, 3).toUpperCase()];
@@ -559,7 +600,7 @@ function saveMapping() {
         }
     });
     PT_MAPPING = newRules;
-    localStorage.setItem('pt_mapping_v4', JSON.stringify(PT_MAPPING));
+    localStorage.setItem('pt_mapping_final', JSON.stringify(PT_MAPPING));
     renderMappingUI();
     document.getElementById('mapping-modal').classList.add('hidden');
     // Re-process
