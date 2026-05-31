@@ -168,7 +168,10 @@ function loadMapping() {
 
 function renderMappingUI() {
     const list = document.getElementById('mapping-list');
+    const countBadge = document.getElementById('mapping-count');
     if (!list) return;
+
+    if (countBadge) countBadge.textContent = PT_MAPPING.length;
 
     list.innerHTML = PT_MAPPING.map(rule => `
         <div class="p-3 rounded-xl bg-white/5 border border-white/5">
