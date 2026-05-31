@@ -438,9 +438,11 @@ function analyzeText(text, originalName) {
             if (exactMatches.length === 1) {
                 detectedToko = exactMatches[0].store;
             } else {
-                // If mapping fails, try to extract 'BPK/IBU' from recipient block explicitly
-                const bpkMatch = recipientSectionText.match(/(?:BPK|IBU|BAPAK|SDR|ATTN|UP)\s*[.:,]*\s*([A-Z\s]{3,20})/i);
-                if (bpkMatch) {
+                // If mapping fails, try to extract 'BPK/IBU/BP' from recipient block explicitly
+                const bpkMatch = cleanText.match(/(?:BPK|IBU|BAPAK|SDR|ATTN|UP|BP|PENERIMA)[.,:\s]+([A-Z\s]{3,20})/i);
+                if (bpkMatch && !bpkMatch[1].match(/DENI/i) === false) { // sanity logic removed
+                    detectedToko = `Cek Manual (${bpkMatch[1].trim()})`;
+                } else if (bpkMatch) {
                     detectedToko = `Cek Manual (${bpkMatch[1].trim()})`;
                 } else {
                     detectedToko = "Cek Manual (Ambigu)";
@@ -590,32 +592,42 @@ function analyzeText(text, originalName) {
 
     // ========== 4. Date Detection ==========
     let dateStr = "00-Unknown";
-    const datePatterns = [
-        /(?:[Cc]etak|[Tt]gl|[Tt]anggal)\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})/i,
-        /\b(\d{1,2})\s*[-/]\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/]\s*(\d{4})\b/i
-    ];
-    for (const pat of datePatterns) {
-        const m = cleanText.match(pat);
-        if (m) {
-            const day = parseInt(m[1], 10).toString(); // removes leading zero if present
-            const rawMonth = m[2].substring(0, 3).toUpperCase();
-            const indMonthMap = {
-                'JAN': 'Januari', 'FEB': 'Februari', 'MAR': 'Maret', 'APR': 'April',
-                'MEI': 'Mei', 'MAY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
-                'AGU': 'Agustus', 'AUG': 'Agustus', 'SEP': 'September', 'OKT': 'Oktober',
-                'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember',
-                '01': 'Januari', '1': 'Januari', '02': 'Februari', '2': 'Februari',
-                '03': 'Maret', '3': 'Maret', '04': 'April', '4': 'April',
-                '05': 'Mei', '5': 'Mei', '06': 'Juni', '6': 'Juni',
-                '07': 'Juli', '7': 'Juli', '08': 'Agustus', '8': 'Agustus',
-                '09': 'September', '9': 'September', '10': 'Oktober',
-                '11': 'November', '12': 'Desember'
-            };
-            const month = indMonthMap[rawMonth];
-            if (month) {
-                dateStr = `${day} ${month}`;
-                break;
-            }
+
+    // We want the VERY FIRST date in the document that has a 4-digit year.
+    // This perfectly bypasses "batas maksimal retur" or "jatuh tempo" which are at the bottom.
+    // Matches: "24-Mei-2026", "24 05 2026", "24/Mei/2026", "24.05.2026"
+    const generalDatePat = /\b(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})\b/ig;
+    const allDates = [...cleanText.matchAll(generalDatePat)];
+
+    // Priority: find one prefixed directly by Tgl or Cetak if possible
+    let chosenDateMatch = null;
+    const explicitMatch = cleanText.match(/(?:[Cc]etak|[Tt]gl|[Tt]anggal)\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})/i);
+
+    if (explicitMatch) {
+        chosenDateMatch = explicitMatch;
+    } else if (allDates.length > 0) {
+        // Just take the first 4-digit date found (usually at the very top of invoice)
+        chosenDateMatch = allDates[0];
+    }
+
+    if (chosenDateMatch) {
+        const day = parseInt(chosenDateMatch[1], 10).toString(); // removes leading zero if present
+        const rawMonth = chosenDateMatch[2].substring(0, 3).toUpperCase();
+        const indMonthMap = {
+            'JAN': 'Januari', 'FEB': 'Februari', 'MAR': 'Maret', 'APR': 'April',
+            'MEI': 'Mei', 'MAY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
+            'AGU': 'Agustus', 'AUG': 'Agustus', 'SEP': 'September', 'OKT': 'Oktober',
+            'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember',
+            '01': 'Januari', '1': 'Januari', '02': 'Februari', '2': 'Februari',
+            '03': 'Maret', '3': 'Maret', '04': 'April', '4': 'April',
+            '05': 'Mei', '5': 'Mei', '06': 'Juni', '6': 'Juni',
+            '07': 'Juli', '7': 'Juli', '08': 'Agustus', '8': 'Agustus',
+            '09': 'September', '9': 'September', '10': 'Oktober',
+            '11': 'November', '12': 'Desember'
+        };
+        const month = indMonthMap[rawMonth];
+        if (month) {
+            dateStr = `${day} ${month}`;
         }
     }
 
