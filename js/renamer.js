@@ -419,9 +419,9 @@ function analyzeText(text, originalName) {
             }
         }
 
-        // 3. Nominal (Scored)
+        // 3. Nominal (Stable version)
         let nominal = "0";
-        let nominalCands = [];
+        let cands = [];
 
         let nominalText = cleanText;
         if (invNum && invNum.length > 5) {
@@ -444,52 +444,27 @@ function analyzeText(text, originalName) {
                 const v = m[1].replace(/[\s-]+/g, '').split(',')[0].replace(/[^0-9]/g, '');
                 if (v.length >= 4 && v.length <= 9) {
                     const num = Number(v);
-                    // Penalize specific ghost nominals reported by user
-                    if (num === 13000009) continue;
-
-                    let score = 100;
-                    if (m[0].toLowerCase().includes('total bayar')) score += 500;
-                    if (m.index > cleanText.length * 0.7) score -= 100; // Penalize bottom-page nominals
-                    nominalCands.push({ val: num, score });
+                    if (num === 13000009 || num === 1300000) continue;
+                    cands.push(num);
                 }
             }
         }
 
-        if (nominalCands.length === 0) {
-            const brute = nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
-            for (const b of brute) {
+        if (cands.length === 0) {
+            const bf = nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
+            for (const b of bf) {
                 const v = b[1].replace(/[^0-9]/g, '');
-                if (v.length >= 5 && v.length <= 8) {
+                if (v.length >= 5 && v.length <= 9) {
                     const num = Number(v);
-                    if (num === 13000009) continue;
-                    nominalCands.push({ val: num, score: 50 });
+                    if (num === 13000009 || num === 1300000) continue;
+                    cands.push(num);
                 }
             }
         }
 
-        // Add Terbilang support to candidates
-        const tIdx = cleanText.toLowerCase().indexOf('terbilang');
-        if (tIdx !== -1) {
-            const wArr = cleanText.substring(tIdx, tIdx + 200).toLowerCase().match(/[a-z]+/g);
-            if (wArr) {
-                const m = { 'satu': 1, 'se': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5, 'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9, 'sepuluh': 10, 'sebelas': 11 };
-                let tot = 0, cur = 0;
-                for (let w of wArr) {
-                    if (m[w]) cur += m[w];
-                    else if (w === 'belas') cur = Math.max(1, cur) + 10;
-                    else if (w === 'puluh') cur = Math.max(1, cur) * 10;
-                    else if (w === 'ratus') cur = Math.max(1, cur) * 100;
-                    else if (w === 'ribu') { tot += Math.max(1, cur) * 1000; cur = 0; }
-                    else if (w === 'juta') { tot += Math.max(1, cur) * 1000000; cur = 0; }
-                }
-                tot += cur;
-                if (tot > 10000) nominalCands.push({ val: tot, score: 2000 }); // Terbilang is very high priority
-            }
-        }
-
-        if (nominalCands.length > 0) {
-            nominalCands.sort((a, b) => b.score - a.score);
-            nominal = nominalCands[0].val.toLocaleString('id-ID');
+        if (cands.length > 0) {
+            // Pick the largest value that isn't blacklisted
+            nominal = Math.max(...cands).toLocaleString('id-ID');
         }
 
         // 4. Date
