@@ -301,37 +301,77 @@ function analyzeText(text, originalName) {
     const upperText = cleanText.toUpperCase();
     const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l);
 
-    // ========== 1. PPN Detection & Sectioning ==========
-    // We search for a recipient "Kepada Yth" section.
-    // If not found, we fallback to finding PT./CV. patterns elsewhere.
+    // ========== 1. PPN / NON Detection ==========
+    // Rules:
+    //   PPN = detected from PT./CV. in "Kepada Yth:" (EXCEPT PT. GARUDA GEMILANG) OR Invoice contains "8351003100"
+    //   NON = detected when "Kepada Yth:" is directly followed by "MEGA BAJA X" (no PT.) OR Invoice contains "8351003110"
     let isPPN = false;
+    let isNON = false;
     let ythText = "";
     let recipientSectionText = "";
 
-    // Robust Kepada Yth line find (handles common OCR typos like Kepade, KepadaYth)
+    // Step 1a: Find "Kepada Yth" line
     const ythRegex = /[Kk]epad[ae]\s*[Yy]th\s*[:.;]?\s*([^\n]+)/i;
     const ythMatch = cleanText.match(ythRegex);
 
     if (ythMatch) {
         ythText = ythMatch[1].trim().toUpperCase();
-        // Sectioning: Take the yth line + next 2 lines (common recipient block)
         const matchIdx = cleanText.indexOf(ythMatch[0]);
-        recipientSectionText = cleanText.substring(matchIdx, matchIdx + 200).toUpperCase();
-        // Handle common OCR typos: CV→OV, PT→PI/P1, CV→CF/C7
-        isPPN = ythText.match(/\b(PT|P[TI1]|CV|[O0C][VF]|C[TY7])\b/i) !== null;
+        recipientSectionText = cleanText.substring(matchIdx, matchIdx + 250).toUpperCase();
     }
 
-    // Fallback detection (if strict yth failed)
-    if (!isPPN) {
-        // Look for any line containing PT. or CV. (with OCR typo support)
-        // Priority: Skip the first 10% of text to avoid letterheads
-        const midText = cleanText.substring(Math.floor(cleanText.length * 0.1));
-        const fallbackPT = midText.match(/\b(PT\.|CV\.|PI\.|CF\.|CT\.|OV\.|0V\.)\s*[A-Z]{3,}/i);
-        if (fallbackPT) {
-            isPPN = true;
-            if (!ythText) ythText = fallbackPT[0].toUpperCase();
+    // Step 1b: Check Invoice number for definitive PPN/NON signal
+    const invoiceMatch = cleanText.match(/[Ii]nvoice\s*[:;.]?\s*([\d]+)/);
+    const invoiceNum = invoiceMatch ? invoiceMatch[1] : "";
+
+    if (invoiceNum.startsWith("8351003100")) {
+        isPPN = true;
+    } else if (invoiceNum.startsWith("8351003110")) {
+        isNON = true;
+    }
+
+    // Step 1c: If invoice didn't decide, use "Kepada Yth" content
+    if (!isPPN && !isNON && ythText) {
+        // Check if ythText contains PT./CV. (with OCR typo support: OV, PI, P1, CF, C7)
+        const hasPT = ythText.match(/\b(PT\.?|P[TI1]\.?|CV\.?|[O0C][VF]\.?|C[TY7]\.?)\s/i);
+        if (hasPT) {
+            // It's PPN... UNLESS it's PT. GARUDA GEMILANG (that's the sender, not recipient)
+            const isGaruda = ythText.match(/GARUDA\s*GEMILANG/i);
+            if (isGaruda) {
+                // Garuda Gemilang is the SENDER company, not the recipient. This is likely an error in OCR.
+                // Treat as unknown, check further in the recipient block
+                const recipientHasOtherPT = recipientSectionText.replace(/GARUDA\s*GEMILANG[^\n]*/gi, '').match(/\b(PT\.?|CV\.?)\s*[A-Z]{3,}/i);
+                if (recipientHasOtherPT) {
+                    isPPN = true;
+                } else {
+                    // Check for MEGA BAJA pattern in recipient
+                    const megaBajaInRecipient = recipientSectionText.match(/MEGA\s*BAJA\s+([A-Z0-9]+)/);
+                    if (megaBajaInRecipient) {
+                        isNON = true;
+                    }
+                }
+            } else {
+                isPPN = true;
+            }
+        } else {
+            // No PT/CV found after Kepada Yth → Check for "MEGA BAJA X" pattern → NON
+            const megaBajaMatch = ythText.match(/MEGA\s*BAJA/i);
+            if (megaBajaMatch) {
+                isNON = true;
+            }
         }
     }
+
+    // Step 1d: Final fallback — scan full text for PT/CV if still undecided
+    if (!isPPN && !isNON) {
+        // Skip first 10% (letterhead area) and look for PT./CV.
+        const midText = cleanText.substring(Math.floor(cleanText.length * 0.1)).toUpperCase();
+        const fallbackPT = midText.match(/\b(PT\.?|CV\.?)\s*[A-Z]{3,}/i);
+        if (fallbackPT && !fallbackPT[0].match(/GARUDA\s*GEMILANG/i)) {
+            isPPN = true;
+        }
+    }
+
     const type = isPPN ? 'PPN' : 'NON';
 
     // ========== 2. Store Name Detection ==========
@@ -346,51 +386,52 @@ function analyzeText(text, originalName) {
         return keywords.some(k => searchText.includes(k));
     };
 
+    // Helper: find mapping matches by stripping PT/CV from mapping key
+    const findPTMatches = (scope) => {
+        return PT_MAPPING.filter(r => {
+            const cleanPtName = r.pt.replace(/\b(PT\.?|CV\.?)\b/gi, '').replace(/[()]/g, '').trim().toUpperCase();
+            if (!cleanPtName || cleanPtName.length < 3) return false;
+            return scope.includes(cleanPtName);
+        });
+    };
+
     if (isPPN) {
-        // IMPORTANT: Match PT against the Recipient Section FIRST
-        // This is the most crucial part to avoid letterheads!
+        // ----- PPN PATH: Look for PT/CV name in recipient, match against mapping -----
         const searchScope = recipientSectionText || ythText || upperText.substring(Math.floor(upperText.length * 0.15));
 
-        const findPTMatches = (scope) => {
-            return PT_MAPPING.filter(r => {
-                // Strip PT/CV from mapping keyword so "CV. DUNIA BAJA" matches OCR "OV DUNIA BAJA"
-                const cleanPtName = r.pt.replace(/\b(PT\.?|CV\.?)\b/gi, '').trim().toUpperCase();
-                if (!cleanPtName) return false;
-                return scope.includes(cleanPtName);
-            });
-        };
-
         let ptMatches = findPTMatches(searchScope);
+        // Filter out GARUDA GEMILANG matches (sender company)
+        ptMatches = ptMatches.filter(r => !r.pt.match(/GARUDA\s*GEMILANG/i));
 
         if (ptMatches.length === 0) {
-            // Very loose fallback
-            ptMatches = findPTMatches(upperText);
+            // Very loose fallback: search full text
+            ptMatches = findPTMatches(upperText).filter(r => !r.pt.match(/GARUDA\s*GEMILANG/i));
         }
 
         if (ptMatches.length === 1) {
             const rule = ptMatches[0];
             if (rule.secondary && !checkSecondary(rule, upperText)) {
-                detectedToko = "Cek Manual (Secondary Tidak Cocok)";
+                // PT found but secondary keyword missing — still use it but flag
+                detectedToko = rule.store;
                 needsReview = true;
-                fallbackCause = `PT '${rule.pt}' terdeteksi, tapi kata kunci sekunder '${rule.secondary}' tidak ada.`;
+                fallbackCause = `PT '${rule.pt}' terdeteksi. Kata kunci sekunder '${rule.secondary}' tidak ditemukan.`;
             } else {
                 detectedToko = rule.store;
             }
         } else if (ptMatches.length > 1) {
-            // Multiple rules for this PT. Must disambiguate via secondary keyword!
+            // Multiple rules matched. Disambiguate via secondary keyword (BPK/IBU names)
             const exactMatches = ptMatches.filter(r => checkSecondary(r, upperText));
-
             if (exactMatches.length === 1) {
                 detectedToko = exactMatches[0].store;
             } else {
                 detectedToko = "Cek Manual (Ambigu)";
                 needsReview = true;
-                fallbackCause = `PT ini memiliki ${ptMatches.length} cabang. Gagal mencocokkan kata kunci sekunder.`;
+                fallbackCause = `${ptMatches.length} toko memiliki PT yang sama. Cek nama BPK/IBU.`;
             }
         } else {
-            // Fallback: If PT/CV not in mapping, extract PT/CV name from ythText first, then full text
+            // No mapping found. Extract PT/CV name raw from text
             const extractFrom = ythText || upperText;
-            const ptExtract = extractFrom.match(/(?:PT|CV)[.\s]+([A-Z][A-Z0-9\s]{2,30})/);
+            const ptExtract = extractFrom.match(/(?:PT|CV|OV|PI)[.\s]+([A-Z][A-Z0-9\s]{2,30})/);
             detectedToko = ptExtract ? ptExtract[1].trim() : "PT_UNKNOWN";
             if (detectedToko !== "PT_UNKNOWN") {
                 needsReview = true;
@@ -398,12 +439,35 @@ function analyzeText(text, originalName) {
             }
         }
     } else {
-        // NON-PPN logic: "MEGA BAJA KOMSEN" -> "KOMSEN"
-        const mbMatch = upperText.match(/MEGA\s*BAJA\s+([A-Z0-9]+)/);
+        // ----- NON PATH: "MEGA BAJA X" → extract city name -----
+        // First try to extract from "Kepada Yth" line
+        const megaBajaSource = ythText || recipientSectionText || upperText;
+        const mbMatch = megaBajaSource.match(/MEGA\s*BAJA\s+([A-Z0-9][A-Z0-9\s]*)/i);
+
         if (mbMatch) {
-            detectedToko = mbMatch[1].trim();
+            const cityRaw = mbMatch[1].trim().split(/\s+/)[0]; // Take first word as city
+            // Try to find in mapping by store name
+            const storeMatch = PT_MAPPING.find(r => r.store.toUpperCase() === cityRaw.toUpperCase());
+            if (storeMatch) {
+                detectedToko = storeMatch.store;
+            } else {
+                // Check secondary keywords (BPK/IBU) for disambiguation
+                const secondaryMatches = PT_MAPPING.filter(r => checkSecondary(r, upperText));
+                if (secondaryMatches.length === 1) {
+                    detectedToko = secondaryMatches[0].store;
+                } else {
+                    detectedToko = cityRaw;
+                    // Check if cityRaw partially matches any store name
+                    const partialMatch = PT_MAPPING.find(r => r.store.toUpperCase().includes(cityRaw.toUpperCase()));
+                    if (partialMatch) {
+                        detectedToko = partialMatch.store;
+                    }
+                }
+            }
         } else if (ythText) {
-            detectedToko = ythText.split(/[,\s]/)[0];
+            // No MEGA BAJA pattern — try direct name from Yth line
+            const cleanYth = ythText.replace(/^(BPK|IBU|BAPAK)\s*/i, '').trim();
+            detectedToko = cleanYth.split(/[,\n]/)[0].trim() || "UNKNOWN";
         }
     }
 
@@ -509,9 +573,9 @@ function analyzeText(text, originalName) {
     // ========== 4. Date Detection ==========
     let dateStr = "00-Unknown";
     const datePatterns = [
-        /[Cc]etak\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9})/,
-        /[Tt]anggal\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9})/,
-        /(\d{1,2})\s*[-/]\s*([A-Za-z]{3,9})\s*[-/]\s*\d{2,4}/
+        /[Cc]etak\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})/,
+        /[Tt]anggal\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})/,
+        /(\d{1,2})\s*[-/]\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/]\s*\d{2,4}/
     ];
     for (const pat of datePatterns) {
         const m = cleanText.match(pat);
@@ -522,7 +586,13 @@ function analyzeText(text, originalName) {
                 'JAN': 'Januari', 'FEB': 'Februari', 'MAR': 'Maret', 'APR': 'April',
                 'MEI': 'Mei', 'MAY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
                 'AGU': 'Agustus', 'AUG': 'Agustus', 'SEP': 'September', 'OKT': 'Oktober',
-                'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember'
+                'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember',
+                '01': 'Januari', '1': 'Januari', '02': 'Februari', '2': 'Februari',
+                '03': 'Maret', '3': 'Maret', '04': 'April', '4': 'April',
+                '05': 'Mei', '5': 'Mei', '06': 'Juni', '6': 'Juni',
+                '07': 'Juli', '7': 'Juli', '08': 'Agustus', '8': 'Agustus',
+                '09': 'September', '9': 'September', '10': 'Oktober',
+                '11': 'November', '12': 'Desember'
             };
             const month = indMonthMap[rawMonth];
             if (month) {
