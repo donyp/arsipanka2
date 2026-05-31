@@ -419,7 +419,7 @@ function analyzeText(text, originalName) {
             }
         }
 
-        // 3. Nominal (Intelligent Proximity Scoring)
+        // 3. Nominal (Zonal & Blacklist)
         let nominal = "0";
         let nominalCands = [];
 
@@ -430,39 +430,42 @@ function analyzeText(text, originalName) {
                 nominalText = nominalText.replace(new RegExp(seg, 'g'), ' [MASK] ');
             });
         }
+        // Remove phone/NPWP segments (blacklist any string of 11+ digits)
+        nominalText = nominalText.replace(/\d{11,}/g, ' [MASK] ');
 
-        const labels = [
-            { rx: /[Tt]otal\s*[Bb]ayar/i, weight: 1000 },
-            { rx: /[Nn]etto|[Jj]umlah\s*[Bb]ayar|[Tt]otal/i, weight: 800 },
-            { rx: /[Bb]ayar|sayar|ayar/i, weight: 600 },
-            { rx: /[Rr][Pp]/i, weight: 300 }
-        ];
+        // OCR-resilient labels (ignores spaces/symbols)
+        const findLabelPos = (labelRx) => {
+            const m = cleanText.match(labelRx);
+            return m ? m.index : -1;
+        };
+        const totalPos = findLabelPos(/[Tt]\s*[Oo]\s*[Tt]\s*[Aa]\s*[Ll]/i);
+        const bayarPos = findLabelPos(/[Bb]\s*[Aa]\s*[Yy]\s*[Aa]\s*[Rr]/i);
+        const nettoPos = findLabelPos(/[Nn]\s*[Ee]\s*[Tt]\s*[Tt]\s*[Oo]/i);
 
+        // Strategy: Look for the largest number in the BOTTOM half of the document, 
+        // especially after one of the "Total" labels.
         const brute = nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
         for (const b of brute) {
             const v = b[1].replace(/[^0-9]/g, '');
             if (v.length >= 4 && v.length <= 9) {
                 const num = Number(v);
-                let maxScore = 0;
+                let score = 50;
+                // Bonuses
+                if (b.index > cleanText.length * 0.6) score += 500; // Likely near bottom
+                if (totalPos !== -1 && b.index > totalPos) score += 300;
+                if (nettoPos !== -1 && b.index > nettoPos) score += 300;
+                if (bayarPos !== -1 && b.index > bayarPos) score += 300;
 
-                // Find nearest label and calculate score
-                labels.forEach(lb => {
-                    const lMatch = [...nominalText.matchAll(new RegExp(lb.rx, 'gi'))];
-                    lMatch.forEach(lm => {
-                        const dist = Math.abs(b.index - lm.index);
-                        if (dist < 40) maxScore = Math.max(maxScore, lb.weight);
-                        else if (dist < 100) maxScore = Math.max(maxScore, lb.weight * 0.5);
-                    });
-                });
-
-                if (maxScore > 0) nominalCands.push({ val: num, score: maxScore });
-                else if (b.index > cleanText.length * 0.5) nominalCands.push({ val: num, score: 50 }); // Fallback for numbers in lower half
+                nominalCands.push({ val: num, score });
             }
         }
 
         if (nominalCands.length > 0) {
             nominalCands.sort((a, b) => b.score - a.score);
-            nominal = nominalCands[0].val.toLocaleString('id-ID');
+            // If scores are tied (common at bottom), pick the LARGEST number
+            const topScore = nominalCands[0].score;
+            const topCands = nominalCands.filter(c => c.score === topScore);
+            nominal = Math.max(...topCands.map(c => c.val)).toLocaleString('id-ID');
         }
 
         // 4. Date
@@ -491,9 +494,10 @@ function analyzeText(text, originalName) {
                 let score = 50; // default
                 const context = cleanText.substring(Math.max(0, m.index - 60), m.index + 60).toLowerCase();
 
-                if (context.includes('cetak') || context.includes('tanggal') || context.includes('tgl') || context.includes('iyl')) score += 100;
-                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 500;
-                if (m.index < cleanText.length * 0.25) score += 100; // Top of page is likely the real date
+                if (context.includes('cetak') || context.includes('tanggal') || context.includes('tgl') || context.includes('iyl')) score += 500;
+                if (context.includes('retur') || context.includes('tempo') || context.includes('maksimal')) score -= 2000;
+                if (m.index < cleanText.length * 0.3) score += 1000; // TOP OF PAGE IS KING for Dates
+                if (m.index > cleanText.length * 0.7) score -= 1000; // Penalty for footer dates
 
                 dateCandidates.push({ match: m, score });
             }
