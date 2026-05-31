@@ -182,8 +182,9 @@ function analyzeText(text, originalName) {
         ythText = ythMatch[1].trim().toUpperCase();
         // Sectioning: Take the yth line + next 2 lines (common recipient block)
         const matchIdx = cleanText.indexOf(ythMatch[0]);
-        recipientSectionText = cleanText.substring(matchIdx, matchIdx + 150).toUpperCase(); // approx 3 lines
-        isPPN = ythText.match(/\b(P[TI]|CV|C[VF]|C[TY])\b/i) !== null;
+        recipientSectionText = cleanText.substring(matchIdx, matchIdx + 200).toUpperCase();
+        // Handle common OCR typos: CV→OV, PT→PI/P1, CV→CF/C7
+        isPPN = ythText.match(/\b(PT|P[TI1]|CV|[O0C][VF]|C[TY7])\b/i) !== null;
     }
 
     // Fallback detection (if strict yth failed)
@@ -191,7 +192,7 @@ function analyzeText(text, originalName) {
         // Look for any line containing PT. or CV. (with OCR typo support)
         // Priority: Skip the first 10% of text to avoid letterheads
         const midText = cleanText.substring(Math.floor(cleanText.length * 0.1));
-        const fallbackPT = midText.match(/\b(PT\.|CV\.|PI\.|CF\.|CT\.)\s*[A-Z]{3,}/i);
+        const fallbackPT = midText.match(/\b(PT\.|CV\.|PI\.|CF\.|CT\.|OV\.|0V\.)\s*[A-Z]{3,}/i);
         if (fallbackPT) {
             isPPN = true;
             if (!ythText) ythText = fallbackPT[0].toUpperCase();
@@ -269,11 +270,12 @@ function analyzeText(text, originalName) {
     // ========== 3. Nominal Detection ==========
     let nominal = "0";
 
-    // Strategy 1: Look for "Total Bayar" or similar labels
+    // Strategy 1: Look for "Total Bayar" or similar labels (incl. OCR garble like 'ayar')
     const nominalPatterns = [
         /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
         /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*(\d[\d.,\s-]+)/,
         /[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
+        /ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/i,
         /[Nn]etto\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
         /[Tt]otal\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
         /[Rr][Pp][\s.]*(\d[\d.,\s-]+)/
@@ -290,19 +292,35 @@ function analyzeText(text, originalName) {
         }
     }
 
-    // Strategy 2: Brute-force fallback — find ALL large numbers in text
+    // Strategy 2: Brute-force fallback — find ALL formatted numbers (like 250.030 or 1.371.320)
     if (candidates.length === 0) {
         const allNums = cleanText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
         for (const m of allNums) {
             let rawNum = m[1].replace(/[^0-9]/g, '');
-            if (rawNum && rawNum.length >= 5) { // At least 10.000
+            if (rawNum && rawNum.length >= 5) {
                 candidates.push(Number(rawNum));
             }
         }
     }
 
+    // Strategy 3: SUM all subtotals from invoice line items
+    // Pattern: numbers at end of lines like "250.030,50,-" or "189.000.00,-"
+    if (candidates.length === 0) {
+        let subtotalSum = 0;
+        const lineItemPattern = /(\d{1,3}(?:[.,]\d{3})+)(?:[.,]\d{2})?[.,]?\s*-\s*$/gm;
+        const lineMatches = cleanText.matchAll(lineItemPattern);
+        for (const m of lineMatches) {
+            let rawNum = m[1].replace(/[^0-9]/g, '');
+            if (rawNum && rawNum.length >= 4) {
+                subtotalSum += Number(rawNum);
+            }
+        }
+        if (subtotalSum > 0) {
+            candidates.push(subtotalSum);
+        }
+    }
+
     if (candidates.length > 0) {
-        // Pick the HIGHEST number found (usually the grand total)
         const highest = Math.max(...candidates);
         nominal = highest.toLocaleString('id-ID');
     }
