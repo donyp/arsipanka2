@@ -5,33 +5,33 @@
 
 let PT_MAPPING = [
     // ZONA 1
-    { store: "MB Balaraja", secondary: "YADI SURYADI", pt: "PT. MEGA BAJA" },
-    { store: "MB Bitung", secondary: "HENDIANA, FARID, ADIN", pt: "PT. BITUNG BAJA UTAMA" },
-    { store: "MB Cilegon", secondary: "HAROR, SOLIHIN", pt: "CV. SEMESTA GEMILANG CILEGON" },
-    { store: "MB Cipondoh", secondary: "KUSTIAWATI, TIYA", pt: "PT. INDOTAMA BAJA MAKMUR" },
-    { store: "MB Ciruas", secondary: "WAHYUDIN, ENTIS SUTISNA", pt: "PT. BAJA LAMPUNG BAROKAH" },
-    { store: "MB Kutabumi", secondary: "YOGA PRADITA", pt: "PT. KUTABUMI JAYA LESTARI" },
-    { store: "MB Serang Timur", secondary: "FATUR", pt: "PT. MEGA SERANG WAJATAMA" },
+    { store: "Balaraja", secondary: "YADI SURYADI", pt: "PT. MEGA BAJA" },
+    { store: "Bitung", secondary: "HENDIANA, FARID, ADIN", pt: "PT. BITUNG BAJA UTAMA" },
+    { store: "Cilegon", secondary: "HAROR, SOLIHIN", pt: "CV. SEMESTA GEMILANG CILEGON" },
+    { store: "Cipondoh", secondary: "KUSTIAWATI, TIYA", pt: "PT. INDOTAMA BAJA MAKMUR" },
+    { store: "Ciruas", secondary: "WAHYUDIN, ENTIS SUTISNA", pt: "PT. BAJA LAMPUNG BAROKAH" },
+    { store: "Kutabumi", secondary: "YOGA PRADITA", pt: "PT. KUTABUMI JAYA LESTARI" },
+    { store: "Serang Timur", secondary: "FATUR", pt: "PT. MEGA SERANG WAJATAMA" },
     { store: "Mega Matrial Pasar Kamis", secondary: "HENDIANA, HENDIYANA, HENDI", pt: "PT. BITUNG BAJA UTAMA" },
 
     // ZONA 2
-    { store: "MB Bintaro", secondary: "SARIP", pt: "CV. MEGA BAJA" },
-    { store: "MB Cengkareng", secondary: "ICHA", pt: "CV. MEGA BAJA" },
-    { store: "MB Ciledug", secondary: "YENI", pt: "PT. MEGA BAJA" },
-    { store: "MB Gading Serpong", secondary: "ABDUL YASIR, HOLIP MUNANDAR", pt: "PT. MEGA BAJA" },
-    { store: "MB Joglo", secondary: "AJIS", pt: "PT. INDOTAMA BAJA MAKMUR" },
-    { store: "MB Karang Tengah", secondary: "ERIS MARWAN, ARIF IRFAN", pt: "CV. KARANG TENGAH MANDALA" },
-    { store: "MB Pinang", secondary: "ALI YADI", pt: "CV. MEGA BAJA" },
-    { store: "MB Sawangan", secondary: "BAYU, RAMDANI, ALPIAN", pt: "PT. MEGA SAWANGAN WAJATAMA" },
-    { store: "MB Sawangan 2", secondary: "EKY, EKI, ARMAN", pt: "PT. DEPOK UNGGUL MANDIRI" },
+    { store: "Bintaro", secondary: "SARIP", pt: "CV. MEGA BAJA" },
+    { store: "Cengkareng", secondary: "ICHA", pt: "CV. MEGA BAJA" },
+    { store: "Ciledug", secondary: "YENI", pt: "PT. MEGA BAJA" },
+    { store: "Gading Serpong", secondary: "ABDUL YASIR, HOLIP MUNANDAR", pt: "PT. MEGA BAJA" },
+    { store: "Joglo", secondary: "AJIS", pt: "PT. INDOTAMA BAJA MAKMUR" },
+    { store: "Karang Tengah", secondary: "ERIS MARWAN, ARIF IRFAN", pt: "CV. KARANG TENGAH MANDALA" },
+    { store: "Pinang", secondary: "ALI YADI", pt: "CV. MEGA BAJA" },
+    { store: "Sawangan", secondary: "BAYU, RAMDANI, ALPIAN", pt: "PT. MEGA SAWANGAN WAJATAMA" },
+    { store: "Sawangan 2", secondary: "EKY, EKI, ARMAN", pt: "PT. DEPOK UNGGUL MANDIRI" },
 
     // ZONA 3
-    { store: "MB Condet", secondary: "FIKRI", pt: "CV. MEGA BAJA" },
-    { store: "MB Duren Sawit", secondary: "HENGKI HERNIAWAN", pt: "PT. PONDOKGEDE MAKMUR ABADI" },
-    { store: "MB Harapan Indah", secondary: "MUHAMMAD", pt: "PT. PONDOKGEDE MAKMUR ABADI" },
-    { store: "MB Jatiwaringin", secondary: "ACENG", pt: "PT. MEGA BAJA" },
-    { store: "MB Pondok Gede", secondary: "", pt: "PT. PONDOKGEDE MAKMUR ABADI" },
-    { store: "MB Rorotan", secondary: "WAWAN, DEDE", pt: "PT. Rorotan Makmur Sentosa" },
+    { store: "Condet", secondary: "FIKRI", pt: "CV. MEGA BAJA" },
+    { store: "Duren Sawit", secondary: "HENGKI HERNIAWAN", pt: "PT. PONDOKGEDE MAKMUR ABADI" },
+    { store: "Harapan Indah", secondary: "MUHAMMAD", pt: "PT. PONDOKGEDE MAKMUR ABADI" },
+    { store: "Jatiwaringin", secondary: "ACENG", pt: "PT. MEGA BAJA" },
+    { store: "Pondok Gede", secondary: "", pt: "PT. PONDOKGEDE MAKMUR ABADI" },
+    { store: "Rorotan", secondary: "WAWAN, DEDE", pt: "PT. Rorotan Makmur Sentosa" },
     { store: "Mega Alumunium", secondary: "PANJI, RIDWAN", pt: "PT. FITRAH JAYA STAINLES" },
     { store: "Mega Alumunium Karawang", secondary: "PANJI", pt: "PT. FITRAH JAYA STAINLES" },
     { store: "Mega Alumunium Leuwi Liang", secondary: "PANJI", pt: "PT. LEWILIANG MEKAR JAYA" },
@@ -39,106 +39,106 @@ let PT_MAPPING = [
     { store: "Mega Warna kalimalang", secondary: "EDI", pt: "PT. MEGA WARNA Indonesia" },
 
     // ZONA 4
-    { store: "MB Bantar Gebang", secondary: "LILIS, ANTO, NEGA, MITA", pt: "CV. DUNIA BAJA" },
-    { store: "MB Cibubur", secondary: "ANWAR", pt: "CV. CILEGON STEEL" },
-    { store: "MB Cikeas", secondary: "RUDIYANTO", pt: "PT CIBUBUR RAYA INDOSTEEL (CIKEAS)" },
-    { store: "MB Cimanggis", secondary: "BAHTIAR, YUNUS", pt: "PT. TRIGALUH MAS CIMANGGIS" },
-    { store: "MB Pedurenan", secondary: "RAHMAT", pt: "PT. SETU SUMBER BERKAH" },
-    { store: "MB Setu", secondary: "SUPANDI", pt: "PT CIBUBUR RAYA INDOSTEEL" },
-    { store: "MBI Cibubur Raya", secondary: "MENUN, YOGI", pt: "PT CIBUBUR RAYA INDOSTEEL" },
+    { store: "Bantar Gebang", secondary: "LILIS, ANTO, NEGA, MITA", pt: "CV. DUNIA BAJA" },
+    { store: "Cibubur", secondary: "ANWAR", pt: "CV. CILEGON STEEL" },
+    { store: "Cikeas", secondary: "RUDIYANTO", pt: "PT CIBUBUR RAYA INDOSTEEL (CIKEAS)" },
+    { store: "Cimanggis", secondary: "BAHTIAR, YUNUS", pt: "PT. TRIGALUH MAS CIMANGGIS" },
+    { store: "Pedurenan", secondary: "RAHMAT", pt: "PT. SETU SUMBER BERKAH" },
+    { store: "Setu", secondary: "SUPANDI", pt: "PT CIBUBUR RAYA INDOSTEEL" },
+    { store: "Cibubur Raya", secondary: "MENUN, YOGI", pt: "PT CIBUBUR RAYA INDOSTEEL" },
 
     // ZONA 5
-    { store: "MB Dramaga", secondary: "IRWAN, CHAIRIL ALIF", pt: "CV. MEGA BAJA" },
-    { store: "MB Jasinga", secondary: "HILMAN", pt: "PT. MEGA BAJA BOGOR" },
-    { store: "MB Karadenan", secondary: "AHMAD", pt: "PT. MEGA BAJA BOGOR" },
-    { store: "MB Leuwi Liang", secondary: "ENDIK SUDIKNA", pt: "PT. LEWILIANG MEKAR JAYA" },
-    { store: "MB Rangkas Bitung", secondary: "HUSNAN, ADE WAWAN", pt: "PT. RANGKAS BITUNG MAJU BERSAMA" },
-    { store: "MB Sentul", secondary: "AHMAD NURSIDIK", pt: "CV. GEMILANG BAJA KENCANA" },
+    { store: "Dramaga", secondary: "IRWAN, CHAIRIL ALIF", pt: "CV. MEGA BAJA" },
+    { store: "Jasinga", secondary: "HILMAN", pt: "PT. MEGA BAJA BOGOR" },
+    { store: "Karadenan", secondary: "AHMAD", pt: "PT. MEGA BAJA BOGOR" },
+    { store: "Leuwi Liang", secondary: "ENDIK SUDIKNA", pt: "PT. LEWILIANG MEKAR JAYA" },
+    { store: "Rangkas Bitung", secondary: "HUSNAN, ADE WAWAN", pt: "PT. RANGKAS BITUNG MAJU BERSAMA" },
+    { store: "Sentul", secondary: "AHMAD NURSIDIK", pt: "CV. GEMILANG BAJA KENCANA" },
 
     // ZONA 6
-    { store: "MB Cianjur", secondary: "AGIT, WANDI, ARDI", pt: "PT. CIANJUR BAJA MANDIRI" },
-    { store: "MB Ciawi", secondary: "AHMAD MUHAERY", pt: "CV. DUNIA BETON" },
-    { store: "MB Cigombong", secondary: "INDRA MAULANA", pt: "CV. DUNIA BETON" },
-    { store: "MB Cikalong", secondary: "CEPI MAULANA", pt: "PT. TRIPUSAKA PRIMAS CIKALONG" },
-    { store: "MB Ciluer", secondary: "ALFIYANSAH, ALFIYANSYAH", pt: "PT. MEGA BAJA BOGOR" },
-    { store: "MB Cimahi", secondary: "ALWI, AHMAD", pt: "CV. ANUGRAH BAJATAMA" },
-    { store: "MB Cipeuyeum", secondary: "SUHENDAR", pt: "PT. CIANJUR BAJA MANDIRI" },
-    { store: "MB Garut", secondary: "HARIS", pt: "CV. BAINIT UNGGUL" },
-    { store: "MB Majalaya", secondary: "CHANDRA, ELOK MEI", pt: "PT. BANDUNG LAUTAN BAJA" },
-    { store: "MB Rancaekek", secondary: "MAHROM", pt: "CV. NUSA BAJA SENTOSA" },
-    { store: "MB Soreang", secondary: "FIKI MULYANA", pt: "PT. SOREANG SUKSES SEJATI" },
-    { store: "MB Sukabumi", secondary: "JADIN", pt: "PT. SUKABUMI BAJA SANTANA" },
-    { store: "MB Sumedang", secondary: "NABILA", pt: "PT. SUMEDANG GALUH NUSANTARA" },
-    { store: "MB Sukaraja", secondary: "RIFKI ROYANI", pt: "PT. SUKABUMI BAJA SANTANA" },
-    { store: "MB Pelabuhan Ratu", secondary: "WANDI", pt: "PT. SUKABUMI BAJA SANTANA" },
+    { store: "Cianjur", secondary: "AGIT, WANDI, ARDI", pt: "PT. CIANJUR BAJA MANDIRI" },
+    { store: "Ciawi", secondary: "AHMAD MUHAERY", pt: "CV. DUNIA BETON" },
+    { store: "Cigombong", secondary: "INDRA MAULANA", pt: "CV. DUNIA BETON" },
+    { store: "Cikalong", secondary: "CEPI MAULANA", pt: "PT. TRIPUSAKA PRIMAS CIKALONG" },
+    { store: "Ciluer", secondary: "ALFIYANSAH, ALFIYANSYAH", pt: "PT. MEGA BAJA BOGOR" },
+    { store: "Cimahi", secondary: "ALWI, AHMAD", pt: "CV. ANUGRAH BAJATAMA" },
+    { store: "Cipeuyeum", secondary: "SUHENDAR", pt: "PT. CIANJUR BAJA MANDIRI" },
+    { store: "Garut", secondary: "HARIS", pt: "CV. BAINIT UNGGUL" },
+    { store: "Majalaya", secondary: "CHANDRA, ELOK MEI", pt: "PT. BANDUNG LAUTAN BAJA" },
+    { store: "Rancaekek", secondary: "MAHROM", pt: "CV. NUSA BAJA SENTOSA" },
+    { store: "Soreang", secondary: "FIKI MULYANA", pt: "PT. SOREANG SUKSES SEJATI" },
+    { store: "Sukabumi", secondary: "JADIN", pt: "PT. SUKABUMI BAJA SANTANA" },
+    { store: "Sumedang", secondary: "NABILA", pt: "PT. SUMEDANG GALUH NUSANTARA" },
+    { store: "Sukaraja", secondary: "RIFKI ROYANI", pt: "PT. SUKABUMI BAJA SANTANA" },
+    { store: "Pelabuhan Ratu", secondary: "WANDI", pt: "PT. SUKABUMI BAJA SANTANA" },
 
     // ZONA 7
-    { store: "MB Cikampek", secondary: "DENI", pt: "PT CIKAMPEK BAJA MAKMUR" },
-    { store: "MB Cirebon", secondary: "ASEP SOLIKHIN", pt: "CV. MEGA BAJA (KARAWANG)" },
-    { store: "MB Karawang Barat", secondary: "ANDI, ENDANG JUANDA", pt: "CV. MEGA BAJA (KARAWANG)" },
-    { store: "MB Karawang Timur", secondary: "DARUL HIDAYAT", pt: "CV. MEGA BAJA (KARAWANG)" },
-    { store: "MB Kedawung", secondary: "UZEM, FIRMAN", pt: "PT. PALIMANAN BAJA SUKSES" },
-    { store: "MB Kuningan", secondary: "DEDE SUHADA", pt: "CV. KUNINGAN MAKMUR SENTOSA" },
-    { store: "MB Palimanan", secondary: "RIYAN", pt: "PT. PALIMANAN BAJA SUKSES" },
-    { store: "MB Purwakarta", secondary: "RIZKI, ADE NURJAMAN", pt: "PT CIKAMPEK BAJA MAKMUR" },
-    { store: "MB Rengas Dengklok", secondary: "ADE WAWAN", pt: "PT BAJA MAKMUR PEKALONGAN" },
-    { store: "MB Subang", secondary: "RENDI, CANDRA", pt: "PT. SUBANG BAJA GEMILANG" },
-    { store: "MB Majalengka", secondary: "", pt: "PT. SUBANG BAJA GEMILANG" },
+    { store: "Cikampek", secondary: "DENI", pt: "PT CIKAMPEK BAJA MAKMUR" },
+    { store: "Cirebon", secondary: "ASEP SOLIKHIN", pt: "CV. MEGA BAJA (KARAWANG)" },
+    { store: "Karawang Barat", secondary: "ANDI, ENDANG JUANDA", pt: "CV. MEGA BAJA (KARAWANG)" },
+    { store: "Karawang Timur", secondary: "DARUL HIDAYAT", pt: "CV. MEGA BAJA (KARAWANG)" },
+    { store: "Kedawung", secondary: "UZEM, FIRMAN", pt: "PT. PALIMANAN BAJA SUKSES" },
+    { store: "Kuningan", secondary: "DEDE SUHADA", pt: "CV. KUNINGAN MAKMUR SENTOSA" },
+    { store: "Palimanan", secondary: "RIYAN", pt: "PT. PALIMANAN BAJA SUKSES" },
+    { store: "Purwakarta", secondary: "RIZKI, ADE NURJAMAN", pt: "PT CIKAMPEK BAJA MAKMUR" },
+    { store: "Rengas Dengklok", secondary: "ADE WAWAN", pt: "PT BAJA MAKMUR PEKALONGAN" },
+    { store: "Subang", secondary: "RENDI, CANDRA", pt: "PT. SUBANG BAJA GEMILANG" },
+    { store: "Majalengka", secondary: "", pt: "PT. SUBANG BAJA GEMILANG" },
 
     // ZONA 8
-    { store: "MB Brebes", secondary: "", pt: "CV. MEGA BAJA (KARAWANG)" },
-    { store: "MB Kendal", secondary: "", pt: "PT INDAH JAYA KENDAL" },
-    { store: "MB Kudus", secondary: "", pt: "PT BAJA MAKMUR PEKALONGAN" },
-    { store: "MB Pemalang", secondary: "", pt: "PT. MAKMUR JAYA PEMALANG" },
-    { store: "MB Semarang Unggaran", secondary: "", pt: "CV. SEMARANG UNGGUL" },
-    { store: "MB Slawi", secondary: "", pt: "PT SLAWI BUDI UTAMA" },
-    { store: "MBI Semarang", secondary: "", pt: "PT MEGA BAJA MAGELANG" },
+    { store: "Brebes", secondary: "", pt: "CV. MEGA BAJA (KARAWANG)" },
+    { store: "Kendal", secondary: "", pt: "PT INDAH JAYA KENDAL" },
+    { store: "Kudus", secondary: "", pt: "PT BAJA MAKMUR PEKALONGAN" },
+    { store: "Pemalang", secondary: "", pt: "PT. MAKMUR JAYA PEMALANG" },
+    { store: "Semarang Unggaran", secondary: "", pt: "CV. SEMARANG UNGGUL" },
+    { store: "Slawi", secondary: "", pt: "PT SLAWI BUDI UTAMA" },
+    { store: "Semarang", secondary: "", pt: "PT MEGA BAJA MAGELANG" },
 
     // ZONA 9
-    { store: "MB Magelang", secondary: "", pt: "PT. MEGA BAJA MAGELANG" },
-    { store: "MB Solo", secondary: "", pt: "PT. SOLO INTI BAJA" },
-    { store: "MB Yogyakarta", secondary: "", pt: "PT. SINAR AGUNG Yogyakarta" },
+    { store: "Magelang", secondary: "", pt: "PT. MEGA BAJA MAGELANG" },
+    { store: "Solo", secondary: "", pt: "PT. SOLO INTI BAJA" },
+    { store: "Yogyakarta", secondary: "", pt: "PT. SINAR AGUNG Yogyakarta" },
 
     // ZONA 10
-    { store: "MB Jember", secondary: "", pt: "PT. KRAKATAU MEGATAMA Indonesia" },
-    { store: "MB Madiun", secondary: "", pt: "PT. KRAKATAU MEGATAMA Indonesia" },
-    { store: "MB Malang", secondary: "", pt: "PT. KRAKATAU MEGATAMA Indonesia" },
-    { store: "MB Mojokerto", secondary: "", pt: "PT. MOJOKERTO BAJA SAKTI" },
-    { store: "MB Surabaya", secondary: "", pt: "PT. KRAKATAU MEGATAMA Indonesia" },
+    { store: "Jember", secondary: "", pt: "PT. KRAKATAU MEGATAMA Indonesia" },
+    { store: "Madiun", secondary: "", pt: "PT. KRAKATAU MEGATAMA Indonesia" },
+    { store: "Malang", secondary: "", pt: "PT. KRAKATAU MEGATAMA Indonesia" },
+    { store: "Mojokerto", secondary: "", pt: "PT. MOJOKERTO BAJA SAKTI" },
+    { store: "Surabaya", secondary: "", pt: "PT. KRAKATAU MEGATAMA Indonesia" },
 
     // ZONA 11
-    { store: "MB Bandar jaya", secondary: "", pt: "CV. BANDARJAYA CAHAYA LAUTAN" },
-    { store: "MB Kotabumi", secondary: "TENDI", pt: "PT. BAJA LAMPUNG BAROKAH" },
-    { store: "MB Lampung", secondary: "ROBI", pt: "PT. BAJA LAMPUNG BAROKAH" },
-    { store: "MB Palembang", secondary: "BAGUS", pt: "CV. Sejahtera Nusa Internasional" },
+    { store: "Bandar jaya", secondary: "", pt: "CV. BANDARJAYA CAHAYA LAUTAN" },
+    { store: "Kotabumi", secondary: "TENDI", pt: "PT. BAJA LAMPUNG BAROKAH" },
+    { store: "Lampung", secondary: "ROBI", pt: "PT. BAJA LAMPUNG BAROKAH" },
+    { store: "Palembang", secondary: "BAGUS", pt: "CV. Sejahtera Nusa Internasional" },
 
     // ZONA 12
-    { store: "MB Banjarnegara", secondary: "", pt: "PT. BANJARNEGARA MEGA UTAMA" },
-    { store: "MB Purwokerto", secondary: "", pt: "PT. PURWOKERTO BAJA UTAMA" },
-    { store: "MB Tasikmalaya", secondary: "DANI KUSMAWAN", pt: "PT. PUSAKA BAJA PRIANGAN" },
-    { store: "MB Singaparna", secondary: "", pt: "PT. PUSAKA BAJA PRIANGAN" },
+    { store: "Banjarnegara", secondary: "", pt: "PT. BANJARNEGARA MEGA UTAMA" },
+    { store: "Purwokerto", secondary: "", pt: "PT. PURWOKERTO BAJA UTAMA" },
+    { store: "Tasikmalaya", secondary: "DANI KUSMAWAN", pt: "PT. PUSAKA BAJA PRIANGAN" },
+    { store: "Singaparna", secondary: "", pt: "PT. PUSAKA BAJA PRIANGAN" },
 
     // ZONA 13
-    { store: "MB Makassar", secondary: "TRI", pt: "CV. MANDIRI MAKMUR MAKASAR" },
+    { store: "Makassar", secondary: "TRI", pt: "CV. MANDIRI MAKMUR MAKASAR" },
 
     // ZONA 14
-    { store: "MB Kariangau", secondary: "", pt: "CV. BERKAH BAJA BALIKPAPAN" },
-    { store: "MB Samarinda", secondary: "FAHMI", pt: "CV. BERKAH BAJA BALIKPAPAN" },
-    { store: "MB Sepinggan", secondary: "", pt: "CV. BERKAH BAJA BALIKPAPAN" },
+    { store: "Kariangau", secondary: "", pt: "CV. BERKAH BAJA BALIKPAPAN" },
+    { store: "Samarinda", secondary: "FAHMI", pt: "CV. BERKAH BAJA BALIKPAPAN" },
+    { store: "Sepinggan", secondary: "", pt: "CV. BERKAH BAJA BALIKPAPAN" },
 
     // ZONA 15
-    { store: "MB Kalimalang", secondary: "ANDI", pt: "CV. Pusat Baja" },
+    { store: "Kalimalang", secondary: "ANDI", pt: "CV. Pusat Baja" },
 
     // ZONA 16
-    { store: "MB Cibitung", secondary: "NANDANG", pt: "CV. DUNIA BAJA" },
-    { store: "MB Deltamas", secondary: "RAHAYU", pt: "CV. Mega Baja Deltamas" },
-    { store: "MB Pulo Gebang", secondary: "YAYAT", pt: "CV. MEGA BAJA" },
-    { store: "MB Sukatani", secondary: "YAYAT", pt: "CV. Mega Baja Deltamas" },
+    { store: "Cibitung", secondary: "NANDANG", pt: "CV. DUNIA BAJA" },
+    { store: "Deltamas", secondary: "RAHAYU", pt: "CV. Mega Baja Deltamas" },
+    { store: "Pulo Gebang", secondary: "YAYAT", pt: "CV. MEGA BAJA" },
+    { store: "Sukatani", secondary: "YAYAT", pt: "CV. Mega Baja Deltamas" },
 
     // ZONA 17
-    { store: "MB Cikarang 1", secondary: "INDRA KURNIAWAN", pt: "CV. CILEGON STEEL" },
-    { store: "MB Sukadami", secondary: "GAN GAN", pt: "CV. CILEGON STEEL" },
-    { store: "MB Cibarusah", secondary: "REZA", pt: "CV. CILEGON STEEL" }
+    { store: "Cikarang 1", secondary: "INDRA KURNIAWAN", pt: "CV. CILEGON STEEL" },
+    { store: "Sukadami", secondary: "GAN GAN", pt: "CV. CILEGON STEEL" },
+    { store: "Cibarusah", secondary: "REZA", pt: "CV. CILEGON STEEL" }
 ];
 
 const MONTHS_MAP = {
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadMapping() {
-    const saved = localStorage.getItem('pt_mapping_v3');
+    const saved = localStorage.getItem('pt_mapping_v4');
     if (saved) {
         try {
             PT_MAPPING = JSON.parse(saved);
