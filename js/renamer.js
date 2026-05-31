@@ -324,9 +324,9 @@ function analyzeText(text, originalName) {
     const invoiceMatch = cleanText.match(/[Ii]nvoice\s*[:;.]?\s*([\d]+)/);
     const invoiceNum = invoiceMatch ? invoiceMatch[1] : "";
 
-    if (invoiceNum.startsWith("8351003100")) {
+    if (invoiceNum.startsWith("8351003110")) {
         isPPN = true;
-    } else if (invoiceNum.startsWith("8351003110")) {
+    } else if (invoiceNum.startsWith("8351003100")) {
         isNON = true;
     }
 
