@@ -408,6 +408,20 @@ function analyzeText(text, originalName) {
             ptMatches = findPTMatches(upperText).filter(r => !r.pt.match(/GARUDA\s*GEMILANG/i));
         }
 
+        let rawExtract = null;
+        if (ptMatches.length === 0) {
+            const extractFrom = ythText || upperText.substring(Math.floor(upperText.length * 0.15));
+            const ptMatchRegex = extractFrom.match(/(?:PT|CV|OV|PI)[.\s]+([A-Z][A-Z0-9\s]{3,30})/);
+            if (ptMatchRegex) {
+                rawExtract = ptMatchRegex[1].trim();
+                ptMatches = PT_MAPPING.filter(r => {
+                    const cleanMap = r.pt.replace(/\b(PT\.?|CV\.?)\b/gi, '').replace(/[()]/g, '').trim().toUpperCase();
+                    if (!cleanMap || cleanMap.length < 3) return false;
+                    return cleanMap.includes(rawExtract) || rawExtract.includes(cleanMap);
+                });
+            }
+        }
+
         if (ptMatches.length === 1) {
             const rule = ptMatches[0];
             if (rule.secondary && !checkSecondary(rule, upperText)) {
@@ -429,10 +443,8 @@ function analyzeText(text, originalName) {
                 fallbackCause = `${ptMatches.length} toko memiliki PT yang sama. Cek nama BPK/IBU.`;
             }
         } else {
-            // No mapping found. Extract PT/CV name raw from text
-            const extractFrom = ythText || upperText;
-            const ptExtract = extractFrom.match(/(?:PT|CV|OV|PI)[.\s]+([A-Z][A-Z0-9\s]{2,30})/);
-            detectedToko = ptExtract ? ptExtract[1].trim() : "PT_UNKNOWN";
+            // No mapping found. Use the manually extracted PT name
+            detectedToko = rawExtract || "PT_UNKNOWN";
             if (detectedToko !== "PT_UNKNOWN") {
                 needsReview = true;
                 fallbackCause = `Pemetaan untuk '${detectedToko}' belum ada di sistem.`;
@@ -501,9 +513,9 @@ function analyzeText(text, originalName) {
         const allNums = cleanText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
         for (const m of allNums) {
             let rawNum = m[1].replace(/[^0-9]/g, '');
-            // Limit to < 12 digits to avoid grabbing NPWP (15 digits) or Phone Numbers (12-13 digits).
-            // 11 digits allows up to 99 billion, which is extremely safe for invoices. 
-            if (rawNum && rawNum.length >= 5 && rawNum.length <= 11) {
+            // Limit to < 10 digits to avoid grabbing NPWP (15 digits) or Phone Numbers (12-13 digits)
+            // Even an OCR-mangled NPWP (e.g. 11 digits: 31460440641) should be filtered. Maximum 9,999,999,999
+            if (rawNum && rawNum.length >= 5 && rawNum.length <= 10) {
                 candidates.push(Number(rawNum));
             }
         }
@@ -575,7 +587,7 @@ function analyzeText(text, originalName) {
     const datePatterns = [
         /[Cc]etak\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})/,
         /[Tt]anggal\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})/,
-        /(\d{1,2})\s*[-/]\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/]\s*\d{2,4}/
+        /\b(\d{1,2})\s*[-/]\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/]\s*(\d{4})\b/
     ];
     for (const pat of datePatterns) {
         const m = cleanText.match(pat);
