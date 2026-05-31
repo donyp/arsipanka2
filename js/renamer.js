@@ -419,52 +419,50 @@ function analyzeText(text, originalName) {
             }
         }
 
-        // 3. Nominal (Stable version)
+        // 3. Nominal (Intelligent Proximity Scoring)
         let nominal = "0";
-        let cands = [];
+        let nominalCands = [];
 
         let nominalText = cleanText;
         if (invNum && invNum.length > 5) {
-            nominalText = nominalText.replace(new RegExp(invNum, 'g'), ' [INV_MASK] ');
-            const segments = invNum.match(/\d{5,}/g) || [];
-            segments.forEach(seg => nominalText = nominalText.replace(new RegExp(seg, 'g'), ' [INV_SEG_MASK] '));
+            nominalText = nominalText.replace(new RegExp(invNum, 'g'), ' [MASK] ');
+            (invNum.match(/\d{5,}/g) || []).forEach(seg => {
+                nominalText = nominalText.replace(new RegExp(seg, 'g'), ' [MASK] ');
+            });
         }
-        nominalText = nominalText.replace(/\d{11,}/g, ' [LONG_DIGITS_MASK] ');
 
-        const pats = [
-            /[Tt]otal\s*[Bb]ayar\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/,
-            /(?:[Bb]ayar|sayar|ayar)\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/i,
-            /[Tt]otal\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/i,
-            /[Nn]etto\s*[:;.]?\s*[Rr]?[Pp]?[\s.]*(\d[\d.,\s-]+)/i
+        const labels = [
+            { rx: /[Tt]otal\s*[Bb]ayar/i, weight: 1000 },
+            { rx: /[Nn]etto|[Jj]umlah\s*[Bb]ayar|[Tt]otal/i, weight: 800 },
+            { rx: /[Bb]ayar|sayar|ayar/i, weight: 600 },
+            { rx: /[Rr][Pp]/i, weight: 300 }
         ];
 
-        for (const p of pats) {
-            const matches = nominalText.matchAll(new RegExp(p, 'g'));
-            for (const m of matches) {
-                const v = m[1].replace(/[\s-]+/g, '').split(',')[0].replace(/[^0-9]/g, '');
-                if (v.length >= 4 && v.length <= 9) {
-                    const num = Number(v);
-                    if (num === 13000009 || num === 1300000) continue;
-                    cands.push(num);
-                }
+        const brute = nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
+        for (const b of brute) {
+            const v = b[1].replace(/[^0-9]/g, '');
+            if (v.length >= 4 && v.length <= 9) {
+                const num = Number(v);
+                let maxScore = 0;
+
+                // Find nearest label and calculate score
+                labels.forEach(lb => {
+                    const lMatch = [...nominalText.matchAll(new RegExp(lb.rx, 'gi'))];
+                    lMatch.forEach(lm => {
+                        const dist = Math.abs(b.index - lm.index);
+                        if (dist < 40) maxScore = Math.max(maxScore, lb.weight);
+                        else if (dist < 100) maxScore = Math.max(maxScore, lb.weight * 0.5);
+                    });
+                });
+
+                if (maxScore > 0) nominalCands.push({ val: num, score: maxScore });
+                else if (b.index > cleanText.length * 0.5) nominalCands.push({ val: num, score: 50 }); // Fallback for numbers in lower half
             }
         }
 
-        if (cands.length === 0) {
-            const bf = nominalText.matchAll(/(\d{1,3}(?:[.\s]\d{3})+)/g);
-            for (const b of bf) {
-                const v = b[1].replace(/[^0-9]/g, '');
-                if (v.length >= 5 && v.length <= 9) {
-                    const num = Number(v);
-                    if (num === 13000009 || num === 1300000) continue;
-                    cands.push(num);
-                }
-            }
-        }
-
-        if (cands.length > 0) {
-            // Pick the largest value that isn't blacklisted
-            nominal = Math.max(...cands).toLocaleString('id-ID');
+        if (nominalCands.length > 0) {
+            nominalCands.sort((a, b) => b.score - a.score);
+            nominal = nominalCands[0].val.toLocaleString('id-ID');
         }
 
         // 4. Date
