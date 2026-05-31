@@ -311,7 +311,8 @@ function analyzeText(text, originalName) {
         if (ythMatch) {
             ythText = ythMatch[1].trim().toUpperCase();
             const idx = cleanText.indexOf(ythMatch[0]);
-            recSecText = cleanText.substring(idx, idx + 400).toUpperCase();
+            // Increase scope to 1000 to catch name/address on A4
+            recSecText = cleanText.substring(idx, idx + 1000).toUpperCase();
         }
 
         const invMatch = cleanText.match(/[Ii]nvoice\s*[:;.]?\s*([\d]+)/);
@@ -347,10 +348,13 @@ function analyzeText(text, originalName) {
                 return cleanTxt.includes(cleanK) || cleanK.includes(cleanTxt);
             });
         };
-        const getPTMatch = (scope) => PT_MAPPING.filter(r => {
-            const clean = r.pt.replace(/\b(PT\.?|P[TI1]\.?|CV\.?|[O0C][VF]\.?|C[TY7]\.?|NV\.?|C[TN1]\.?)\b/gi, '').replace(/[()]/g, '').trim().toUpperCase();
-            return clean.length > 2 && (scope.includes(clean) || clean.includes(scope.substring(0, 15)));
-        });
+        const getPTMatch = (scope) => {
+            const cleanScope = scope.replace(/[^A-Z0-9]/g, '');
+            return PT_MAPPING.filter(r => {
+                const cleanPt = r.pt.replace(/\b(PT\.?|P[TI1]\.?|CV\.?|[O0C][VF]\.?|C[TY7]\.?|NV\.?|C[TN1]\.?)\b/gi, '').replace(/[^A-Z0-9]/g, '').toUpperCase();
+                return cleanPt.length > 2 && (cleanScope.includes(cleanPt) || cleanPt.includes(cleanScope));
+            });
+        };
 
         if (isPPN) {
             const scope = recSecText || ythText || upperText.substring(Math.floor(upperText.length * 0.15));
