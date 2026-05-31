@@ -217,14 +217,20 @@ function analyzeText(text, originalName) {
         // This is the most crucial part to avoid letterheads!
         const searchScope = recipientSectionText || ythText || upperText.substring(Math.floor(upperText.length * 0.15));
 
-        let ptMatches = PT_MAPPING.filter(r => {
-            const ptName = r.pt.toUpperCase();
-            return searchScope.includes(ptName);
-        });
+        const findPTMatches = (scope) => {
+            return PT_MAPPING.filter(r => {
+                // Strip PT/CV from mapping keyword so "CV. DUNIA BAJA" matches OCR "OV DUNIA BAJA"
+                const cleanPtName = r.pt.replace(/\b(PT\.?|CV\.?)\b/gi, '').trim().toUpperCase();
+                if (!cleanPtName) return false;
+                return scope.includes(cleanPtName);
+            });
+        };
+
+        let ptMatches = findPTMatches(searchScope);
 
         if (ptMatches.length === 0) {
             // Very loose fallback
-            ptMatches = PT_MAPPING.filter(r => upperText.includes(r.pt.toUpperCase()));
+            ptMatches = findPTMatches(upperText);
         }
 
         if (ptMatches.length === 1) {
@@ -317,6 +323,43 @@ function analyzeText(text, originalName) {
         }
         if (subtotalSum > 0) {
             candidates.push(subtotalSum);
+        }
+    }
+
+    // Strategy 4: (Ultimate Fallback) Terbilang Parser
+    // Often amounts are explicitly spelled out as "empat juta sembilan ratus ribu rupiah"
+    if (candidates.length === 0 || Math.max(...candidates) < 1000) {
+        const terbilangMatch = cleanText.match(/(?:[Tt]erbilang|[Tt]erbilang\s*:)\s*([^0-9\n;]+)(?:rupiah|rp|$)/i);
+        if (terbilangMatch) {
+            let parseTerbilang = (text) => {
+                const map = {
+                    'satu': 1, 'se': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5,
+                    'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9, 'sepuluh': 10, 'sebelas': 11
+                };
+                let words = text.toLowerCase().match(/[a-z]+/g);
+                if (!words) return 0;
+                let total = 0; let current = 0;
+                for (let w of words) {
+                    if (map[w]) current += map[w];
+                    else if (w === 'belas') current = Math.max(1, current) + 10;
+                    else if (w === 'puluh') current = Math.max(1, current) * 10;
+                    else if (w === 'ratus') current = Math.max(1, current) * 100;
+                    else if (w === 'ribu') { total += Math.max(1, current) * 1000; current = 0; }
+                    else if (w === 'juta') { total += Math.max(1, current) * 1000000; current = 0; }
+                    else if (w === 'milyar') { total += Math.max(1, current) * 1000000000; current = 0; }
+                }
+                total += current;
+                // If it ends with "ratus" but total < 100000, probably meant "ratus ribu" in OCR cuts
+                if (words[words.length - 1] === 'ratus' && total > 1000 && (total % 1000 !== 0) && total < 100000) {
+                    // "empat juta sembilan ratus" -> 4000900 -> probably 4900000
+                    const jutaPart = Math.floor(total / 1000000) * 1000000;
+                    const rem = total - jutaPart;
+                    if (rem > 0 && rem < 1000) total = jutaPart + (rem * 1000);
+                }
+                return total;
+            };
+            const tbVal = parseTerbilang(terbilangMatch[1]);
+            if (tbVal > 0) candidates.push(tbVal);
         }
     }
 
