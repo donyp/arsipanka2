@@ -39,7 +39,7 @@ let PT_MAPPING = [
     { store: "Mega Warna kalimalang", secondary: "EDI", pt: "PT. MEGA WARNA Indonesia" },
 
     // ZONA 4
-    { store: "Bantar Gebang", secondary: "LILIS, ANTO, NEGA, MITA, DENI", pt: "CV. DUNIA BAJA" },
+    { store: "Bantar Gebang", secondary: "LILIS, ANTO, NEGA, MITA, DENI, DEN", pt: "CV. DUNIA BAJA" },
     { store: "Cibubur", secondary: "ANWAR", pt: "CV. CILEGON STEEL" },
     { store: "Cikeas", secondary: "RUDIYANTO", pt: "PT CIBUBUR RAYA INDOSTEEL (CIKEAS)" },
     { store: "Cimanggis", secondary: "BAHTIAR, YUNUS", pt: "PT. TRIGALUH MAS CIMANGGIS" },
@@ -269,9 +269,9 @@ async function extractTextFromPDF(file) {
 
     const lowerText = fullText.toLowerCase();
     if (fullText.trim().length < 50 || (!lowerText.includes('yth') && !lowerText.includes('bayar'))) {
-        console.log(`[AI] Page text too short, using OCR (Scale 4.0)...`);
+        console.log(`[AI] Page text too short, using OCR (Scale 3.0)...`);
         const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 4.0 }); // Higher scale for better OCR on small A4 text
+        const viewport = page.getViewport({ scale: 3.0 });
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         canvas.height = viewport.height;
@@ -342,12 +342,14 @@ function analyzeText(text, originalName) {
             const cleanTxt = txt.replace(/[^A-Z0-9]/g, '');
             return rule.secondary.split(',').some(k => {
                 const cleanK = k.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-                return cleanK && cleanTxt.includes(cleanK);
+                if (!cleanK) return false;
+                // Match if keyword is in text OR text fragment (normalized) contains keyword
+                return cleanTxt.includes(cleanK) || cleanK.includes(cleanTxt);
             });
         };
         const getPTMatch = (scope) => PT_MAPPING.filter(r => {
-            const clean = r.pt.replace(/\b(PT\.?|P[T1]\.?|CV\.?|[O0C][VF]\.?|C[TY7]\.?|NV\.?|C[TN1]\.?)\b/gi, '').replace(/[()]/g, '').trim().toUpperCase();
-            return clean.length > 2 && scope.includes(clean);
+            const clean = r.pt.replace(/\b(PT\.?|P[TI1]\.?|CV\.?|[O0C][VF]\.?|C[TY7]\.?|NV\.?|C[TN1]\.?)\b/gi, '').replace(/[()]/g, '').trim().toUpperCase();
+            return clean.length > 2 && (scope.includes(clean) || clean.includes(scope.substring(0, 15)));
         });
 
         if (isPPN) {
