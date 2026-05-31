@@ -604,6 +604,19 @@ function analyzeText(text, originalName) {
     let chosenDateMatch = null;
     const explicitMatch = cleanText.match(/(?:[Cc]etak|[Tt]gl|[Tt]anggal)\s*[:;.]?\s*(\d{1,2})\s*[-/\s.,]+\s*([A-Za-z]{3,9}|\d{1,2})\s*[-/\s.,]+\s*(\d{4})/i);
 
+    const indMonthMap = {
+        'JAN': 'Januari', 'FEB': 'Februari', 'MAR': 'Maret', 'APR': 'April',
+        'MEI': 'Mei', 'MAY': 'Mei', 'MEL': 'Mei', 'MEY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
+        'AGU': 'Agustus', 'AUG': 'Agustus', 'SEP': 'September', 'OKT': 'Oktober',
+        'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember',
+        '01': 'Januari', '1': 'Januari', '02': 'Februari', '2': 'Februari',
+        '03': 'Maret', '3': 'Maret', '04': 'April', '4': 'April',
+        '05': 'Mei', '5': 'Mei', '06': 'Juni', '6': 'Juni',
+        '07': 'Juli', '7': 'Juli', '08': 'Agustus', '8': 'Agustus',
+        '09': 'September', '9': 'September', '10': 'Oktober',
+        '11': 'November', '12': 'Desember'
+    };
+
     if (explicitMatch) {
         const d = parseInt(explicitMatch[1], 10);
         const mSub = explicitMatch[2].substring(0, 3).toUpperCase();
@@ -628,18 +641,6 @@ function analyzeText(text, originalName) {
     if (chosenDateMatch) {
         const day = parseInt(chosenDateMatch[1], 10).toString(); // removes leading zero if present
         const rawMonth = chosenDateMatch[2].substring(0, 3).toUpperCase();
-        const indMonthMap = {
-            'JAN': 'Januari', 'FEB': 'Februari', 'MAR': 'Maret', 'APR': 'April',
-            'MEI': 'Mei', 'MAY': 'Mei', 'MEL': 'Mei', 'MEY': 'Mei', 'JUN': 'Juni', 'JUL': 'Juli',
-            'AGU': 'Agustus', 'AUG': 'Agustus', 'SEP': 'September', 'OKT': 'Oktober',
-            'OCT': 'Oktober', 'NOV': 'November', 'DES': 'Desember', 'DEC': 'Desember',
-            '01': 'Januari', '1': 'Januari', '02': 'Februari', '2': 'Februari',
-            '03': 'Maret', '3': 'Maret', '04': 'April', '4': 'April',
-            '05': 'Mei', '5': 'Mei', '06': 'Juni', '6': 'Juni',
-            '07': 'Juli', '7': 'Juli', '08': 'Agustus', '8': 'Agustus',
-            '09': 'September', '9': 'September', '10': 'Oktober',
-            '11': 'November', '12': 'Desember'
-        };
         const month = indMonthMap[rawMonth];
         if (month) {
             dateStr = `${day} ${month}`;
