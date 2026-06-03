@@ -33,7 +33,7 @@
     <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
-    <!-- Sidebar (rendered by js/sidebar.js) -->
+    <!-- Sidebar (rendered by js/sidebar.js?v=FORCE_REFRESH_9999) -->
     <aside id="sidebar"
         class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
     </aside>
@@ -50,7 +50,7 @@
                 </button>
                 <div>
                     <h2 class="text-lg font-semibold text-white">Optimasi Penyimpanan</h2>
-                    <p class="text-xs text-gray-500">AI Assistant untuk membersihkan file sampah & duplikat</p>
+                    <p class="text-xs text-gray-500">Asisten Sistem untuk membersihkan file sampah & duplikat</p>
                 </div>
             </div>
         </header>
@@ -157,7 +157,7 @@
                     <div class="flex justify-center pt-4">
                         <button onclick="cleanupAll()"
                             class="px-10 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-2xl shadow-indigo-500/30">
-                            Bersihkan Semua Berdasarkan Saran AI
+                            Bersihkan Semua Berdasarkan Rekomendasi Sistem
                         </button>
                     </div>
 
@@ -177,7 +177,7 @@
             </div>
         </div>
     </main>
-    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar.js?v=FORCE_REFRESH_9999"></script>
 
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
@@ -317,7 +317,7 @@
 
             showConfirm(
                 'Pembersihan Total',
-                `AI menyarankan menghapus ${ids.length} file. Lanjutkan pembersihan total secara permanen?`,
+                `Sistem menyarankan menghapus ${ids.length} file. Lanjutkan pembersihan total secara permanen?`,
                 async () => {
                     try {
                         await API.post('/api/files/cleanup-bulk', { ids });

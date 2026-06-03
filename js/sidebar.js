@@ -1,7 +1,9 @@
 // ============================================================
 // Shared Sidebar Component — Single Source of Truth
 // Auto-detects current page and renders the sidebar
+// Version 2.1.1 - Definitive Clean Build (No AI PDF Renamer)
 // ============================================================
+console.log("Sidebar Version 2.1.1 - Clean Build Executed");
 
 (function () {
     const activePage = window.location.pathname.split('/').pop() || 'dashboard.html';
@@ -80,7 +82,7 @@
             // Check if any child is active
             const hasActiveChild = item.children.some(child => activePage === child.href);
             const parentClass = hasActiveChild ? 'expanded' : '';
-            const maxH = hasActiveChild ? '1000px' : '0px'; // Initial height
+            const maxH = hasActiveChild ? '1000px' : '0px';
 
             let childrenHTML = '';
             for (const child of item.children) {
@@ -122,7 +124,6 @@
             `;
 
         } else {
-            // Normal Link
             const isActive = activePage === item.href;
             const activeClass = isActive
                 ? 'active text-white bg-white/10 ring-1 ring-white/10 shadow-lg'
@@ -139,7 +140,6 @@
         }
     }
 
-    // Wait for DOM to be ready, then inject
     function inject() {
         const sidebar = document.getElementById('sidebar');
         if (!sidebar) return;
@@ -182,12 +182,11 @@
             </div>
         `;
 
-        // Modern Global Broadcast Bar Injection
         const mainContent = document.getElementById('main-content');
         if (mainContent && !document.getElementById('global-broadcast-bar')) {
             const bar = document.createElement('div');
             bar.id = 'global-broadcast-bar';
-            bar.className = 'modern-broadcast-bar hidden'; // Hidden by default
+            bar.className = 'modern-broadcast-bar hidden';
             bar.innerHTML = `
                 <div class="broadcast-badge">
                     <span class="flex items-center gap-1.5">
@@ -206,7 +205,6 @@
             loadGlobalBroadcast();
         }
 
-        // --- NEW: Trigger UI Update to process guards (data-role/data-permission) ---
         if (typeof updateUserUI === 'function') {
             updateUserUI();
         }
@@ -214,9 +212,7 @@
 
     async function loadGlobalBroadcast() {
         try {
-            // Wait for API to be available
             if (typeof API === 'undefined') return;
-
             const { broadcast } = await API.get('/api/broadcasts/latest');
             const bar = document.getElementById('global-broadcast-bar');
             const ticker = document.getElementById('global-broadcast-ticker');
@@ -224,8 +220,6 @@
             if (broadcast && broadcast.content && bar && ticker) {
                 ticker.textContent = broadcast.content;
                 bar.classList.remove('hidden');
-
-                // Adjust animation speed based on text length
                 const speed = Math.max(20, broadcast.content.length / 5);
                 ticker.style.animationDuration = `${speed}s`;
             }
@@ -234,12 +228,10 @@
         }
     }
 
-    // Run immediately if DOM is ready, otherwise wait
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', inject);
     } else {
         inject();
     }
-    // Expose globally for manual refresh (e.g. after sending broadcast)
     window.loadGlobalBroadcast = loadGlobalBroadcast;
 })();

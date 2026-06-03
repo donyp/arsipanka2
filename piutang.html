@@ -1,10 +1,10 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bukti Pembayaran Piutang â€” Pusat Arsip Anka</title>
+    <title>Bukti Pembayaran Piutang — Pusat Arsip Anka</title>
     <meta name="description" content="Upload bukti pembayaran piutang secara massal">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -33,7 +33,7 @@
     <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
-    <!-- Sidebar (rendered by js/sidebar.js) -->
+    <!-- Sidebar (rendered by js/sidebar.js?v=FORCE_REFRESH_9999) -->
     <aside id="sidebar"
         class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
     </aside>
@@ -94,7 +94,7 @@
                                     </svg>
                                     <p class="text-sm text-gray-400 mb-1">Drag & drop file di sini atau <span
                                             class="text-emerald-400 font-medium">pilih file</span></p>
-                                    <p class="text-xs text-gray-600">PDF, JPG, PNG â€¢ Upload massal didukung â€¢ Maks 25MB
+                                    <p class="text-xs text-gray-600">PDF, JPG, PNG • Upload massal didukung • Maks 25MB
                                         per file</p>
                                 </div>
                                 <div id="file-info" class="hidden text-left w-full max-w-lg mx-auto">
@@ -161,7 +161,7 @@
     </main>
 
     <!-- Scripts -->
-    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar.js?v=FORCE_REFRESH_9999"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/utils.js?v=1778387279965"></script>
@@ -416,7 +416,7 @@
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-300">${truncate(f.nama_file, 35)}</p>
-                                <p class="text-xs text-gray-500">${f.zonas?.nama || ''} â€¢ ${new Date(f.created_at).toLocaleDateString('id-ID')}</p>
+                                <p class="text-xs text-gray-500">${f.zonas?.nama || ''} • ${new Date(f.created_at).toLocaleDateString('id-ID')}</p>
                             </div>
                         </div>
                         <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400">Piutang</span>
