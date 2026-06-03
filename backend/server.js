@@ -1667,9 +1667,9 @@ app.get('/api/stats/chart', authenticateToken, async (req, res) => {
             }
         }
 
-        const labels = Object.keys(chartData);
-        const values = Object.values(chartData);
-        console.log(`[DEBUG_CHART] Result:`, chartData);
+        const labels = allZonas.map(z => z.nama);
+        const values = labels.map(label => chartData[label] || 0);
+        console.log(`[DEBUG_CHART] Result:`, { labels, values });
 
         res.json({ labels, values });
     } catch (err) {
