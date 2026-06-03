@@ -41,18 +41,17 @@ async function handleSmartUpload(event) {
 
 function handleDirectPDFUpload(files) {
     batchData = files.map((file, index) => {
-        const metadata = parseMetadataFromFilename(file.name);
         return {
             id: index,
-            tanggal: metadata.tanggal || new Date().toISOString(),
-            no_invoice: metadata.no_invoice || '-',
-            total: metadata.total || 0,
-            konsumen: metadata.toko || '-',
+            tanggal: new Date().toISOString().split('T')[0],
+            no_invoice: '-',
+            total: 0,
+            konsumen: '-',
             metode: 'TUNAI',
             pdfFile: file,
             status: 'ready',
             errorMsg: '',
-            tipe_ppn: metadata.tipe_ppn,
+            tipe_ppn: 'NON',
             _originalRow: {}
         };
     });
@@ -115,29 +114,7 @@ function processExcelData(json) {
     showTable();
 }
 
-function parseMetadataFromFilename(filename) {
-    const name = filename.replace(/\.pdf$/i, '');
-    let meta = { toko: '', total: 0, tanggal: '', no_invoice: '', tipe_ppn: 'NON' };
-
-    // 1. Nominal (Matches 15.370.000 or 15370000)
-    const priceMatch = name.match(/\d{1,3}(?:\.\d{3})+|\d{5,10}/);
-    if (priceMatch) meta.total = parseFloat(priceMatch[0].replace(/\./g, '')) || 0;
-
-    // 2. PPN/NON
-    if (name.toUpperCase().includes('PPN')) meta.tipe_ppn = 'PPN';
-    else meta.tipe_ppn = 'NON';
-
-    // 3. Toko
-    const upper = name.toUpperCase();
-    const matched = tokos.find(t => upper.includes(t.nama.toUpperCase()));
-    if (matched) meta.toko = matched.nama;
-
-    // 4. Date
-    const dMatch = name.match(/(\d{1,2})[-/\s]?(JAN|FEB|MAR|APR|MEI|JUN|JUL|AGU|SEP|OKT|NOV|DES|JANUARI|FEBRUARI|MARET|APRIL|MEI|JUNI|JULI|AGUSTUS|SEPTEMBER|OKTOBER|NOVEMBER|DESEMBER|\d{1,2})[-/\s]?(\d{2,4})?/i);
-    if (dMatch) meta.tanggal = dMatch[0];
-
-    return meta;
-}
+// ---- Metadata Extraction (REMOVED) ----
 
 function parseMoney(val, filename) {
     if (filename) {
@@ -163,22 +140,6 @@ function attachPDF(id, event) {
     if (row) {
         row.pdfFile = file;
         row.status = 'ready';
-
-        // Extract metadata from filename (Authoritative source)
-        const meta = parseMetadataFromFilename(file.name);
-
-        // Always prefer filename nominal if it's greater than 0
-        if (meta.total > 0) {
-            row.total = meta.total;
-        }
-
-        // Prefill Toko if missing or generic
-        if (meta.toko && (row.konsumen === '-' || row.konsumen === '')) {
-            row.konsumen = meta.toko;
-        }
-
-        if (meta.tipe_ppn) row.tipe_ppn = meta.tipe_ppn;
-
         renderBatchTable();
     }
 }

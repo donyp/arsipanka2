@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-// ---- Load ALL Tokos (for filename auto-detection) ----
+// ---- Load Toko List (for dropdown selection) ----
 async function loadAllTokos() {
     try {
         const { tokos: toko } = await API.get('/api/toko');
@@ -34,27 +34,6 @@ async function loadAllTokos() {
     } catch (err) {
         window._allTokos = [];
     }
-}
-
-// ---- Detect Toko from Filename ----
-// Normalizes both strings: uppercase, strips non-alphanumeric.
-// Matches even if toko name has spaces or not in the filename.
-function detectTokoFromFilename(filename) {
-    if (!window._allTokos || !window._allTokos.length) return null;
-
-    const normalize = (s) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const normalizedFilename = normalize(filename);
-
-    // Sort by name length descending: prefer longer/more-specific match
-    const sorted = [...window._allTokos].sort((a, b) => b.nama.length - a.nama.length);
-
-    for (const toko of sorted) {
-        const normalizedToko = normalize(toko.nama);
-        if (normalizedToko && normalizedFilename.includes(normalizedToko)) {
-            return toko;
-        }
-    }
-    return null;
 }
 
 
@@ -101,16 +80,12 @@ function addFiles(files) {
         }
         return true;
     }).map(f => {
-        // Detect date and toko for each file individually
-        const toko = detectTokoFromFilename(f.name);
-        const date = extractDateFromFilename(f.name);
-        const tipe_ppn = detectPPNFromFilename(f.name);
-
+    }).map(f => {
         return {
             file: f,
-            toko: toko,
-            date: date,
-            tipe_ppn: tipe_ppn
+            toko: null,
+            date: null,
+            tipe_ppn: null
         };
     });
 
@@ -118,71 +93,7 @@ function addFiles(files) {
     updateFileUI();
 }
 
-function detectPPNFromFilename(name) {
-    if (!name) return null;
-    const n = name.toUpperCase();
-    if (n.includes('NON')) return 'NON';
-    if (n.includes('PPN')) return 'PPN';
-    return null;
-}
-
-function extractDateFromFilename(name) {
-    if (!name) return null;
-
-    const text = name.toUpperCase();
-
-    // 1. DD/MM/YYYY or DD-MM-YYYY
-    const dmyRegex = /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4}|\d{2})/;
-    const dmyMatch = text.match(dmyRegex);
-    if (dmyMatch) {
-        let y = dmyMatch[3];
-        if (y.length === 2) y = '20' + y;
-        const m = dmyMatch[2].padStart(2, '0');
-        const d = dmyMatch[1].padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    }
-
-    // 2. YYYY/MM/DD or YYYY-MM-DD
-    const ymdRegex = /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/;
-    const ymdMatch = text.match(ymdRegex);
-    if (ymdMatch) {
-        const y = ymdMatch[1];
-        const m = ymdMatch[2].padStart(2, '0');
-        const d = ymdMatch[3].padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    }
-
-    const months = {
-        'JAN': '01', 'FEB': '02', 'PEB': '02', 'MAR': '03', 'APR': '04',
-        'MEI': '05', 'MAY': '05', 'JUN': '06', 'JUL': '07', 'AGU': '08',
-        'AUG': '08', 'SEP': '09', 'OKT': '10', 'OCT': '10', 'NOV': '11',
-        'NOP': '11', 'DES': '12', 'DEC': '12'
-    };
-
-    // 3. DD MMM (e.g. 17 FEB or 2 MAR, 17FEB, 2MAR)
-    // Matches 1-2 digits followed optionally by space then 3 letters
-    const regex = /(\d{1,2})\s*([A-Z]{3})/i;
-    const match = text.match(regex);
-
-    if (match) {
-        const day = match[1].padStart(2, '0');
-        const monthAbbr = match[2];
-        const month = months[monthAbbr];
-
-        if (month) {
-            const dayNum = parseInt(day);
-            const monthNum = parseInt(month);
-            const yearNum = new Date().getFullYear();
-
-            // Validate date rollover (e.g., April 31 -> May 1)
-            const dObj = new Date(yearNum, monthNum - 1, dayNum);
-            if (dObj.getFullYear() === yearNum && dObj.getMonth() === monthNum - 1 && dObj.getDate() === dayNum) {
-                return `${yearNum}-${month}-${day}`;
-            }
-        }
-    }
-    return null;
-}
+// ---- Meta Extraction (REMOVED) ----
 
 function removeFile(index, e) {
     e.stopPropagation();
@@ -293,7 +204,7 @@ function setupForm() {
             let msg = 'Mohon perbaiki file berikut:\n';
             if (undetectedToko > 0) msg += `- ${undetectedToko} file toko tidak terdeteksi\n`;
             if (undetectedDate > 0) msg += `- ${undetectedDate} file tanggal tidak terdeteksi\n`;
-            Toast.error(msg + 'Rename file agar informasi lengkap.');
+            Toast.error(msg + 'Lengkapi data manual untuk melanjutkan.');
             return;
         }
 
