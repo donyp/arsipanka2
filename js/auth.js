@@ -88,13 +88,27 @@ async function logout() {
     window.location.href = 'index.html';
 }
 
-// ---- Update User UI Elements ----
+/**
+ * Helper to get pretty role labels based on role ID or permissions
+ */
+function getRoleLabel(user) {
+    if (!user) return 'User';
+    if (user.role === 'super_admin') return 'Super Admin';
+    if (user.role === 'moderator' || (user.permissions && user.permissions.includes('IS_MODERATOR'))) return 'Moderator';
+    return 'Admin Zona';
+}
+
+/**
+ * Updates all user info in the UI (current header, sidebar, profile modal)
+ */
 function updateUserUI() {
     if (!currentUser) return;
 
+    const roleLabel = getRoleLabel(currentUser);
+
     // Update user name displays
     document.querySelectorAll('[data-user-name]').forEach(el => {
-        el.textContent = currentUser.name;
+        el.textContent = currentUser.name || 'User';
     });
 
     // Update user email displays
@@ -104,23 +118,29 @@ function updateUserUI() {
 
     // Update user username displays
     document.querySelectorAll('[data-user-username]').forEach(el => {
-        el.textContent = currentUser.username || currentUser.email.split('@')[0];
+        el.textContent = `@${currentUser.username || (currentUser.email ? currentUser.email.split('@')[0] : 'user')}`;
     });
 
     // Update avatar
     document.querySelectorAll('[data-user-avatar]').forEach(el => {
-        el.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=6366f1&color=fff&size=80`;
+        el.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=6366f1&color=fff&size=200`;
     });
 
     // Update role badge and label
     document.querySelectorAll('[data-user-role], [data-user-role-label]').forEach(el => {
-        const roleName = currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin Zona';
-        el.textContent = roleName;
+        el.textContent = roleLabel;
 
         if (el.hasAttribute('data-user-role')) {
-            el.className = currentUser.role === 'super_admin'
-                ? 'text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                : 'text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+            // Apply different styles based on role
+            let styles = 'text-[10px] px-2 py-0.5 rounded-full border ';
+            if (roleLabel === 'Super Admin') {
+                styles += 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30';
+            } else if (roleLabel === 'Moderator') {
+                styles += 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+            } else {
+                styles += 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+            }
+            el.className = styles;
         }
     });
 
@@ -222,16 +242,8 @@ function openProfileDetail() {
     // Close dropdown first
     toggleUserMenu();
 
-    // Populate modal data
-    const user = JSON.parse(localStorage.getItem('user_data') || '{}');
-    document.querySelectorAll('[data-user-name]').forEach(el => el.textContent = user.name || 'User');
-    document.querySelectorAll('[data-user-username]').forEach(el => el.textContent = `@${user.username || 'user'}`);
-    document.querySelectorAll('[data-user-role]').forEach(el => el.textContent = user.role || 'Moderator');
-    document.querySelectorAll('[data-user-email]').forEach(el => el.textContent = user.email || '-');
-    document.querySelectorAll('[data-user-zona]').forEach(el => el.textContent = user.zona || 'Semua Zona');
-    document.querySelectorAll('[data-user-avatar]').forEach(el => {
-        el.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=6366f1&color=fff&size=256`;
-    });
+    // Populate modal data (Refresh from currentUser first)
+    updateUserUI();
 
     // Show modal
     modal.classList.remove('hidden');
@@ -262,7 +274,6 @@ function hasPermission(perm) {
 
 // ---- Helper: Get zone label from currentUser or zona list ----
 function getZoneLabel(zonaId) {
-    // If zones are loaded, find the label
     if (window._zonaCache) {
         const z = window._zonaCache.find(z => z.id === zonaId);
         if (z) return z.nama;
