@@ -37,14 +37,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     // Admin controls only for super admin / moderator
     if (hasPermission('manage_system') || user.role === 'moderator' || user.role === 'super_admin') {
-        document.getElementById('maintenance-btn')?.classList.remove('hidden');
+        document.getElementById('maintenance-btn')?.classList.replace('hidden', 'md:flex');
+        document.getElementById('btn-manage-broadcast')?.classList.remove('hidden');
+        document.getElementById('stats-grid')?.classList.remove('hidden');
+
         loadMaintenanceStatus();
     } else {
-        // Explicitly hide restricted elements for Admin Zona
+        // Explicitly remove restricted elements for Admin Zona
         document.getElementById('maintenance-btn')?.remove();
         document.getElementById('btn-manage-broadcast')?.remove();
-        document.getElementById('stat-storage-box')?.remove();
-        document.getElementById('stat-today-box')?.remove();
+        document.getElementById('stats-grid')?.remove();
     }
 
     // Check for Post-Maintenance Update Notice (Run for ALL users)
