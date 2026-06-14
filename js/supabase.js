@@ -149,12 +149,15 @@ const API = {
     },
 
     /**
-     * Upload file (FormData)
+     * Get a URL for an authenticated resource (proxied through backend with JWT)
      */
-    upload(endpoint, formData) {
-        return this.request(endpoint, {
-            method: 'POST',
-            body: formData // No Content-Type — browser sets it with boundary
-        });
+    getAuthenticatedUrl(path) {
+        if (!path) return '';
+        // If it already is a full URL with token, return as is
+        if (path.includes('token=') || path.startsWith('http')) return path;
+
+        const token = this.getToken();
+        const separator = path.includes('?') ? '&' : '?';
+        return `${CONFIG.API_URL}${path}${separator}token=${token}`;
     }
 };
