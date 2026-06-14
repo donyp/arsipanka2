@@ -1173,65 +1173,43 @@ async function bulkDownloadSelected() {
     btn.disabled = true;
 
     try {
-        if (selectedIds.length <= 3) {
-            // Sequence download
-            for (const id of selectedIds) {
-                const file = archives.find(f => f.id === id);
-                if (file) {
-                    const token = localStorage.getItem('jwt_token');
-                    const downloadUrl = `${CONFIG.API_URL}/api/files/download/${file.id}?token=${token}`;
+        // ZIP Bulk Download via Backend
+        btn.innerHTML = `
+            <div class="loader-mini">
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+            </div>
+            <span>Zipping...</span>
+        `;
 
-                    const a = document.createElement('a');
-                    a.href = downloadUrl;
-                    a.download = file.nama_file;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
+        const token = API.getToken();
+        const downloadUrl = `${CONFIG.API_URL}/api/files/bulk-download?token=${token}`;
 
-                    await new Promise(r => setTimeout(r, 800));
-                }
-            }
-            Toast.success('Download dimulai.');
-        } else {
-            // ZIP Bulk Download via Backend
-            btn.innerHTML = `
-                <div class="loader-mini">
-                    <div class="loader-ring"></div>
-                    <div class="loader-ring"></div>
-                    <div class="loader-ring"></div>
-                </div>
-                <span>Zipping...</span>
-            `;
+        // We use a hidden form to send a large number of IDs via POST 
+        // while still allowing the browser to handle the resulting stream as a download.
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = downloadUrl;
+        form.style.display = 'none';
 
-            const token = API.getToken();
-            const downloadUrl = `${CONFIG.API_URL}/api/files/bulk-download?token=${token}`;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids';
+        input.value = selectedIds.join(',');
+        form.appendChild(input);
 
-            // We use a hidden form to send a large number of IDs via POST 
-            // while still allowing the browser to handle the resulting stream as a download.
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = downloadUrl;
-            form.style.display = 'none';
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
 
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'ids';
-            input.value = selectedIds.join(',');
-            form.appendChild(input);
-
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-
-            // Give it some time before resetting UI
-            setTimeout(() => {
-                Toast.success('Proses ZIP dimulai. Tunggu hingga download selesai.');
-                btn.disabled = false;
-                btn.innerHTML = originalContent;
-                clearSelection();
-            }, 3000);
-            return; // Exit early as we handled everything
-        }
+        // Give it some time before resetting UI
+        setTimeout(() => {
+            Toast.success('Proses ZIP dimulai. Tunggu hingga download selesai.');
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+            clearSelection();
+        }, 3000);
     } catch (err) {
         console.error('Bulk Download Error:', err);
         Toast.error('Gagal mendownload berkas masal.');
