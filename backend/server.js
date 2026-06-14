@@ -407,7 +407,7 @@ app.get('/api/files/trash', authenticateToken, requirePermission('restore_trash'
     try {
         let query = supabase
             .from('files')
-            .select('*, zonas(kode, nama), toko(kode, nama), users:users!deleted_by(name)', { count: 'exact' })
+            .select('*, zonas(kode, nama), toko(kode, nama), deleter:users!deleted_by(name)', { count: 'exact' })
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false });
 
@@ -428,13 +428,13 @@ app.get('/api/files/trash', authenticateToken, requirePermission('restore_trash'
         // Fallback for "Unknown" if deleted_by is NULL or user deleted
         const filesWithFallback = (data || []).map(f => {
             let userName = 'Admin (System)';
-            if (f.users && f.users.name) {
-                userName = f.users.name;
+            if (f.deleter && f.deleter.name) {
+                userName = f.deleter.name;
             }
             return {
                 ...f,
-                display_name: userName, // Explicit helper field
-                users: f.users || { name: userName }
+                display_name: userName,
+                users: { name: userName } // Legacy compatibility for trash.js
             };
         });
 
@@ -1076,7 +1076,7 @@ app.post('/api/files/bulk-delete', authenticateToken, requirePermission('soft_de
 });
 
 // POST /api/files/bulk-restore - bulk restore from trash
-app.post('/api/files/bulk-restore', authenticateToken, authorizeRole('super_admin', 'moderator', 'admin_zona'), async (req, res) => {
+app.post('/api/files/bulk-restore', authenticateToken, authorizeRole('super_admin', 'moderator'), async (req, res) => {
     try {
         const { ids } = req.body;
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
@@ -1164,30 +1164,9 @@ app.post('/api/files/bulk-trash-delete', authenticateToken, requirePermission('h
     }
 });
 
-// PUT /api/files/:id/restore
-app.put('/api/files/:id/restore', authenticateToken, async (req, res) => {
+// PUT /api/files/:id/restore — Restricted to Admin/Moderator
+app.put('/api/files/:id/restore', authenticateToken, authorizeRole('super_admin', 'moderator'), async (req, res) => {
     try {
-        // Find the file first to check its zone
-        const { data: file, error: fErr } = await supabase
-            .from('files')
-            .select('id, zona_id, category')
-            .eq('id', req.params.id)
-            .single();
-
-        if (fErr || !file) return res.status(404).json({ error: 'File tidak ditemukan.' });
-
-        // Permission check
-        if (req.user.role === 'admin_zona') {
-            if (file.zona_id !== req.user.zona_id) {
-                return res.status(403).json({ error: 'Akses ditolak: File di luar zona Anda.' });
-            }
-        } else if (req.user.role !== 'super_admin' && req.user.role !== 'moderator') {
-            // General permission check for other potential roles
-            const perms = req.user.permissions || [];
-            if (!perms.includes('restore_trash')) {
-                return res.status(403).json({ error: 'Akses ditolak. Butuh izin Pulihkan Arsip.' });
-            }
-        }
 
         const { error } = await supabase
             .from('files')
