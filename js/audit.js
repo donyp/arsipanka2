@@ -66,21 +66,21 @@ function renderLogs(logs) {
         const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         const dateStr = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
-        let actionColor = 'text-gray-300 bg-gray-500/10 border-gray-500/20';
+        let actionColor = 'text-gray-600 bg-gray-100 border-gray-200';
         if (log.action.includes('Delete') || log.action.includes('Trash')) actionColor = 'text-red-400 bg-red-500/10 border-red-500/20';
         else if (log.action.includes('Upload') || log.action.includes('Restore')) actionColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
         else if (log.action.includes('Edit') || log.action.includes('Update')) actionColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
 
         return `
-        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors animate-fade-in" style="animation-delay: ${i * 30}ms">
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors animate-fade-in" style="animation-delay: ${i * 30}ms">
             <td class="p-4">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-xs font-bold shrink-0">
                         ${(log.users?.name || 'U')[0].toUpperCase()}
                     </div>
                     <div>
-                        <p class="text-white font-medium truncate max-w-[150px] sm:max-w-[200px]">${log.users?.name || 'Unknown'}</p>
-                        <p class="text-[10px] text-gray-500">${log.users?.role || '-'}</p>
+                        <p class="text-gray-900 font-bold truncate max-w-[150px] sm:max-w-[200px]">${log.users?.name || 'Unknown'}</p>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tight">${log.users?.role || '-'}</p>
                     </div>
                 </div>
             </td>
@@ -90,11 +90,11 @@ function renderLogs(logs) {
                 </span>
             </td>
             <td class="p-4">
-                <p class="text-gray-400 text-sm break-words">${log.context}</p>
+                <p class="text-gray-600 text-sm leading-relaxed break-words">${log.context}</p>
             </td>
             <td class="p-4">
                 <div class="text-xs text-gray-400">
-                    <span class="text-white font-medium">${dateStr}</span> <span class="mx-1">•</span> ${timeStr}
+                    <span class="text-gray-900 font-bold">${dateStr}</span> <span class="mx-1 text-gray-300">•</span> ${timeStr}
                 </div>
             </td>
         </tr>

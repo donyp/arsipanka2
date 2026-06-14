@@ -136,11 +136,11 @@ function createRowHtml(u, i) {
             <td class="text-gray-600 text-sm">${u.contact_email || '-'}</td>
             <td>
                 ${(u.role === 'moderator' || (u.permissions && u.permissions.includes('IS_MODERATOR'))) ? `
-                    <span class="badge bg-purple-500/15 text-purple-400 border-purple-500/30">Moderator</span>
+                    <span class="badge bg-purple-100 text-purple-700 border-purple-200">Moderator</span>
                 ` : `
                     <span class="${u.role === 'super_admin'
-            ? 'badge bg-indigo-500/15 text-indigo-400 border-indigo-500/30'
-            : 'badge bg-emerald-500/15 text-emerald-400 border-emerald-500/30'}">
+            ? 'badge bg-indigo-100 text-indigo-700 border-indigo-200'
+            : 'badge bg-emerald-100 text-emerald-700 border-emerald-200'}">
                         ${u.role === 'super_admin' ? 'Super Admin' : 'Admin Zona'}
                     </span>
                 `}
@@ -429,8 +429,8 @@ function renderLoginHistory() {
         const uaData = parseUserAgent(meta.ua);
         const role = log.users?.role || '-';
         const roleBadge = role === 'super_admin'
-            ? '<span class="badge bg-indigo-500/15 text-indigo-400 border-indigo-500/30">Super Admin</span>'
-            : '<span class="badge bg-emerald-500/15 text-emerald-400 border-emerald-500/30">Admin Zona</span>';
+            ? '<span class="badge bg-indigo-100 text-indigo-700 border-indigo-200">Super Admin</span>'
+            : '<span class="badge bg-emerald-100 text-emerald-700 border-emerald-200">Admin Zona</span>';
 
         return `
         <tr class="animate-fade-in" style="animation-delay: ${Math.min(i * 30, 500)}ms">
@@ -490,7 +490,7 @@ function parseUserAgent(uaString) {
 
 async function loadActivityLogs() {
     try {
-        const { logs } = await API.get('/api/admin/activity-logs');
+        const { logs } = await API.get('/api/audit-logs');
         activityLogs = logs || [];
         renderActivityLogs();
     } catch (err) {
@@ -515,8 +515,8 @@ function renderActivityLogs() {
     tbody.innerHTML = activityLogs.map((log, i) => {
         const role = log.users?.role || '-';
         const roleBadge = role === 'super_admin'
-            ? '<span class="badge bg-indigo-500/15 text-indigo-400 border-indigo-500/30">Super Admin</span>'
-            : '<span class="badge bg-emerald-500/15 text-emerald-400 border-emerald-500/30">Admin Zona</span>';
+            ? '<span class="badge bg-indigo-100 text-indigo-700 border-indigo-200">Super Admin</span>'
+            : '<span class="badge bg-emerald-100 text-emerald-700 border-emerald-200">Admin Zona</span>';
 
         return `
         <tr class="animate-fade-in" style="animation-delay: ${Math.min(i * 30, 500)}ms">

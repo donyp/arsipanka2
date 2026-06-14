@@ -107,10 +107,10 @@ function renderTokos(dataToRender = tokos) {
                         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
                             <span class="text-xs font-bold text-indigo-400">${t.nama.substring(0, 2).toUpperCase()}</span>
                         </div>
-                        <span class="font-medium text-white text-sm">${t.nama}</span>
+                        <span class="font-bold text-gray-900 text-sm">${t.nama}</span>
                     </div>
                 </td>
-                <td class="text-gray-400 text-sm font-mono">${t.kode}</td>
+                <td class="text-gray-700 text-sm font-mono">${t.kode}</td>
                 <td>
                     <span class="badge bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
                         ${zona ? zona.nama : `Zona ${t.zona_id}`}

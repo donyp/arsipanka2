@@ -40,11 +40,11 @@ function renderTrash(displayFiles = deletedFiles) {
 
     emptyState.classList.add('hidden');
     tbody.innerHTML = displayFiles.map(f => `
-        <tr class="animate-fade-in group hover:bg-white/5 transition-colors">
+        <tr class="animate-fade-in group hover:bg-gray-50 transition-colors border-b border-gray-100">
             <td>
                 <input type="checkbox" data-id="${f.id}" onclick="toggleItemSelection('${f.id}', this)"
                     ${selectedIds.includes(f.id) ? 'checked' : ''}
-                    class="row-checkbox w-4 h-4 rounded border-white/10 bg-white/5 text-red-500 focus:ring-red-500 cursor-pointer">
+                    class="row-checkbox w-4 h-4 rounded border-gray-300 bg-white text-red-500 focus:ring-red-500 cursor-pointer">
             </td>
             <td>
                 <div class="flex items-center gap-3">
@@ -54,8 +54,8 @@ function renderTrash(displayFiles = deletedFiles) {
                         </svg>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-gray-300">${truncate(f.nama_file.toUpperCase(), 40)}</p>
-                        <p class="text-[10px] text-gray-600">${f.storage_path}</p>
+                        <p class="text-sm font-bold text-gray-900">${truncate(f.nama_file.toUpperCase(), 40)}</p>
+                        <p class="text-[10px] text-gray-500 font-mono italic">${f.storage_path}</p>
                     </div>
                 </div>
             </td>
@@ -65,7 +65,7 @@ function renderTrash(displayFiles = deletedFiles) {
                     <div class="w-5 h-5 rounded-full bg-indigo-500/10 flex items-center justify-center text-[8px] font-bold text-indigo-400 uppercase border border-indigo-500/20">
                         ${(f.users?.name || 'A')[0]}
                     </div>
-                    <span class="text-sm font-medium text-gray-300">${f.users?.name || 'Admin (System)'}</span>
+                    <span class="text-sm font-medium text-gray-700">${f.users?.name || 'Admin (System)'}</span>
                 </div>
             </td>
             <td class="text-xs text-gray-500">${new Date(f.deleted_at).toLocaleString('id-ID')}</td>

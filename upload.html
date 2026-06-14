@@ -100,7 +100,7 @@
                                     <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
                                         <div class="flex items-center gap-2">
                                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            <p class="text-xs font-bold text-gray-300 uppercase tracking-wider">Berkas
+                                            <p class="text-xs font-bold text-gray-700 uppercase tracking-wider">Berkas
                                                 Terpilih</p>
                                         </div>
                                         <button type="button" onclick="clearFile(event)"
@@ -138,7 +138,7 @@
                                     Dokumen</label>
                                 <div class="relative opacity-60">
                                     <input type="text" value="Invoice Merah" disabled
-                                        class="input-field w-full px-4 py-3.5 rounded-xl text-sm font-semibold bg-white/5 cursor-not-allowed">
+                                        class="input-field w-full px-4 py-3.5 rounded-xl text-sm font-semibold bg-gray-50 border-gray-100 cursor-not-allowed text-gray-500">
                                     <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -164,13 +164,13 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <div class="loader-mini w-4 h-4 text-indigo-400"></div>
-                                    <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Proses
+                                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Proses
                                         Unggah...</span>
                                 </div>
                                 <span id="upload-progress-pct"
-                                    class="text-sm font-bold text-white tracking-widest">0%</span>
+                                    class="text-sm font-bold text-indigo-600 tracking-widest">0%</span>
                             </div>
-                            <div class="progress-bar bg-white/5 h-2">
+                            <div class="progress-bar bg-gray-100 h-2">
                                 <div id="upload-progress-bar" class="progress-bar-fill h-2" style="width: 0%"></div>
                             </div>
                         </div>

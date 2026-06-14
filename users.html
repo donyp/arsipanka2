@@ -328,36 +328,42 @@
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeUserModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div
-                class="relative bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl animate-scale-in border border-gray-100">
+                class="relative bg-white rounded-[2rem] p-6 max-w-sm w-full shadow-2xl animate-scale-in border border-gray-100">
                 <h3 id="modal-title" class="text-xl font-extrabold text-gray-900 mb-6">Tambah User Baru</h3>
                 <form id="user-form" class="space-y-4">
                     <input type="hidden" id="edit-user-id">
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1.5">Nama</label>
+                        <label
+                            class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Nama</label>
                         <input id="modal-name" type="text" required placeholder="Nama lengkap"
                             class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
+                        <label
+                            class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Email</label>
                         <input id="modal-user-email" type="email" placeholder="contoh@email.com"
                             class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Username</label>
+                            <label
+                                class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Username</label>
                             <input id="modal-email" type="text" required placeholder="username"
                                 class="input-field w-full px-4 py-2.5 rounded-xl text-sm" autocomplete="off">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Password <span
-                                    id="password-hint" class="text-gray-600 text-xs"></span></label>
-                            <input id="modal-password" type="password" placeholder="��������"
+                            <label
+                                class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Password
+                                <span id="password-hint"
+                                    class="text-gray-500 text-[9px] font-normal lowercase tracking-normal"></span></label>
+                            <input id="modal-password" type="password" placeholder="••••••••"
                                 class="input-field w-full px-4 py-2.5 rounded-xl text-sm" autocomplete="new-password">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Role</label>
+                            <label
+                                class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Role</label>
                             <select id="modal-role" required class="input-field w-full px-4 py-2.5 rounded-xl text-sm"
                                 onchange="toggleZonaField()">
                                 <option value="">Pilih role</option>
@@ -367,7 +373,8 @@
                             </select>
                         </div>
                         <div id="zona-field">
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Zona</label>
+                            <label
+                                class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Zona</label>
                             <select id="modal-zona" class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
                                 <option value="">Pilih zona</option>
                             </select>
@@ -375,123 +382,124 @@
                     </div>
 
                     <!-- Hak Akses Khusus -->
-                    <div class="pt-2 border-t border-white/5" id="permissions-field">
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Hak Akses Fleksibel
+                    <div class="pt-4 border-t border-gray-100" id="permissions-field">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1">Hak
+                            Akses Fleksibel
                             (Opsional)</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 h-48 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 h-36 overflow-y-auto pr-2 custom-scrollbar">
                             <!-- Group 1: Files -->
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="upload_single"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Upload Tunggal</p>
+                                    <p class="text-xs font-bold text-gray-700">Upload Tunggal</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="upload_batch"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Upload Massal</p>
+                                    <p class="text-xs font-bold text-gray-700">Upload Massal</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="soft_delete"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Buang ke Sampah</p>
+                                    <p class="text-xs font-bold text-gray-700">Buang ke Sampah</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="hard_delete"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Hapus Permanen</p>
+                                    <p class="text-xs font-bold text-gray-700">Hapus Permanen</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="restore_trash"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Pulihkan Sampah</p>
+                                    <p class="text-xs font-bold text-gray-700">Pulihkan Sampah</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="bulk_download"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Unduh ZIP Massal</p>
+                                    <p class="text-xs font-bold text-gray-700">Unduh ZIP Massal</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="view_piutang"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Akses File Piutang</p>
+                                    <p class="text-xs font-bold text-gray-700">Akses File Piutang</p>
                                 </div>
                             </label>
                             <!-- Group 2: Manage -->
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="manage_toko"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Manajemen Toko</p>
+                                    <p class="text-xs font-bold text-gray-700">Manajemen Toko</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="manage_zonas"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Manajemen Zona</p>
+                                    <p class="text-xs font-bold text-gray-700">Manajemen Zona</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="manage_users"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Manajemen User</p>
+                                    <p class="text-xs font-bold text-gray-700">Manajemen User</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="manage_media_ads"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Kelola Media Iklan</p>
+                                    <p class="text-xs font-bold text-gray-700">Kelola Media Iklan</p>
                                 </div>
                             </label>
                             <!-- Group 3: Security & Audit -->
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="view_activity_logs"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Lihat Log Aktivitas</p>
+                                    <p class="text-xs font-bold text-gray-700">Lihat Log Aktivitas</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="view_dashboard_stats"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Statistik Dashboard</p>
+                                    <p class="text-xs font-bold text-gray-700">Statistik Dashboard</p>
                                 </div>
                             </label>
                             <label
-                                class="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-white hover:border-blue-200 transition-all shadow-sm shadow-transparent hover:shadow-blue-500/5">
                                 <input type="checkbox" value="bypass_session_limit"
                                     class="custom-checkbox flex-shrink-0 perm-checkbox">
                                 <div>
-                                    <p class="text-xs font-medium text-white">Bypass Limit Sesi</p>
+                                    <p class="text-xs font-bold text-gray-700">Bypass Limit Sesi</p>
                                 </div>
                             </label>
                         </div>

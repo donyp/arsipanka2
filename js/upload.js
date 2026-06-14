@@ -136,7 +136,7 @@ function updateFileUI() {
         const tokoOptions = window._allTokos.map(t => `<option value="${t.id}" ${item.toko && item.toko.id === t.id ? 'selected' : ''}>${t.nama}</option>`).join('');
 
         return `
-        <li class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all group/item shadow-lg">
+        <li class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-blue-200 transition-all group/item shadow-sm">
             <div class="flex items-center gap-4 min-w-0 flex-1 w-full">
                 <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0 border border-red-500/20 group-hover/item:border-red-500/40 transition-colors">
                     <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,21 +144,21 @@ function updateFileUI() {
                     </svg>
                 </div>
                 <div class="flex flex-col truncate flex-1 min-w-0">
-                    <p class="text-sm font-bold text-white truncate mb-2 group-hover/item:text-indigo-300 transition-colors">${item.file.name}</p>
+                    <p class="text-sm font-bold text-gray-900 truncate mb-2 group-hover/item:text-blue-600 transition-colors">${item.file.name}</p>
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="relative w-full sm:w-auto">
-                            <select onchange="setFileToko(${i}, this.value)" class="w-full sm:w-auto bg-[#0f172a] border border-white/10 text-gray-400 text-[11px] font-bold rounded-lg px-3 py-1.5 outline-none focus:border-indigo-500/50 hover:bg-white/5 transition-all cursor-pointer appearance-none">
+                            <select onchange="setFileToko(${i}, this.value)" class="w-full sm:w-auto bg-white border border-gray-200 text-gray-700 text-[11px] font-bold rounded-lg px-3 py-1.5 outline-none focus:ring-4 focus:ring-blue-100 hover:bg-gray-50 transition-all cursor-pointer appearance-none">
                                 <option value="">-- Pilih Toko --</option>
                                 ${tokoOptions}
                             </select>
                         </div>
-                        <div class="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-md border border-white/5">
+                        <div class="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-md border border-gray-200">
                             <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                             <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">${item.date || '<span class="text-red-400">?</span>'}</span>
                         </div>
-                        <span class="px-2 py-1 rounded text-[10px] ${item.tipe_ppn === 'PPN' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : item.tipe_ppn === 'NON' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-gray-500/10 text-gray-500 border border-white/5'} font-black italic tracking-tighter">
+                        <span class="px-2 py-1 rounded text-[10px] ${item.tipe_ppn === 'PPN' ? 'bg-blue-100 text-blue-700 border border-blue-200' : item.tipe_ppn === 'NON' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-600 border border-gray-200'} font-black italic tracking-tighter">
                             ${item.tipe_ppn || 'REGULAR'}
                         </span>
                     </div>
@@ -309,7 +309,7 @@ async function loadRecentUploads() {
         }
 
         container.innerHTML = recent.map((a, i) => `
-            <div class="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all group/recent shadow-lg animate-fade-in" style="animation-delay: ${i * 50}ms">
+            <div class="flex items-center justify-between p-4 rounded-2xl bg-white border border-gray-100 hover:border-emerald-100 hover:bg-emerald-50/20 transition-all group/recent shadow-sm animate-fade-in" style="animation-delay: ${i * 50}ms">
                 <div class="flex items-center gap-4 min-w-0">
                     <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover/recent:border-emerald-500/40 transition-colors">
                         <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -317,16 +317,16 @@ async function loadRecentUploads() {
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-sm font-bold text-gray-200 truncate group-hover/recent:text-white transition-colors">${a.nama_file.toUpperCase()}</p>
+                        <p class="text-sm font-bold text-gray-900 truncate group-hover/recent:text-emerald-700 transition-colors">${a.nama_file.toUpperCase()}</p>
                         <div class="flex items-center gap-2 mt-0.5">
-                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">${a.zonas?.nama || 'Tanpa Zona'}</span>
-                            <span class="text-[10px] text-gray-600">•</span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${a.zonas?.nama || 'Tanpa Zona'}</span>
+                            <span class="text-[10px] text-gray-300">•</span>
                             <span class="text-[10px] font-medium text-gray-500 italic">${new Date(a.created_at).toLocaleDateString('id-ID')}</span>
                         </div>
                     </div>
                 </div>
                 <div class="hidden sm:flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded text-[9px] bg-white/5 text-gray-500 border border-white/5 font-bold tracking-widest uppercase">Berhasil</span>
+                    <span class="px-2 py-0.5 rounded text-[9px] bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold tracking-widest uppercase">Berhasil</span>
                 </div>
             </div>
         `).join('');
