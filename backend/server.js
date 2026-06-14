@@ -1238,8 +1238,12 @@ app.all('/api/files/bulk-download', authenticateToken, async (req, res) => {
 
         // Use stream to send Zip to response
         const now = new Date();
-        const dateStr = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
-        res.attachment(`ARSIP ANKA 023(${dateStr}).zip`);
+        const DD = String(now.getDate()).padStart(2, '0');
+        const MM = String(now.getMonth() + 1).padStart(2, '0');
+        const YYYY = String(now.getFullYear());
+        const YY = YYYY.slice(-2);
+        const Y = YYYY.slice(-1);
+        res.attachment(`ARSIP ANKA 02${Y}${DD}${MM}${YY}.zip`);
         archive.pipe(res);
 
         // 3. Add files to ZIP sequentially to prevent server overload
