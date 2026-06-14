@@ -608,6 +608,69 @@ app.get('/api/files/download/:id', authenticateToken, (req, res) => {
     res.redirect(`/api/files/${req.params.id}/download?token=${req.query.token}`);
 });
 
+// GET /api/files/:id/view — inline preview (PDF in iframe)
+app.get('/api/files/:id/view', authenticateToken, async (req, res) => {
+    try {
+        const { data: file, error } = await supabase
+            .from('files')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error || !file) {
+            return res.status(404).json({ error: 'File tidak ditemukan.' });
+        }
+
+        // Zone access check
+        if (req.user.role === 'admin_zona') {
+            if (file.zona_id !== req.user.zona_id) {
+                return res.status(403).json({ error: 'Anda tidak memiliki akses ke file ini.' });
+            }
+            if (file.category === 'PIUTANG') {
+                const userPerms = req.user.permissions || [];
+                if (!userPerms.includes('view_piutang')) {
+                    return res.status(403).json({ error: 'Anda tidak memiliki akses ke kategori Piutang.' });
+                }
+            }
+        }
+
+        // Determine content type from file extension
+        const ext = path.extname(file.nama_file).toLowerCase();
+        const mimeMap = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+            '.png': 'image/png', '.gif': 'image/gif',
+            '.webp': 'image/webp',
+        };
+        const contentType = mimeMap[ext] || 'application/pdf';
+
+        // Stream file inline (for browser preview, not download)
+        let fileStream;
+        try {
+            fileStream = await RcloneStorage.getStream(file.storage_path);
+        } catch (streamErr) {
+            console.error(`[View Stream Error] Path: ${file.storage_path}`, streamErr);
+            return res.status(500).json({ error: 'Gagal memuat preview file.' });
+        }
+
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', 'inline');
+        if (file.ukuran_bytes) {
+            res.setHeader('Content-Length', file.ukuran_bytes);
+        }
+
+        fileStream.pipe(res);
+
+        fileStream.on('error', (err) => {
+            console.error('[View Stream Pipe Error]', err);
+        });
+
+    } catch (err) {
+        console.error('View File Error:', err);
+        res.status(500).json({ error: 'Gagal memuat preview file.' });
+    }
+});
+
 // POST /api/files/:id/share - generate signed link
 app.post('/api/files/:id/share', authenticateToken, async (req, res) => {
     try {
