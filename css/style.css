@@ -43,8 +43,8 @@
 body {
     background-color: var(--surface);
     font-family: 'Inter', sans-serif;
-    zoom: 0.7;
-    /* Global UI Scaling for compact view */
+    zoom: 1.0;
+    /* Restored to 1.0 to fix Chart.js coordinate mapping offset */
     min-height: 100vh;
 }
 
