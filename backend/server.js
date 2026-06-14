@@ -407,9 +407,13 @@ app.get('/api/files/trash', authenticateToken, requirePermission('restore_trash'
     try {
         let query = supabase
             .from('files')
-            .select('*, zonas(kode, nama), toko(kode, nama), users:deleted_by(name)', { count: 'exact' })
+            .select('*, zonas(kode, nama), toko(kode, nama), users:users!deleted_by(name)', { count: 'exact' })
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false });
+
+        if (req.user.role === 'admin_zona') {
+            query = query.eq('zona_id', req.user.zona_id);
+        }
 
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
@@ -1072,7 +1076,7 @@ app.post('/api/files/bulk-delete', authenticateToken, requirePermission('soft_de
 });
 
 // POST /api/files/bulk-restore - bulk restore from trash
-app.post('/api/files/bulk-restore', authenticateToken, requirePermission('restore_trash'), async (req, res) => {
+app.post('/api/files/bulk-restore', authenticateToken, authorizeRole('super_admin', 'moderator', 'admin_zona'), async (req, res) => {
     try {
         const { ids } = req.body;
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
@@ -1161,8 +1165,30 @@ app.post('/api/files/bulk-trash-delete', authenticateToken, requirePermission('h
 });
 
 // PUT /api/files/:id/restore
-app.put('/api/files/:id/restore', authenticateToken, requirePermission('restore_trash'), async (req, res) => {
+app.put('/api/files/:id/restore', authenticateToken, async (req, res) => {
     try {
+        // Find the file first to check its zone
+        const { data: file, error: fErr } = await supabase
+            .from('files')
+            .select('id, zona_id, category')
+            .eq('id', req.params.id)
+            .single();
+
+        if (fErr || !file) return res.status(404).json({ error: 'File tidak ditemukan.' });
+
+        // Permission check
+        if (req.user.role === 'admin_zona') {
+            if (file.zona_id !== req.user.zona_id) {
+                return res.status(403).json({ error: 'Akses ditolak: File di luar zona Anda.' });
+            }
+        } else if (req.user.role !== 'super_admin' && req.user.role !== 'moderator') {
+            // General permission check for other potential roles
+            const perms = req.user.permissions || [];
+            if (!perms.includes('restore_trash')) {
+                return res.status(403).json({ error: 'Akses ditolak. Butuh izin Pulihkan Arsip.' });
+            }
+        }
+
         const { error } = await supabase
             .from('files')
             .update({
