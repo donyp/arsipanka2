@@ -1845,29 +1845,50 @@ app.post('/api/files/:id/dispute', authenticateToken, async (req, res) => {
         const { reason, note } = req.body;
         if (!reason) return res.status(400).json({ error: 'Alasan revisi wajib diisi.' });
 
-        // Update file status and metadata
-        const { error } = await supabase
+        // 1. Get file details to build a helpful message
+        const { data: file, error: findErr } = await supabase
+            .from('files')
+            .select('nama_file')
+            .eq('id', req.params.id)
+            .single();
+
+        if (findErr || !file) {
+            return res.status(404).json({ error: 'File tidak ditemukan.' });
+        }
+
+        // 2. Update file status in 'files' table
+        const { error: updateErr } = await supabase
             .from('files')
             .update({
                 status: 'Revision',
                 dispute_reason: reason,
                 dispute_note: note || '',
                 disputed_at: new Date().toISOString(),
-                disputed_by: req.user.id
+                disputed_by: req.user.userId || req.user.id
             })
             .eq('id', req.params.id);
 
-        if (error) throw error;
+        if (updateErr) throw updateErr;
 
-        // Log to audit
-        await supabase.from('audit_logs').insert({
-            user_id: req.user.id,
-            action: 'Revision Requested',
-            details: `Invoice revision requested. Reason: ${reason}. Note: ${note || '-'}`,
-            target_id: req.params.id
+        // 3. Create a ticket in 'upload_requests' table so it appears in the moderator queue
+        // The moderator view (requests.html) fetches from this table.
+        const pesanRequest = `REVISI: Permintaan perbaikan data untuk berkas "${file.nama_file}".\nAlasan: ${reason}.\nCatatan: ${note || '-'}`;
+
+        await supabase.from('upload_requests').insert({
+            user_id: req.user.userId || req.user.id,
+            zona_id: req.user.zona_id,
+            pesan: pesanRequest,
+            status: 'Pending'
         });
 
-        res.json({ success: true });
+        // 4. Audit Log
+        await supabase.from('audit_logs').insert({
+            user_id: req.user.userId || req.user.id,
+            action: 'Revision Requested',
+            context: `Revision for ${file.nama_file}. Reason: ${reason}`
+        });
+
+        res.json({ success: true, message: 'Permintaan revisi berhasil dikirim ke moderator.' });
     } catch (err) {
         console.error('Revision Error:', err);
         res.status(500).json({ error: 'Gagal mengajukan revisi.' });
