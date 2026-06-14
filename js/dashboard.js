@@ -254,10 +254,11 @@ async function populateTokoFilter() {
 // ---- Update Stats ----
 function updateStats() {
     const el = (id) => document.getElementById(id);
-    if (el('stat-ppn')) el('stat-ppn').textContent = filteredArchives.filter(a => a.category === 'PPN').length;
-    if (el('stat-nonppn')) el('stat-nonppn').textContent = filteredArchives.filter(a => a.category === 'NON_PPN').length;
-    if (el('stat-invoice')) el('stat-invoice').textContent = filteredArchives.filter(a => a.category === 'INVOICE').length;
-    if (el('stat-piutang')) el('stat-piutang').textContent = filteredArchives.filter(a => a.category === 'PIUTANG').length;
+    const invoiceCount = filteredArchives.filter(a => a.category === 'INVOICE').length;
+    const piutangCount = filteredArchives.filter(a => a.category === 'PIUTANG').length;
+
+    if (el('stat-invoice')) el('stat-invoice').textContent = invoiceCount;
+    if (el('stat-piutang')) el('stat-piutang').textContent = piutangCount;
 }
 
 // ---- Apply Filters ----
@@ -720,20 +721,21 @@ async function deleteBroadcast(id) {
 async function loadStorageStats() {
     try {
         const stats = await API.get('/api/stats/storage');
-        console.log('[STATS] Received:', stats);
         const { total_bytes, today_bytes, limit_bytes } = stats;
 
         // 1. Used vs Total
         const storageEl = document.getElementById('stat-storage');
         const progressEl = document.getElementById('stat-storage-progress');
-        if (storageEl && progressEl) {
+        if (storageEl) {
             const usedGB = (total_bytes / (1024 ** 3)).toFixed(2);
             // Fallback to 1024 GB if limit_bytes is missing or 0
             const totalGB = ((limit_bytes || (1024 ** 4)) / (1024 ** 3)).toFixed(0);
             storageEl.textContent = `${usedGB} / ${totalGB} GB`;
 
-            const percent = Math.min((total_bytes / limit_bytes) * 100, 100);
-            progressEl.style.width = percent + '%';
+            if (progressEl) {
+                const percent = Math.min((total_bytes / (limit_bytes || (1024 ** 4))) * 100, 100);
+                progressEl.style.width = percent + '%';
+            }
         }
 
         // 2. Today's Usage

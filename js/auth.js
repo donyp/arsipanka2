@@ -111,6 +111,13 @@ function updateUserUI() {
         el.textContent = currentUser.name || 'User';
     });
 
+    // Update user name initials
+    document.querySelectorAll('[data-user-name-initials]').forEach(el => {
+        const name = currentUser.name || 'User';
+        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        el.textContent = initials;
+    });
+
     // Update user email displays
     document.querySelectorAll('[data-user-email]').forEach(el => {
         el.textContent = currentUser.email;
