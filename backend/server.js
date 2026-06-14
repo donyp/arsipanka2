@@ -1240,10 +1240,9 @@ app.all('/api/files/bulk-download', authenticateToken, async (req, res) => {
         const now = new Date();
         const DD = String(now.getDate()).padStart(2, '0');
         const MM = String(now.getMonth() + 1).padStart(2, '0');
-        const YYYY = String(now.getFullYear());
-        const YY = YYYY.slice(-2);
-        const Y = YYYY.slice(-1);
-        res.attachment(`ARSIP ANKA 02${Y}${DD}${MM}${YY}.zip`);
+        const YY = String(now.getFullYear()).slice(-2);
+        const randomBatch = Math.floor(100 + Math.random() * 900);
+        res.attachment(`ARSIP ANKA ${randomBatch}${DD}${MM}${YY}.zip`);
         archive.pipe(res);
 
         // 3. Add files to ZIP sequentially to prevent server overload
