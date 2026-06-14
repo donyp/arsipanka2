@@ -39,6 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (hasPermission('manage_system') || user.role === 'moderator' || user.role === 'super_admin') {
         loadMaintenanceStatus();
     }
+
+    // Check for Post-Maintenance Update Notice
+    await checkUpdateNotice();
+
     setupEventListeners();
     setupIntersectionObserver();
 
@@ -51,6 +55,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+
+
+// ---- Check for Post-Maintenance Update Notice ("What's New") ----
+async function checkUpdateNotice() {
+    try {
+        const status = await API.get('/api/system/maintenance');
+        if (!status || !status.lastResult) return;
+
+        const lastReadId = localStorage.getItem('last_read_update_id');
+        if (lastReadId === status.lastResult.id) return;
+
+        // Show Modal
+        showUpdateModal(status.lastResult);
+    } catch (err) {
+        console.warn('[Update Notice] Skip:', err.message);
+    }
+}
+
+function showUpdateModal(data) {
+    const modalId = 'update-notice-modal';
+    if (document.getElementById(modalId)) return;
+
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-fade-in';
+
+    // Convert details list to HTML
+    const detailsHtml = data.details ? data.details.split('\n').filter(l => l.trim()).map(line =>
+        `<div class="flex items-start gap-4 p-3 bg-gray-50 rounded-2xl border border-gray-100/50">
+            <div class="w-2 h-2 mt-2 bg-blue-500 rounded-full shadow-sm shadow-blue-200"></div>
+            <p class="text-sm font-medium text-gray-700 leading-relaxed">${line.replace(/^[-\*\+]\s*/, '')}</p>
+        </div>`
+    ).join('') : '';
+
+    modal.innerHTML = `
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl p-10 animate-scale-up border border-white/20">
+            <div class="text-center mb-10">
+                <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-blue-50/50">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-black text-gray-900 leading-tight mb-2 uppercase tracking-tight">Pembaruan Selesai!</h2>
+                <p class="text-sm font-bold text-blue-500/80 uppercase tracking-widest">${data.title || 'Sistem Kembali Normal'}</p>
+            </div>
+
+            <div class="space-y-3 max-h-[350px] overflow-y-auto px-1 custom-scrollbar mb-10">
+                ${detailsHtml}
+            </div>
+
+            <div class="pt-2">
+                <button onclick="readUpdateNotice('${data.id}')" class="w-full py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 active:scale-95 uppercase tracking-[0.2em] text-[10px]">
+                    Selesai & Lanjutkan
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+window.readUpdateNotice = function (id) {
+    localStorage.setItem('last_read_update_id', id);
+    const modal = document.getElementById('update-notice-modal');
+    if (modal) {
+        modal.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => modal.remove(), 300);
+    }
+};
 
 
 // ---- Set Current Date & Time-based Greeting ----

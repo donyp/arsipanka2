@@ -64,14 +64,32 @@ const uploadMediaMulter = multer({
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-to-a-very-long-random-string';
 const JWT_EXPIRES_IN = '8h';
 
-// Maintenance Mode Helper
+// Maintenance Mode Helper (Persistent via Supabase + Fallback File)
 const MAINTENANCE_FILE = path.join(__dirname, 'maintenance_status.json');
-function getMaintenanceStatus() {
+async function getMaintenanceStatus() {
     try {
+        // High priority: Fetch from Supabase for true persistence across restarts
+        const { data, error } = await supabase
+            .from('system_config')
+            .select('value')
+            .eq('key', 'maintenance_mode')
+            .maybeSingle();
+
+        if (data && data.value) {
+            return typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        }
+
+        // Fallback: Local JSON file
         if (!fs.existsSync(MAINTENANCE_FILE)) return { isMaintenance: false };
         return JSON.parse(fs.readFileSync(MAINTENANCE_FILE, 'utf8'));
     } catch (err) {
-        return { isMaintenance: false };
+        console.warn('[Maintenance] DB fetch failed, using local fallback:', err.message);
+        try {
+            if (!fs.existsSync(MAINTENANCE_FILE)) return { isMaintenance: false };
+            return JSON.parse(fs.readFileSync(MAINTENANCE_FILE, 'utf8'));
+        } catch (_) {
+            return { isMaintenance: false };
+        }
     }
 }
 
@@ -104,26 +122,30 @@ function authenticateToken(req, res, next) {
         req.user = decoded;
 
         // --- MAINTENANCE MODE ENFORCEMENT ---
-        const sys = getMaintenanceStatus();
-        if (sys.isMaintenance && decoded.role === 'admin_zona') {
-            return res.status(503).json({
-                error: 'Sistem Sedang Perbaikan',
-                message: 'Akses Admin Zona ditangguhkan sementara untuk pemeliharaan teknis. Silakan coba lagi nanti.'
-            });
-        }
-
-        // Session Heartbeat (Asynchronous)
-        const sessionId = req.headers['x-session-id'];
-        if (sessionId) {
-            supabase.from('active_sessions')
-                .update({ last_active: new Date().toISOString() })
-                .eq('session_id', sessionId)
-                .then(({ error }) => {
-                    if (error) console.warn('[HEARTBEAT] Error:', error.message);
+        getMaintenanceStatus().then(sys => {
+            if (sys.isMaintenance && decoded.role === 'admin_zona') {
+                return res.status(503).json({
+                    error: 'Sistem Sedang Perbaikan',
+                    message: 'Akses Admin Zona ditangguhkan sementara untuk pemeliharaan teknis. Silakan coba lagi nanti.'
                 });
-        }
+            }
 
-        next();
+            // Session Heartbeat (Asynchronous)
+            const sessionId = req.headers['x-session-id'];
+            if (sessionId) {
+                supabase.from('active_sessions')
+                    .update({ last_active: new Date().toISOString() })
+                    .eq('session_id', sessionId)
+                    .then(({ error }) => {
+                        if (error) console.warn('[HEARTBEAT] Error:', error.message);
+                    });
+            }
+
+            next();
+        }).catch(err => {
+            console.error('[Maintenance Check Error]', err);
+            next(); // Proceed if check fails to avoid blocking legals
+        });
     });
 }
 
@@ -261,7 +283,7 @@ app.post('/api/auth/login', async (req, res) => {
         });
 
         // --- MAINTENANCE MODE ENFORCEMENT ---
-        const sys = getMaintenanceStatus();
+        const sys = await getMaintenanceStatus();
         if (sys.isMaintenance && user.role === 'admin_zona') {
             return res.status(503).json({
                 error: 'Sistem Sedang Perbaikan',
@@ -1603,18 +1625,18 @@ app.get('/api/broadcasts/latest', authenticateToken, async (req, res) => {
 
 // GET /api/system/maintenance — Get current system status (Public)
 app.get('/api/system/maintenance', async (req, res) => {
-    res.json(getMaintenanceStatus());
+    res.json(await getMaintenanceStatus());
 });
 
 // POST/PUT /api/system/maintenance — Toggle maintenance mode
 app.all('/api/system/maintenance', authenticateToken, authorizeRole('super_admin', 'moderator'), async (req, res) => {
-    if (req.method === 'GET') return res.json(getMaintenanceStatus());
+    if (req.method === 'GET') return res.json(await getMaintenanceStatus());
     try {
         const isMaintenance = req.body.isMaintenance !== undefined ? req.body.isMaintenance : req.body.is_maintenance;
         const result = req.body.result;
 
         // Read current status to merge with lastResult
-        const currentStatus = getMaintenanceStatus();
+        const currentStatus = await getMaintenanceStatus();
 
         const status = {
             ...currentStatus,
@@ -1633,7 +1655,14 @@ app.all('/api/system/maintenance', authenticateToken, authorizeRole('super_admin
             };
         }
 
+        // --- PERSISTENCE ---
+        // 1. Local Fallback
         fs.writeFileSync(MAINTENANCE_FILE, JSON.stringify(status, null, 4));
+
+        // 2. Supabase Primary Storage
+        await supabase
+            .from('system_config')
+            .upsert({ key: 'maintenance_mode', value: status }, { onConflict: 'key' });
 
         // Audit Log
         await supabase.from('audit_logs').insert({
