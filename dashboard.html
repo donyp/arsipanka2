@@ -514,7 +514,8 @@
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg></div>
+                        </svg>
+                    </div>
                     <div>
                         <h3 id="preview-title" class="text-sm font-black text-gray-900 truncate max-w-md">Preview</h3>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Document Viewer</p>
@@ -528,6 +529,41 @@
             </div>
             <div class="flex-1 bg-gray-100"><iframe id="preview-iframe" class="w-full h-full border-none"></iframe>
             </div>
+        </div>
+    </div>
+
+    <div id="bulk-action-bar"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] bg-white border border-gray-100 px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-8 transition-all duration-500 translate-y-24 opacity-0 pointer-events-none">
+        <div class="flex items-center gap-3 pr-8 border-r border-gray-100">
+            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black"
+                id="selected-count">0</div>
+            <div>
+                <p class="text-[10px] font-black text-gray-900 uppercase leading-none mb-0.5">Terpilih</p>
+                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Berkas</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="bulkDownloadSelected()" id="btn-bulk-download"
+                class="flex items-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95 shadow-xl shadow-gray-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Download ZIP
+            </button>
+            <button onclick="bulkDeleteSelected()" id="btn-bulk-delete"
+                class="flex items-center gap-2 px-6 py-3.5 bg-red-50 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Hapus
+            </button>
+            <button onclick="clearSelection()" class="p-3 text-gray-400 hover:text-gray-900 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     </div>
 

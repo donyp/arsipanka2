@@ -977,7 +977,7 @@ async function deleteArchive(id, fileName, isHardDelete = false) {
         ? `Apakah Anda yakin ingin MENGHAPUS PERMANEN "${fileName}"? Tindakan ini tidak dapat dibatalkan.`
         : `Apakah Anda yakin ingin memindahkan "${fileName}" ke Tong Sampah?`;
 
-    showConfirmModal(
+    showConfirm(
         isHardDelete ? 'Hapus Permanen' : 'Pindahkan ke Sampah',
         msg,
         async () => {
@@ -1012,7 +1012,7 @@ function toggleAnomalyFilter() {
 }
 
 async function restoreArchive(id, fileName) {
-    showConfirmModal(
+    showConfirm(
         'Pulihkan Arsip',
         `Kembalikan arsip "${fileName}" menjadi aktif kembali?`,
         async () => {
@@ -1143,20 +1143,16 @@ function toggleItemSelection(id, cb) {
 function updateBulkUI() {
     const bar = document.getElementById('bulk-action-bar');
     const countEl = document.getElementById('selected-count');
-    const btnText = document.getElementById('bulk-download-text');
 
     if (!bar || !countEl) return;
 
-    if (selectedIds.length > 0) {
-        bar.classList.add('active');
+    if (selectedIds.length >= 3) {
+        bar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+        bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
         countEl.textContent = selectedIds.length;
-        if (selectedIds.length > 3) {
-            btnText.textContent = 'Download ZIP (Bundled)';
-        } else {
-            btnText.textContent = `Download ${selectedIds.length} Berkas`;
-        }
     } else {
-        bar.classList.remove('active');
+        bar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+        bar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
         const master = document.getElementById('select-all');
         if (master) master.checked = false;
     }
@@ -1169,7 +1165,7 @@ function clearSelection() {
     updateBulkUI();
 }
 
-async function downloadSelected() {
+async function bulkDownloadSelected() {
     if (selectedIds.length === 0) return;
 
     const btn = document.getElementById('btn-bulk-download');
@@ -1249,7 +1245,7 @@ async function downloadSelected() {
 async function bulkDeleteSelected() {
     if (selectedIds.length === 0) return;
 
-    showConfirmModal(
+    showConfirm(
         viewMode === 'active' ? 'Pindahkan ke Sampah' : 'Hapus Permanen',
         viewMode === 'active'
             ? `Apakah Anda yakin ingin memindahkan ${selectedIds.length} berkas ke Tong Sampah?`
@@ -1276,7 +1272,9 @@ async function bulkDeleteSelected() {
                 btn.disabled = false;
             }
         },
-        'Hapus'
+        'Hapus',
+        'Batal',
+        false // Solid Light Theme
     );
 }
 
