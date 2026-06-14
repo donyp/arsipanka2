@@ -70,7 +70,7 @@ function renderTrash(displayFiles = deletedFiles) {
             </td>
             <td class="text-xs text-gray-500">${new Date(f.deleted_at).toLocaleString('id-ID')}</td>
             <td>
-                <div class="flex items-center justify-end gap-2">
+                <div class="flex items-center justify-end gap-2 ${selectedIds.includes(f.id) ? 'opacity-100' : 'opacity-0'} transition-opacity">
                     <button onclick="restoreFile('${f.id}', '${f.nama_file}')" class="p-2 rounded-lg hover:bg-emerald-500/10 text-emerald-400" title="Pulihkan">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     </button>
@@ -85,7 +85,7 @@ function renderTrash(displayFiles = deletedFiles) {
 }
 
 async function restoreFile(id, name) {
-    showConfirmModal('Pulihkan File', `Kembalikan "${name}" ke arsip aktif?`, async () => {
+    showConfirm('Pulihkan File', `Kembalikan "${name}" ke arsip aktif?`, async () => {
         try {
             await API.put(`/api/files/${id}/restore`);
             Toast.success('File dipulihkan');
@@ -97,7 +97,7 @@ async function restoreFile(id, name) {
 }
 
 async function permanentDelete(id, name) {
-    showConfirmModal('Hapus Permanen', `PERINGATAN: "${name}" akan dihapus selamanya dari Terabox. Tindakan ini tidak dapat dibatalkan.`, async () => {
+    showConfirm('Hapus Permanen', `PERINGATAN: "${name}" akan dihapus selamanya dari Terabox. Tindakan ini tidak dapat dibatalkan.`, async () => {
         try {
             await API.del(`/api/files/${id}?hard=true`);
             Toast.success('File dihapus permanen');
@@ -111,7 +111,7 @@ async function permanentDelete(id, name) {
 async function emptyTrash() {
     if (deletedFiles.length === 0) return;
 
-    showConfirmModal('Kosongkan Sampah', `Apakah Anda yakin ingin menghapus SEMUA ${deletedFiles.length} file di tong sampah secara permanen?`, async () => {
+    showConfirm('Kosongkan Sampah', `Apakah Anda yakin ingin menghapus SEMUA ${deletedFiles.length} file di tong sampah secara permanen?`, async () => {
         try {
             Toast.info('Sedang membersihkan sampah...');
             const ids = deletedFiles.map(f => f.id);
@@ -154,9 +154,11 @@ function updateBulkUI() {
 
     if (selectedIds.length > 0) {
         bar.classList.add('active');
+        bar.classList.remove('hidden');
         countEl.textContent = selectedIds.length;
     } else {
         bar.classList.remove('active');
+        bar.classList.add('hidden');
         const master = document.getElementById('select-all');
         if (master) master.checked = false;
     }
@@ -189,7 +191,7 @@ function searchTrash(query) {
 async function bulkDeleteSelected() {
     if (selectedIds.length === 0) return;
 
-    showConfirmModal('Hapus Permanen', `Apakah Anda yakin ingin menghapus permanen ${selectedIds.length} file yang dipilih?`, async () => {
+    showConfirm('Hapus Permanen', `Apakah Anda yakin ingin menghapus permanen ${selectedIds.length} file yang dipilih?`, async () => {
         try {
             const btn = document.getElementById('btn-bulk-hard-delete');
             const originalContent = btn.innerHTML;
@@ -213,7 +215,7 @@ async function bulkDeleteSelected() {
 async function bulkRestoreSelected() {
     if (selectedIds.length === 0) return;
 
-    showConfirmModal('Pulihkan Terpilih', `Kembalikan ${selectedIds.length} file yang dipilih ke arsip aktif?`, async () => {
+    showConfirm('Pulihkan Terpilih', `Kembalikan ${selectedIds.length} file yang dipilih ke arsip aktif?`, async () => {
         try {
             const btn = document.getElementById('btn-bulk-restore');
             btn.disabled = true;

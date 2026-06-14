@@ -372,7 +372,7 @@ function setupUserForm() {
 
 // ---- Delete User ----
 function deleteUser(id, name) {
-    showConfirmModal(
+    showConfirm(
         'Hapus User Permanen',
         `Apakah Anda yakin ingin menghapus user "${name}"? Akun ini akan dihapus secara PERMANEN dari database dan tidak bisa dipulihkan.`,
         async () => {

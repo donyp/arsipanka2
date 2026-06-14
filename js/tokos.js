@@ -199,7 +199,7 @@ function setupTokoForm() {
 
 // ---- Delete Toko ----
 function deleteToko(id, name) {
-    showConfirmModal(
+    showConfirm(
         'Hapus Toko',
         `Apakah Anda yakin ingin menghapus toko "${name}"? Tindakan ini hanya bisa dilakukan jika toko tidak memiliki dokumen terkait.`,
         async () => {
