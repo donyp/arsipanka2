@@ -26,91 +26,96 @@
     </script>
 </head>
 
-<body class="bg-animated min-h-screen text-gray-100 font-sans">
+<body class="bg-[#F0F2F5] min-h-screen text-gray-800 font-sans">
     <div class="flex">
         <!-- Sidebar -->
-    <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
-    <aside id="sidebar"
-        class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
-    </aside>
+        <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
+        <aside id="sidebar"
+            class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
+        </aside>
 
-    <!-- Main Content -->
-    <main id="main-content" class="ml-64 min-h-screen transition-all duration-300 flex-1">
-        <!-- Top Bar -->
-        <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#0f172a]/80 border-b border-white/5 px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-white/5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                    <div>
-                        <h2 class="text-lg font-semibold text-white">Manajemen Zona</h2>
-                        <p class="text-xs text-gray-500">Atur zona operasional dan konfigurasi notifikasi WhatsApp
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="glass-card-light px-4 py-2 rounded-xl flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span class="text-sm font-medium text-gray-300">Total: <span id="stat-total-zonas"
-                                class="text-white font-bold">-</span> Zona</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <div class="p-6 space-y-6">
-            <!-- Data Table Card -->
-            <div class="glass-card rounded-3xl p-6 overflow-hidden border border-white/10 glow-active">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                        </svg>
-                        Daftar Zona Operasional
-                    </h3>
-                    <button onclick="openAddZonaModal()"
-                        class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700 shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Tambah Zona Baru
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-white/5">
-                                <th class="pb-4 font-bold w-[20%]">Nama Zona</th>
-                                <th class="pb-4 font-bold text-center w-[10%]">ID Zona</th>
-                                <th class="pb-4 font-bold w-[60%]">WhatsApp Recipient (ID Grup/Nomor)</th>
-                                <th class="pb-4 font-bold text-right pr-4 w-[10%]">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="zonas-body" class="divide-y divide-white/5">
-                            <!-- Data populated via JS -->
-                        </tbody>
-                    </table>
-
-                    <!-- Empty State -->
-                    <div id="zonas-empty" class="hidden py-20 text-center">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-800 mb-4">
-                            <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Main Content -->
+        <main id="main-content" class="ml-64 min-h-screen transition-all duration-300 flex-1">
+            <!-- Top Bar -->
+            <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <button onclick="toggleSidebar()"
+                            class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                    d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
+                        </button>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Manajemen Zona</h2>
+                            <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Atur zona
+                                operasional dan konfigurasi notifikasi WhatsApp</p>
                         </div>
-                        <h4 class="text-gray-400 font-medium">Data zona tidak ditemukan</h4>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-50 border border-blue-100 px-4 py-2 rounded-xl flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                            <span class="text-sm font-bold text-blue-900 uppercase tracking-tighter">Total: <span
+                                    id="stat-total-zonas" class="text-blue-600 font-extrabold">-</span> Zona</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-6 space-y-6">
+                <!-- Data Table Card -->
+                <div class="bg-white rounded-[2rem] p-8 shadow-xl shadow-blue-500/5 border border-gray-100">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-xl font-extrabold text-gray-900 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                </svg>
+                            </div>
+                            Daftar Zona Operasional
+                        </h3>
+                        <button onclick="openAddZonaModal()"
+                            class="px-6 py-3 rounded-2xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            Tambah Zona Baru
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-white/5">
+                                    <th class="pb-4 font-bold w-[20%]">Nama Zona</th>
+                                    <th class="pb-4 font-bold text-center w-[10%]">ID Zona</th>
+                                    <th class="pb-4 font-bold w-[60%]">WhatsApp Recipient (ID Grup/Nomor)</th>
+                                    <th class="pb-4 font-bold text-right pr-4 w-[10%]">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="zonas-body" class="divide-y divide-white/5">
+                                <!-- Data populated via JS -->
+                            </tbody>
+                        </table>
+
+                        <!-- Empty State -->
+                        <div id="zonas-empty" class="hidden py-20 text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-800 mb-4">
+                                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                </svg>
+                            </div>
+                            <h4 class="text-gray-400 font-medium">Data zona tidak ditemukan</h4>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
     </div>
 
     <!-- Modal Edit Zona -->

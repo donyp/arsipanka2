@@ -342,7 +342,7 @@ function renderTable() {
             </td>
             <td>
                 <div class="flex items-center gap-4 max-w-full">
-                    <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-all duration-300 border border-white/10 ${isAnomali ? 'bg-red-500/10 text-red-400 group-hover/row:border-red-500/30' : (isSuperAdmin() && a.status && a.status.includes('Read') ? 'bg-emerald-500/10 text-emerald-400 group-hover/row:border-emerald-500/30' : (isSuperAdmin() && a.status === 'Unread' ? 'bg-indigo-500/10 text-indigo-400 group-hover/row:border-indigo-500/30' : 'bg-gray-800/30 text-gray-400 group-hover/row:border-white/20'))}">
+                    <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-all duration-300 border border-gray-100 ${isAnomali ? 'bg-red-50 text-red-600' : (isSuperAdmin() && a.status && a.status.includes('Read') ? 'bg-emerald-50 text-emerald-600' : (isSuperAdmin() && a.status === 'Unread' ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-500'))}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ?
                 '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' :
@@ -352,34 +352,34 @@ function renderTable() {
                     </div>
                     <div class="flex flex-col min-w-0">
                         <div class="flex items-center gap-2 mb-0.5">
-                            <p class="font-semibold text-sm truncate ${isAnomali ? 'text-red-400' : (a.status === 'Unread' ? 'text-white' : 'text-gray-300 group-hover/row:text-white')} transition-colors" title="${a.nama_file}">
+                            <p class="font-bold text-sm truncate ${isAnomali ? 'text-red-600' : (a.status === 'Unread' ? 'text-blue-600' : 'text-gray-900')} transition-colors" title="${a.nama_file}">
                                 ${truncate(cleanName, 45)}
                             </p>
                         </div>
                         <div class="flex flex-wrap gap-1.5 items-center">
-                            ${isSuperAdmin() && a.status === 'Unread' && !isAnomali ? '<span class="status-badge bg-indigo-500/10 text-indigo-400 border-indigo-500/20">UNREAD</span>' : ''}
-                            ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ? '<span class="status-badge bg-emerald-500/10 text-emerald-400 border-emerald-500/20">CHECKED</span>' : ''}
-                            ${isAnomali ? '<span class="status-badge bg-red-500/20 text-red-500 border-red-500/30 animate-pulse">ANOMALY</span>' : ''}
-                            ${a.status === 'Revision' ? `<span class="status-badge bg-amber-500/10 text-amber-400 border-amber-500/20" title="Alasan: ${a.dispute_reason || '-'}\nCatatan: ${a.dispute_note || '-'}">REVISION</span>` : ''}
+                            ${isSuperAdmin() && a.status === 'Unread' && !isAnomali ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase">UNREAD</span>' : ''}
+                            ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">CHECKED</span>' : ''}
+                            ${isAnomali ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-600 border border-red-100 animate-pulse uppercase">ANOMALY</span>' : ''}
+                            ${a.status === 'Revision' ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase" title="Alasan: ${a.dispute_reason || '-'}\nCatatan: ${a.dispute_note || '-'}">REVISION</span>` : ''}
                         </div>
                     </div>
                 </div>
             </td>
-            <td><span class="px-2 py-1 rounded-lg border border-white/5 bg-white/5 text-gray-300 text-[11px] font-medium">${getCategoryLabel(a.category)}</span></td>
+            <td><span class="px-2 py-1 rounded-lg border border-gray-100 bg-gray-50 text-gray-600 text-[11px] font-bold uppercase tracking-wider">${getCategoryLabel(a.category)}</span></td>
             <td>
-                ${a.tipe_ppn ? `<span class="px-2 py-1 rounded-md text-[10px] font-bold tracking-wider ${a.tipe_ppn === 'PPN' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'} uppercase">${a.tipe_ppn}</span>` : '<span class="text-gray-600 text-xs">-</span>'}
+                ${a.tipe_ppn ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-black tracking-widest ${a.tipe_ppn === 'PPN' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'} uppercase shadow-sm">${a.tipe_ppn}</span>` : '<span class="text-gray-300 text-xs">-</span>'}
             </td>
-            <td class="text-gray-400 text-sm whitespace-nowrap font-medium">${a.zonas?.nama || '-'}</td>
-            <td class="text-gray-400 text-sm whitespace-nowrap">${a.toko?.nama || '-'}</td>
-            <td class="text-gray-400 text-sm whitespace-nowrap">
-                <span class="flex items-center gap-1.5 font-medium text-gray-400">
-                    <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <td class="text-gray-900 text-sm whitespace-nowrap font-bold">${a.zonas?.nama || '-'}</td>
+            <td class="text-gray-600 text-sm whitespace-nowrap font-medium">${a.toko?.nama || '-'}</td>
+            <td class="text-gray-600 text-sm whitespace-nowrap">
+                <span class="flex items-center gap-1.5 font-bold text-gray-900">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     ${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID') : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID'))}
                 </span>
             </td>
-            <td class="text-gray-500 text-[11px] whitespace-nowrap italic">${new Date(a.created_at).toLocaleDateString('id-ID')}</td>
+            <td class="text-gray-400 text-[10px] whitespace-nowrap font-bold uppercase tracking-tighter">${new Date(a.created_at).toLocaleDateString('id-ID')}</td>
             <td>
                 <div class="relative group flex justify-end" style="z-index: ${40 - i}">
                     <button class="p-2 rounded-xl hover:bg-white/10 text-gray-500 hover:text-white transition-all duration-200" title="Aksi">

@@ -27,7 +27,7 @@
     </script>
 </head>
 
-<body class="bg-[#0f172a] min-h-screen text-gray-200">
+<body class="bg-[#F0F2F5] min-h-screen text-gray-800">
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
@@ -35,13 +35,13 @@
     <!-- Sidebar -->
     <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
     <aside id="sidebar"
-        class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
+        class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
     </aside>
 
     <!-- Main Content -->
     <main id="main-content" class="ml-64 min-h-screen transition-all duration-300">
         <!-- Top Bar -->
-        <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#0f172a]/80 border-b border-white/5 px-6 py-4">
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <!-- Mobile Menu Button -->
@@ -102,20 +102,44 @@
         </header>
 
         <!-- Broadcast Marquee (Modernized) -->
-        <div id="broadcast-container"
-            class="hidden bg-gradient-to-r from-indigo-900/40 via-indigo-600/10 to-transparent border-b border-white/5 py-2.5 px-6 overflow-hidden backdrop-blur-md">
+        <div id="broadcast-container" class="hidden bg-blue-50 border-b border-blue-100 py-3 px-6 overflow-hidden">
             <div class="flex items-center gap-4">
                 <div
-                    class="flex-shrink-0 flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-widest shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                    Pengumuman</div>
-                <marquee id="broadcast-marquee" class="text-[13px] text-indigo-100/90 font-medium tracking-wide">
+                    class="flex-shrink-0 flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-blue-600 text-white uppercase tracking-wider shadow-md shadow-blue-200">
+                    PENGUMUMAN</div>
+                <marquee id="broadcast-marquee" class="text-sm text-blue-900 font-bold tracking-tight">
                 </marquee>
             </div>
         </div>
 
-        <div class="p-6 space-y-6">
+        <div class="p-8 max-w-[1600px] mx-auto space-y-8">
+            <!-- Welcome Banner -->
+            <div class="welcome-banner animate-fade-in shadow-xl shadow-purple-500/10">
+                <div class="relative z-10">
+                    <h3 class="text-2xl font-bold mb-1">Selamat <span id="time-greeting">Datang</span>, <span
+                            data-user-name>User</span>!</h3>
+                    <div class="flex items-center gap-3 text-white/80 text-xs font-medium">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 21V5a2 2 0 012-2H9a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <span data-user-zona>-</span>
+                        </span>
+                        <span>•</span>
+                        <span id="banner-date">Sunday, 14 June 2026</span>
+                    </div>
+                </div>
+                <div class="absolute right-10 top-1/2 -translate-y-1/2 opacity-20 rotate-12">
+                    <svg class="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+            </div>
             <!-- Super Admin Controls (Broadcast) -->
-            <div data-role="super_admin" class="glass-card rounded-2xl p-4 border-l-4 border-indigo-500 hidden"
+            <div data-role="super_admin"
+                class="bg-white rounded-3xl p-6 border border-blue-100 shadow-xl shadow-blue-500/5 hidden"
                 id="admin-controls">
                 <div class="flex flex-col md:flex-row items-end gap-4">
                     <div class="flex-1 w-full text-left">
@@ -155,48 +179,50 @@
             <!-- Top Stats - Only visual to users with permission -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4" id="stats-grid"
                 data-permission="view_dashboard_stats">
-                <div class="stat-card glass-card rounded-2xl p-5 animate-fade-in-up stagger-1">
+                <div
+                    class="stat-card glass-card rounded-2xl p-5 animate-fade-in-up stagger-1 border-t-4 border-t-amber-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
-                        <span class="text-xs text-gray-500 font-medium">Invoice Merah</span>
+                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Invoice Merah</span>
                     </div>
-                    <p id="stat-invoice" class="text-2xl font-bold text-white">0</p>
-                    <p class="text-xs text-gray-500 mt-1">Dokumen</p>
+                    <p id="stat-invoice" class="text-3xl font-extrabold text-gray-900">0</p>
+                    <p class="text-xs text-gray-400 mt-1 font-medium italic">Dokumen Terdeteksi</p>
                 </div>
-                <div class="stat-card glass-card rounded-2xl p-5 animate-fade-in-up stagger-2"
+                <div class="stat-card glass-card rounded-2xl p-5 animate-fade-in-up stagger-2 border-t-4 border-t-purple-500"
                     data-permission="view_dashboard_stats">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
-                        <span class="text-xs text-gray-500 font-medium">Piutang</span>
+                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Piutang</span>
                     </div>
-                    <p id="stat-piutang" class="text-2xl font-bold text-white">0</p>
-                    <p class="text-xs text-gray-500 mt-1">Dokumen</p>
+                    <p id="stat-piutang" class="text-3xl font-extrabold text-gray-900">0</p>
+                    <p class="text-xs text-gray-400 mt-1 font-medium italic">Dokumen Terdeteksi</p>
                 </div>
-                <div class="stat-card glass-card rounded-2xl p-5 animate-fade-in-up stagger-3"
+                <div class="stat-card glass-card rounded-2xl p-5 animate-fade-in-up stagger-3 border-t-4 border-t-emerald-500"
                     data-permission="view_dashboard_stats">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
                         </div>
-                        <span class="text-xs text-gray-500 font-medium">Beban Kapasitas</span>
+                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Beban Kapasitas</span>
                     </div>
-                    <p id="stat-storage" class="text-xl font-bold text-white">0 / 0 GB</p>
-                    <div class="w-full bg-white/5 rounded-full h-1.5 mt-3">
+                    <p id="stat-storage" class="text-2xl font-extrabold text-gray-900">0 / 0 GB</p>
+                    <div class="w-full bg-gray-100 rounded-full h-2 mt-3 overflow-hidden">
                         <div id="stat-storage-progress"
-                            class="bg-emerald-500 h-1.5 rounded-full transition-all duration-1000" style="width: 0%">
+                            class="bg-emerald-500 h-full rounded-full transition-all duration-1000 shadow-sm"
+                            style="width: 0%">
                         </div>
                     </div>
                 </div>

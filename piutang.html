@@ -27,7 +27,7 @@
     </script>
 </head>
 
-<body class="bg-[#0f172a] min-h-screen text-gray-200">
+<body class="bg-[#F0F2F5] min-h-screen text-gray-800">
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
@@ -35,23 +35,24 @@
     <!-- Sidebar -->
     <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
     <aside id="sidebar"
-        class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
+        class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
     </aside>
 
     <!-- Main Content -->
     <main id="main-content" class="ml-64 min-h-screen transition-all duration-300">
         <!-- Top Bar -->
-        <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#0f172a]/80 border-b border-white/5 px-6 py-4">
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-white/5">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
                 <div>
-                    <h2 class="text-lg font-semibold text-white">Bukti Pembayaran Piutang</h2>
-                    <p class="text-xs text-gray-500">Upload bukti pembayaran piutang secara massal</p>
+                    <h2 class="text-xl font-bold text-gray-900">Bukti Pembayaran Piutang</h2>
+                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Upload bukti pembayaran
+                        piutang secara massal</p>
                 </div>
             </div>
         </header>
@@ -61,21 +62,24 @@
 
                 <!-- Info Banner -->
                 <div
-                    class="flex items-start gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 animate-fade-in-up">
-                    <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    class="flex items-start gap-4 p-5 rounded-2xl bg-blue-50 border border-blue-100 animate-fade-in-up">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
                     <div>
-                        <p class="text-sm font-medium text-emerald-300">Upload Massal Bukti Piutang</p>
-                        <p class="text-xs text-emerald-400/70 mt-0.5">Pilih satu atau lebih file bukti pembayaran. File
-                            akan diupload ke folder piutang.</p>
+                        <p class="text-sm font-extrabold text-blue-900 uppercase tracking-tight">Upload Massal Bukti
+                            Piutang</p>
+                        <p class="text-xs text-blue-600 font-medium mt-1 leading-relaxed">Pilih satu atau lebih file
+                            bukti pembayaran. File akan diupload secara otomatis ke kategori dan folder piutang.</p>
                     </div>
                 </div>
 
                 <!-- Upload Form Card -->
-                <div class="glass-card rounded-2xl p-6 animate-fade-in-up">
+                <div
+                    class="bg-white rounded-[2rem] p-8 shadow-xl shadow-blue-500/5 border border-gray-100 animate-fade-in-up">
                     <form id="piutang-form" class="space-y-5">
 
                         <!-- Hidden category -->
@@ -291,7 +295,7 @@
             const tokoOptions = window._allTokos.map(t => `<option value="${t.id}">${t.nama}</option>`).join('');
 
             listDisplay.innerHTML = selectedPiutangFiles.map((item, i) => `
-                <li class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                <li class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
                     <div class="flex items-center gap-3 overflow-hidden flex-1">
                         <div class="w-7 h-7 rounded bg-emerald-500/10 flex items-center justify-center shrink-0">
                             <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -301,7 +305,7 @@
                         <div class="truncate flex-1">
                             <p class="text-xs font-medium text-gray-300 truncate mb-1">${item.file.name}</p>
                             <div class="flex items-center gap-2">
-                                <select onchange="setPiutangToko(${i}, this.value)" class="bg-[#0f172a] border border-white/10 text-gray-400 text-[9px] rounded px-1 py-0.5 outline-none">
+                                <select onchange="setPiutangToko(${i}, this.value)" class="bg-white border border-gray-200 text-gray-700 text-[10px] rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100">
                                     <option value="">-- Umum --</option>
                                     ${tokoOptions}
                                 </select>

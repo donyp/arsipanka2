@@ -27,7 +27,7 @@
     </script>
 </head>
 
-<body class="bg-[#0f172a] min-h-screen text-gray-200">
+<body class="bg-[#F0F2F5] min-h-screen text-gray-800">
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
@@ -35,24 +35,25 @@
     <!-- Sidebar -->
     <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
     <aside id="sidebar"
-        class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
+        class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
     </aside>
 
     <!-- Main Content -->
     <main id="main-content" class="ml-64 min-h-screen transition-all duration-300">
         <!-- Top Bar -->
-        <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#0f172a]/80 border-b border-white/5 px-6 py-4">
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-white/5">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                     <div>
-                        <h2 class="text-lg font-semibold text-white">Manajemen User</h2>
-                        <p class="text-xs text-gray-500">Kelola akses pengguna sistem</p>
+                        <h2 class="text-xl font-bold text-gray-900">Manajemen User</h2>
+                        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Kelola akses
+                            pengguna sistem</p>
                     </div>
                 </div>
                 <button onclick="openUserModal()"
@@ -68,30 +69,30 @@
         <div class="p-6">
             <!-- Stats -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div class="glass-card rounded-2xl p-5">
-                    <p class="text-xs text-gray-500 mb-1">Total User</p>
-                    <p id="stat-total-users" class="text-2xl font-bold text-white">0</p>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total User</p>
+                    <p id="stat-total-users" class="text-2xl font-extrabold text-gray-900">0</p>
                 </div>
-                <div class="glass-card rounded-2xl p-5">
-                    <p class="text-xs text-gray-500 mb-1">Super Admin</p>
-                    <p id="stat-super-admin" class="text-2xl font-bold text-indigo-400">0</p>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Super Admin</p>
+                    <p id="stat-super-admin" class="text-2xl font-extrabold text-blue-600">0</p>
                 </div>
-                <div class="glass-card rounded-2xl p-5">
-                    <p class="text-xs text-gray-500 mb-1">Admin Zona</p>
-                    <p id="stat-admin-zona" class="text-2xl font-bold text-emerald-400">0</p>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Admin Zona</p>
+                    <p id="stat-admin-zona" class="text-2xl font-extrabold text-purple-600">0</p>
                 </div>
             </div>
 
             <!-- Tabs -->
-            <div class="flex items-center gap-4 mb-6 border-b border-white/5 pb-px px-2">
+            <div class="flex items-center gap-4 mb-6 border-b border-gray-200 pb-px px-2">
                 <button onclick="switchTab('users')" id="tab-btn-users"
-                    class="px-4 py-2 font-medium text-sm text-indigo-400 border-b-2 border-indigo-500 transition-all">Pengguna
+                    class="px-4 py-2 font-bold text-sm text-blue-600 border-b-2 border-blue-600 transition-all">Pengguna
                     Aktif</button>
                 <button onclick="switchTab('history')" id="tab-btn-history"
-                    class="px-4 py-2 font-medium text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-all">Riwayat
+                    class="px-4 py-2 font-semibold text-sm text-gray-400 border-b-2 border-transparent hover:text-gray-900 transition-all">Riwayat
                     Login</button>
                 <button onclick="switchTab('activity')" id="tab-btn-activity"
-                    class="px-4 py-2 font-medium text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-all">Log
+                    class="px-4 py-2 font-semibold text-sm text-gray-400 border-b-2 border-transparent hover:text-gray-900 transition-all">Log
                     Aktivitas</button>
             </div>
 
@@ -186,11 +187,11 @@
 
     <!-- Add/Edit User Modal -->
     <div id="user-modal" class="fixed inset-0 z-50 hidden">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeUserModal()"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeUserModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div
-                class="relative bg-gray-900/95 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-scale-in">
-                <h3 id="modal-title" class="text-lg font-semibold text-white mb-5">Tambah User Baru</h3>
+                class="relative bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl animate-scale-in border border-gray-100">
+                <h3 id="modal-title" class="text-xl font-extrabold text-gray-900 mb-6">Tambah User Baru</h3>
                 <form id="user-form" class="space-y-4">
                     <input type="hidden" id="edit-user-id">
                     <div>

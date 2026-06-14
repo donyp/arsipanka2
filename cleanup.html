@@ -27,7 +27,7 @@
     </script>
 </head>
 
-<body class="bg-[#0f172a] min-h-screen text-gray-200">
+<body class="bg-[#F0F2F5] min-h-screen text-gray-800 font-sans">
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
@@ -35,22 +35,23 @@
     <!-- Sidebar -->
     <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
     <aside id="sidebar"
-        class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
+        class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
     </aside>
 
     <!-- Main Content -->
     <main id="main-content" class="ml-64 min-h-screen transition-all duration-300">
-        <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#0f172a]/80 border-b border-white/5 px-6 py-4">
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-white/5">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
                 <div>
-                    <h2 class="text-lg font-semibold text-white">Optimasi Penyimpanan</h2>
-                    <p class="text-xs text-gray-500">Asisten Sistem untuk membersihkan file sampah & duplikat</p>
+                    <h2 class="text-xl font-bold text-gray-900">Optimasi Penyimpanan</h2>
+                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Asisten Sistem untuk
+                        membersihkan file sampah & duplikat</p>
                 </div>
             </div>
         </header>
@@ -59,16 +60,17 @@
             <div class="max-w-4xl mx-auto space-y-6">
 
                 <!-- Welcome Card -->
-                <div class="glass-card p-8 rounded-3xl relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <svg class="w-32 h-32 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div
+                    class="bg-white p-10 rounded-[2.5rem] relative overflow-hidden group shadow-xl shadow-blue-500/5 border border-gray-100">
+                    <div class="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <svg class="w-48 h-48 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="1.5" stroke-linecap="round"
                                 stroke-linejoin="round" />
                         </svg>
                     </div>
-                    <div class="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                    <div class="relative z-10 flex flex-col md:flex-row items-center gap-10">
                         <div
-                            class="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 shrink-0">
+                            class="w-24 h-24 rounded-3xl bg-blue-600 flex items-center justify-center shadow-2xl shadow-blue-200 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
                             <svg class="w-12 h-12 text-white animate-pulse" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -76,15 +78,16 @@
                             </svg>
                         </div>
                         <div class="text-center md:text-left flex-1">
-                            <h3 class="text-xl font-bold text-white mb-2">Halo Admin, Saya Siap Membantu!</h3>
-                            <p class="text-sm text-gray-400 max-w-lg leading-relaxed">
-                                Saya akan memindai database Bapak untuk menemukan file duplikat, file yang tidak ada di
-                                storage (ghost), dan file redundant untuk menghemat kuota Terabox Bapak.
+                            <h3 class="text-2xl font-black text-gray-900 mb-3 leading-tight">Halo Admin, Saya Siap
+                                Membantu!</h3>
+                            <p class="text-sm text-gray-500 max-w-lg leading-relaxed font-medium">
+                                Saya akan memindai database Anda untuk menemukan file duplikat, file yang hilang di
+                                storage, dan file redundan untuk mengoptimalkan kapasitas penyimpanan sistem.
                             </p>
                             <button id="scan-btn" onclick="startScan()"
-                                class="mt-6 px-8 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-indigo-500/25 flex items-center gap-3">
+                                class="mt-8 px-10 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm transition-all shadow-xl shadow-blue-200 flex items-center gap-3">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2.5"
+                                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3"
                                         stroke-linecap="round" />
                                 </svg>
                                 Mulai Audit Penyimpanan
@@ -97,28 +100,32 @@
                 <div id="results-container" class="hidden space-y-8 animate-fade-in">
 
                     <!-- Progress Bar (Fake simulation for UX) -->
-                    <div id="scanning-progress" class="hidden glass-card p-6 rounded-2xl text-center">
-                        <div class="w-full bg-white/5 rounded-full h-2 mb-4">
-                            <div id="scan-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-500"
+                    <div id="scanning-progress"
+                        class="hidden bg-white p-8 rounded-[2rem] text-center border border-gray-100 shadow-xl shadow-blue-500/5">
+                        <div class="w-full bg-gray-100 rounded-full h-3 mb-6 overflow-hidden">
+                            <div id="scan-bar"
+                                class="bg-blue-600 h-full rounded-full transition-all duration-500 shadow-lg shadow-blue-200"
                                 style="width: 0%"></div>
                         </div>
-                        <p id="scan-status" class="text-xs text-gray-500 italic">Menganalisis file...</p>
+                        <p id="scan-status" class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            Menganalisis file...</p>
                     </div>
 
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="glass-card p-4 rounded-2xl border-b-2 border-amber-500/30">
-                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">File Duplikat</p>
-                            <h4 id="count-dupes" class="text-xl font-bold text-amber-400 mt-1">0</h4>
+                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
+                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">File Duplikat</p>
+                            <h4 id="count-dupes" class="text-3xl font-black text-amber-500 mt-2">0</h4>
                         </div>
-                        <div class="glass-card p-4 rounded-2xl border-b-2 border-red-500/30">
-                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">File Hilang (Ghost)
+                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
+                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">File Hilang
+                                (Ghost)</p>
+                            <h4 id="count-ghosts" class="text-3xl font-black text-red-500 mt-2">0</h4>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
+                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">Kandidat Sampah
                             </p>
-                            <h4 id="count-ghosts" class="text-xl font-bold text-red-400 mt-1">0</h4>
-                        </div>
-                        <div class="glass-card p-4 rounded-2xl border-b-2 border-indigo-500/30">
-                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Kandidat Sampah</p>
-                            <h4 id="count-cands" class="text-xl font-bold text-indigo-400 mt-1">0</h4>
+                            <h4 id="count-cands" class="text-3xl font-black text-blue-600 mt-2">0</h4>
                         </div>
                     </div>
 

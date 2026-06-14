@@ -1,9 +1,9 @@
 // ============================================================
 // Shared Sidebar Component — Single Source of Truth
 // Auto-detects current page and renders the sidebar
-// Version 2.1.2 - Final UI Audit Build (Icons & Guard)
+// Version 3.0.0 - Light Theme Build
 // ============================================================
-console.log("Sidebar Version 2.1.2 - Clean Build Executed");
+console.log("Sidebar Version 3.0.0 - Light Theme");
 
 (function () {
     const activePage = window.location.pathname.split('/').pop() || 'dashboard.html';
@@ -75,7 +75,7 @@ console.log("Sidebar Version 2.1.2 - Clean Build Executed");
     let navHTML = '';
     for (const item of menuItems) {
         if (item.section) {
-            navHTML += `<p class="text-[10px] text-gray-600 uppercase tracking-widest mt-6 mb-1 px-4">${item.section}</p>`;
+            navHTML += `<p class="text-[10px] text-gray-400 uppercase tracking-widest mt-6 mb-1 px-4 font-semibold">${item.section}</p>`;
             continue;
         }
 
@@ -89,8 +89,8 @@ console.log("Sidebar Version 2.1.2 - Clean Build Executed");
             for (const child of item.children) {
                 const isActive = activePage === child.href;
                 const activeClass = isActive
-                    ? 'active text-white bg-white/10 ring-1 ring-white/10 shadow-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5';
+                    ? 'active text-blue-600 bg-blue-50 font-semibold'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100';
 
                 childrenHTML += `
                     <a href="${child.href}" ${child.guard || ''}
@@ -104,8 +104,8 @@ console.log("Sidebar Version 2.1.2 - Clean Build Executed");
             }
 
             navHTML += `
-                <div id="${item.id}-parent" class="sidebar-dropdown ${parentClass} mt-3 mb-0.5">
-                    <button onclick="toggleSidebarDropdown('${item.id}')" class="sidebar-dropdown-btn w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm text-gray-400 hover:text-white group">
+                <div id="${item.id}-parent" class="sidebar-dropdown ${parentClass} mt-1 mb-0.5">
+                    <button onclick="toggleSidebarDropdown('${item.id}')" class="sidebar-dropdown-btn w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 group">
                         <div class="flex items-center gap-3">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 ${renderIcon(item.icon, item.iconPaths)}
@@ -127,8 +127,8 @@ console.log("Sidebar Version 2.1.2 - Clean Build Executed");
         } else {
             const isActive = activePage === item.href;
             const activeClass = isActive
-                ? 'active text-white bg-white/10 ring-1 ring-white/10 shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-white/5';
+                ? 'active text-blue-600 bg-blue-50 font-semibold'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100';
 
             navHTML += `
                 <a href="${item.href}" ${item.guard || ''}
@@ -146,34 +146,34 @@ console.log("Sidebar Version 2.1.2 - Clean Build Executed");
         if (!sidebar) return;
 
         sidebar.innerHTML = `
-            <div class="p-5 border-b border-white/5">
+            <div class="p-5 border-b border-gray-200">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-md">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-sm font-bold text-white">Pusat Arsip Anka</h1>
-                        <span class="text-xs text-gray-500">Multi-Zona System</span>
+                        <h1 class="text-sm font-bold text-gray-900">Pusat Arsip Anka</h1>
+                        <span class="text-xs text-gray-400">Multi-Zona System</span>
                     </div>
                 </div>
             </div>
 
-            <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+            <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
                 ${navHTML}
             </nav>
 
-            <div class="p-4 border-t border-white/5">
+            <div class="p-4 border-t border-gray-200">
                 <div class="flex items-center gap-3">
-                    <img data-user-avatar src="" alt="avatar" class="w-9 h-9 rounded-full ring-2 ring-indigo-500/30">
+                    <img data-user-avatar src="" alt="avatar" class="w-9 h-9 rounded-full ring-2 ring-blue-500/20">
                     <div class="flex-1 min-w-0">
-                        <p data-user-name class="text-sm font-medium text-white truncate">Loading...</p>
-                        <span data-user-role class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400">-</span>
+                        <p data-user-name class="text-sm font-medium text-gray-900 truncate">Loading...</p>
+                        <span data-user-role class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">-</span>
                     </div>
                     <button onclick="logout()" title="Logout"
-                        class="p-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                        class="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

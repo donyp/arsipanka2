@@ -27,7 +27,7 @@
     </script>
 </head>
 
-<body class="bg-[#0f172a] min-h-screen text-gray-200">
+<body class="bg-[#F0F2F5] min-h-screen text-gray-800">
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
@@ -35,29 +35,30 @@
     <!-- Sidebar -->
     <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
     <aside id="sidebar"
-        class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
+        class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
     </aside>
 
     <!-- Main Content -->
     <main id="main-content" class="ml-64 min-h-screen transition-all duration-300">
         <!-- Top Bar -->
-        <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#0f172a]/80 border-b border-white/5 px-6 py-4">
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-white/5">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                     <div>
-                        <h2 class="text-lg font-semibold text-white">Manajemen Toko</h2>
-                        <p class="text-xs text-gray-500">Kelola daftar toko dan alokasi zona</p>
+                        <h2 class="text-xl font-bold text-gray-900">Manajemen Toko</h2>
+                        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Kelola daftar toko
+                            dan alokasi zona</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
                     <select id="filter-zona" onchange="applyTokoFilter()"
-                        class="input-field px-4 py-2 rounded-xl text-sm bg-[#0c1222]/50 border-white/10 text-gray-400 min-w-[140px]">
+                        class="px-4 py-2 rounded-xl text-sm bg-white border border-gray-200 text-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-100 min-w-[140px] transition-all">
                         <option value="">Semua Zona</option>
                     </select>
                     <button onclick="openTokoModal()"
@@ -115,26 +116,30 @@
 
     <!-- Add/Edit Toko Modal -->
     <div id="toko-modal" class="fixed inset-0 z-50 hidden">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTokoModal()"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeTokoModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div
-                class="relative bg-gray-900/95 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-scale-in">
-                <h3 id="modal-title" class="text-lg font-semibold text-white mb-5">Tambah Toko Baru</h3>
-                <form id="toko-form" class="space-y-4">
+                class="relative bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-scale-in border border-gray-100">
+                <h3 id="modal-title" class="text-xl font-extrabold text-gray-900 mb-6">Tambah Toko Baru</h3>
+                <form id="toko-form" class="space-y-6">
                     <input type="hidden" id="edit-toko-id">
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1.5">Nama Toko</label>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Nama
+                            Toko</label>
                         <input id="modal-nama" type="text" required placeholder="Contoh: Toko Berkah"
-                            class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
+                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1.5">Kode Toko</label>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Kode
+                            Toko</label>
                         <input id="modal-kode" type="text" required placeholder="Contoh: TRK-01"
-                            class="input-field w-full px-4 py-2.5 rounded-xl text-sm uppercase">
+                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all uppercase">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1.5">Alokasi Zona</label>
-                        <select id="modal-zona" required class="input-field w-full px-4 py-2.5 rounded-xl text-sm">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Alokasi
+                            Zona</label>
+                        <select id="modal-zona" required
+                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all">
                             <option value="">Pilih zona</option>
                         </select>
                     </div>

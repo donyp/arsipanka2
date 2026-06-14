@@ -27,7 +27,7 @@
     </script>
 </head>
 
-<body class="bg-[#0f172a] min-h-screen text-gray-200">
+<body class="bg-[#F0F2F5] min-h-screen text-gray-800">
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
@@ -35,23 +35,24 @@
     <!-- Sidebar -->
     <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
     <aside id="sidebar"
-        class="sidebar fixed top-0 left-0 h-full w-64 bg-[#0c1222] border-r border-white/5 flex flex-col z-40">
+        class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
     </aside>
 
     <!-- Main Content -->
     <main id="main-content" class="ml-64 min-h-screen transition-all duration-300">
         <!-- Top Bar -->
-        <header class="sticky top-0 z-30 backdrop-blur-xl bg-[#0f172a]/80 border-b border-white/5 px-6 py-4">
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-white/5">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
                 <div>
-                    <h2 class="text-lg font-semibold text-white">Upload Invoice Merah</h2>
-                    <p class="text-xs text-gray-500">Upload Invoice Merah ke sistem arsip</p>
+                    <h2 class="text-xl font-bold text-gray-900">Upload Doc</h2>
+                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Antrian Upload Dokumen
+                        Arsip</p>
                 </div>
             </div>
         </header>
@@ -59,8 +60,8 @@
         <div class="p-6">
             <div class="max-w-4xl mx-auto space-y-6">
                 <!-- Upload Form Card -->
-                <div class="glass-card rounded-3xl p-8 animate-fade-in-up border border-white/10 shadow-2xl overflow-hidden relative"
-                    style="background: linear-gradient(180deg, rgba(99,102,241,0.05) 0%, transparent 100%);">
+                <div
+                    class="bg-white rounded-[2rem] p-10 shadow-xl shadow-blue-500/5 border border-gray-100 overflow-hidden relative">
 
                     <!-- Decorative Background Glow -->
                     <div
@@ -80,19 +81,20 @@
                                     PDF/JPG/PNG</span>
                             </div>
                             <div id="drop-zone"
-                                class="drop-zone rounded-2xl p-12 text-center cursor-pointer border-2 border-dashed border-white/5 bg-white/[0.02] hover:bg-indigo-500/[0.03] transition-all duration-300"
+                                class="drop-zone rounded-3xl p-16 text-center cursor-pointer border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300"
                                 onclick="document.getElementById('file-input').click()">
                                 <div id="drop-zone-content">
                                     <div
-                                        class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/20 group-hover:scale-110 transition-transform">
-                                        <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor"
+                                        class="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-200">
+                                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                         </svg>
                                     </div>
-                                    <p class="text-sm text-gray-300 mb-1 font-medium">Klik atau drop file di sini</p>
-                                    <p class="text-xs text-gray-600">Dokumen akan diproses dalam antrian</p>
+                                    <p class="text-base text-gray-900 mb-1 font-bold">Klik atau seret file ke sini</p>
+                                    <p class="text-xs text-gray-400 font-medium">Dokumen akan diproses dalam antrian
+                                        otomatis</p>
                                 </div>
                                 <div id="file-info" class="hidden text-left w-full">
                                     <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
