@@ -94,7 +94,7 @@ console.log("Sidebar Version 2.1.2 - Clean Build Executed");
 
                 childrenHTML += `
                     <a href="${child.href}" ${child.guard || ''}
-                        class="sidebar-link flex items-center gap-3 px-4 py-2.5 mt-1 mx-2 rounded-xl text-sm transition-all group ${activeClass}">
+                        class="sidebar-link flex items-center gap-3 px-4 py-2 mt-0.5 mx-2 rounded-xl text-sm transition-all group ${activeClass}">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             ${renderIcon(child.icon, child.iconPaths)}
                         </svg>
@@ -104,8 +104,8 @@ console.log("Sidebar Version 2.1.2 - Clean Build Executed");
             }
 
             navHTML += `
-                <div id="${item.id}-parent" class="sidebar-dropdown ${parentClass} mt-4 mb-1">
-                    <button onclick="toggleSidebarDropdown('${item.id}')" class="sidebar-dropdown-btn w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm text-gray-400 hover:text-white group">
+                <div id="${item.id}-parent" class="sidebar-dropdown ${parentClass} mt-3 mb-0.5">
+                    <button onclick="toggleSidebarDropdown('${item.id}')" class="sidebar-dropdown-btn w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm text-gray-400 hover:text-white group">
                         <div class="flex items-center gap-3">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 ${renderIcon(item.icon, item.iconPaths)}
