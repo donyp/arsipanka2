@@ -2703,17 +2703,41 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
 app.get('/api/requests', authenticateToken, async (req, res) => {
     try {
         let query = supabase.from('upload_requests')
-            .select(`*, users!upload_requests_user_id_fkey(name, email), zonas!upload_requests_zona_id_fkey(nama), files(nama_file)`)
+            .select(`*, users!upload_requests_user_id_fkey(name, email), zonas!upload_requests_zona_id_fkey(nama)`)
             .order('created_at', { ascending: false });
 
         if (req.user.role === 'admin_zona') {
             query = query.eq('user_id', req.user.userId);
         }
 
-        const { data, error } = await query;
+        const { data: requests, error } = await query;
         if (error) throw error;
 
-        res.json({ requests: data || [] });
+        // Manual Enrichment: If file_id is present, fetch the filenames separately
+        // This avoids PGRST200 error due to missing Foreign Key relationship
+        const fileIds = [...new Set(requests.filter(r => r.file_id).map(r => r.file_id))];
+        let enrichedRequests = requests;
+
+        if (fileIds.length > 0) {
+            try {
+                const { data: files } = await supabase
+                    .from('files')
+                    .select('id, nama_file')
+                    .in('id', fileIds);
+
+                const fileMap = (files || []).reduce((acc, f) => ({ ...acc, [f.id]: f.nama_file }), {});
+
+                enrichedRequests = requests.map(r => ({
+                    ...r,
+                    files: r.file_id && fileMap[r.file_id] ? { nama_file: fileMap[r.file_id] } : null
+                }));
+            } catch (joinErr) {
+                console.warn('[Requests] Manual join failed (possibly missing file_id column):', joinErr.message);
+                // Continue with raw requests, frontend has fallback parsing
+            }
+        }
+
+        res.json({ requests: enrichedRequests });
     } catch (err) {
         console.error('Fetch Requests Error:', err);
         res.status(500).json({ error: 'Gagal memuat data request.' });
