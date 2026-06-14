@@ -621,14 +621,16 @@ function openPreview(fileId, fileName) {
 
         if (download) download.href = downloadUrl;
 
-        // Show modal
+        // Show modal first, then wait for layout to fully settle before loading
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
 
-        // Use a small timeout to ensure the layout is ready before the stream starts
-        setTimeout(() => {
-            iframe.src = viewUrl;
-        }, 100);
+        // Wait for the browser to paint the modal at full size, then load the PDF
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                iframe.src = viewUrl;
+            }, 400);
+        });
     } catch (err) {
         console.error('[Preview Error]', err);
         Toast.error('Gagal membuka preview: ' + err.message);
