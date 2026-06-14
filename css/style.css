@@ -321,75 +321,73 @@ body {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    table-layout: fixed;
-    /* Enforce column widths */
+    table-layout: auto;
+    /* Changed to auto for better flexibility */
     font-size: 0.85rem;
-    /* Slightly smaller for density */
 }
 
 .data-table th,
 .data-table td {
-    padding: 0.75rem 0.5rem;
+    padding: 0.875rem 1rem;
+    /* More generous padding */
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Specific Column Widths */
+/* Specific Column Widths & Styles */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) {
-    width: 40px;
+    width: 48px;
     text-align: center;
+    padding-left: 1.5rem;
 }
 
-/* Checkbox */
+/* Nama File Column - Allow it to grow */
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) {
-    width: 25%;
-}
-
-/* Nama File */
-.data-table th:nth-child(3),
-.data-table td:nth-child(3) {
-    width: 100px;
+    min-width: 200px;
+    max-width: 400px;
 }
 
 /* Kategori */
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+    width: 120px;
+}
+
+/* Tipe */
 .data-table th:nth-child(4),
 .data-table td:nth-child(4) {
     width: 80px;
 }
 
-/* Tipe */
+/* Zona & Toko */
 .data-table th:nth-child(5),
-.data-table td:nth-child(5) {
-    width: 80px;
-}
-
-/* Zona */
+.data-table td:nth-child(5),
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) {
-    width: 15%;
+    width: auto;
+    min-width: 100px;
 }
 
-/* Toko */
+/* Tanggal Dokumen */
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) {
-    width: 110px;
-}
-
-/* Tanggal */
-.data-table th:nth-child(8),
-.data-table td:nth-child(8) {
-    width: 60px;
+    width: 130px;
 }
 
 /* Upload */
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) {
+    width: 100px;
+}
+
+/* Aksi */
 .data-table th:nth-child(9),
 .data-table td:nth-child(9) {
-    width: 90px;
+    width: 64px;
     text-align: right;
+    padding-right: 1.5rem;
 }
 
 /* Aksi */
@@ -558,23 +556,18 @@ select.input-field option:hover {
     border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* ---- Badge ---- */
-.badge {
+/* ---- Status Badge ---- */
+.status-badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px 10px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.625rem;
+    font-weight: 700;
     border-radius: 9999px;
-    border: 1px solid;
-}
-
-/* ---- Particles (Login BG) ---- */
-.particle {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    opacity: 0.15;
+    border: 1px solid transparent;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
 }
 
 /* ---- Responsive ---- */
