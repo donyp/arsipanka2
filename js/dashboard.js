@@ -261,15 +261,22 @@ async function populateTokoFilter() {
 }
 
 // ---- Update Stats ----
-function updateStats(res = {}) {
+async function updateStats(res = {}) {
     const el = (id) => document.getElementById(id);
 
-    // Use true totals from backend if available, fallback to filtered chunk
-    const invoiceCount = res.totalInvoice ?? filteredArchives.filter(a => a.category === 'INVOICE').length;
-    const piutangCount = res.totalPiutang ?? filteredArchives.filter(a => a.category === 'PIUTANG').length;
+    try {
+        // Fetch true totals from summary endpoint if provided by backend, or res metadata
+        const invoiceCount = res.totalInvoice ?? res.total ?? filteredArchives.filter(a => a.category === 'INVOICE').length;
+        const piutangCount = res.totalPiutang ?? filteredArchives.filter(a => a.category === 'PIUTANG').length;
 
-    if (el('stat-invoice')) el('stat-invoice').textContent = invoiceCount;
-    if (el('stat-piutang')) el('stat-piutang').textContent = piutangCount;
+        if (el('stat-invoice')) el('stat-invoice').textContent = invoiceCount;
+        if (el('stat-piutang')) el('stat-piutang').textContent = piutangCount;
+
+        // If we want the TRULY absolute total from the whole storage (all zones/categories)
+        // we might need a specific call, but usually res.total is what's expected here.
+    } catch (err) {
+        console.warn('Stats update error:', err);
+    }
 }
 
 // ---- Apply Filters ----
@@ -1509,7 +1516,7 @@ async function toggleMaintenance() {
             },
             'Aktifkan Sekarang',
             'Batal',
-            true // Image 4: Dark Modal
+            false // Light default for Premium look
         );
     }
 }

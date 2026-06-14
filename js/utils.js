@@ -82,27 +82,28 @@ function showAlert(title, message, onOk) {
 
 function showConfirm(title, message, onConfirm, okText = 'Konfirmasi', cancelText = 'Batal', isDark = false) {
     const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-md animate-fade-in';
+    overlay.className = 'fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-md animate-fade-in';
 
-    const bgColor = isDark ? 'bg-[#1e293b]/95' : 'bg-gray-900/95';
-    const textColor = isDark ? 'text-white' : 'text-white';
-    const subTextColor = isDark ? 'text-gray-300' : 'text-gray-400';
+    // Switch to Light Premium theme by default, matching Image 1-3
+    const bgColor = isDark ? 'bg-[#1e293b]/95' : 'bg-white/95';
+    const textColor = isDark ? 'text-white' : 'text-gray-900';
+    const subTextColor = isDark ? 'text-gray-300' : 'text-gray-500';
 
     overlay.innerHTML = `
-        <div class="relative ${bgColor} border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
+        <div class="relative ${bgColor} border ${isDark ? 'border-white/10' : 'border-gray-100'} rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
             <div class="flex items-start gap-4 mb-6">
-                <div class="flex-shrink-0 w-12 h-12 rounded-xl ${isDark ? 'bg-red-500/20' : 'bg-red-500/10'} text-red-400 flex items-center justify-center border border-red-500/20">
+                <div class="flex-shrink-0 w-12 h-12 rounded-xl ${isDark ? 'bg-red-500/20' : 'bg-red-50'} text-red-500 flex items-center justify-center border ${isDark ? 'border-red-500/20' : 'border-red-100'}">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                 </div>
                 <div>
                     <h3 class="text-xl font-bold ${textColor} mb-1">${title}</h3>
-                    <p class="${subTextColor} text-sm leading-relaxed">${message}</p>
+                    <p class="${subTextColor} text-sm leading-relaxed font-medium">${message}</p>
                 </div>
             </div>
             <div class="flex gap-3">
-                <button id="confirm-cancel" class="flex-1 py-3.5 rounded-2xl text-sm font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200">${cancelText}</button>
+                <button id="confirm-cancel" class="flex-1 py-3.5 rounded-2xl text-sm font-bold text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all duration-200">${cancelText}</button>
                 <button id="confirm-ok" class="flex-1 px-8 py-3.5 rounded-2xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/25 transition-all duration-200">${okText}</button>
             </div>
         </div>
