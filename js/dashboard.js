@@ -719,6 +719,77 @@ function closeBugModal() {
     if (modal) modal.classList.add('hidden');
 }
 
+// ---- Bug History for Admin Zona ----
+function openBugHistoryModal() {
+    const modal = document.getElementById('bug-history-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        loadBugHistory();
+    }
+}
+
+function closeBugHistoryModal() {
+    const modal = document.getElementById('bug-history-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function loadBugHistory() {
+    const list = document.getElementById('bug-history-list');
+    if (!list) return;
+
+    list.innerHTML = `
+        <div class="p-8 text-center">
+            <div class="loader-ring mx-auto mb-4 border-amber-500"></div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Memuat riwayat...</p>
+        </div>
+    `;
+
+    try {
+        const res = await API.get('/api/bugs');
+        const reports = res.reports || [];
+
+        if (reports.length === 0) {
+            list.innerHTML = `
+                <div class="p-12 text-center">
+                    <p class="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">Belum ada riwayat laporan</p>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = reports.map(b => {
+            const date = new Date(b.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            let statusColor = 'bg-gray-100 text-gray-500';
+            if (b.status === 'Diproses') statusColor = 'bg-amber-100 text-amber-600';
+            if (b.status === 'Selesai') statusColor = 'bg-emerald-100 text-emerald-600';
+
+            return `
+                <div class="p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:border-amber-200 transition-all group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">${b.tipe}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${statusColor}">${b.status}</span>
+                    </div>
+                    <p class="text-xs font-bold text-gray-800 line-clamp-2 mb-2 leading-relaxed">${b.deskripsi}</p>
+                    <div class="flex items-center justify-between text-[9px] font-bold text-gray-400 uppercase">
+                        <span>🗓️ ${date}</span>
+                        <span class="flex items-center gap-1">
+                            ${b.tautan_file ? '📎 Ada Lampiran' : '🚫 Tanpa Lampiran'}
+                        </span>
+                    </div>
+                    ${b.admin_notes ? `
+                        <div class="mt-3 pt-3 border-t border-dashed border-gray-200">
+                            <p class="text-[9px] font-black text-amber-600 uppercase mb-1">Catatan Admin:</p>
+                            <p class="text-[10px] font-medium text-gray-600 italic">"${b.admin_notes}"</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        list.innerHTML = `<p class="text-center py-8 text-red-500 text-[10px] font-black uppercase">${err.message}</p>`;
+    }
+}
+
 function handleBugFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -789,6 +860,11 @@ async function submitBugReport() {
 
         Toast.success('Laporan bug berhasil dikirim! Terimakasih atas masukannya.');
         closeBugModal();
+
+        // Refresh history if history modal is open or about to be
+        if (!document.getElementById('bug-history-modal').classList.contains('hidden')) {
+            loadBugHistory();
+        }
     } catch (err) {
         Toast.error('Gagal mengirim laporan bug: ' + err.message);
     } finally {

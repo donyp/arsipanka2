@@ -65,13 +65,20 @@
                     </div>
 
                     <!-- Bug Report Button (Admin Zona) -->
-                    <button id="btn-lapor-bug" onclick="openBugModal()"
-                        class="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all relative"
-                        title="Lapor Bug">
+                    <button onclick="openBugHistoryModal()" title="Riwayat Laporan"
+                        class="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-gray-500 hover:bg-gray-100 transition-all active:scale-95">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
+                    </button>
+                    <button onclick="openBugModal()"
+                        class="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <span>Lapor Bug</span>
                     </button>
 
                     <!-- Notifications Dropdown -->
@@ -410,7 +417,45 @@
         </div>
     </main>
 
-    <!-- Profile Detail Modal -->
+    <!-- Bug History Modal -->
+    <div id="bug-history-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden text-left">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-md" onclick="closeBugHistoryModal()"></div>
+        <div
+            class="relative bg-white w-full max-w-md mx-4 rounded-[2rem] overflow-hidden shadow-2xl animate-fade-in-up">
+            <div class="p-6 border-b border-gray-50 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center border border-blue-100">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight">Riwayat Laporan</h3>
+                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Status perbaikan
+                            bug Anda</p>
+                    </div>
+                </div>
+                <button onclick="closeBugHistoryModal()"
+                    class="p-2 text-gray-400 hover:text-gray-900 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar" id="bug-history-list">
+                <!-- Data will be loaded here -->
+                <div class="p-8 text-center">
+                    <div class="loader-ring mx-auto mb-4 border-amber-500"></div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Memuat riwayat...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="profile-detail-modal" class="fixed inset-0 z-[100] hidden">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-md" onclick="closeProfileDetail()"></div>
         <div
@@ -576,7 +621,7 @@
                         class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shadow-inner">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
                     </div>
                     <div>
@@ -638,7 +683,7 @@
                         class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Jelaskan
                         masalah yang ditemukan</label>
                     <textarea id="bug-deskripsi"
-                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:ring-2 focus:ring-amber-200 h-28 resize-none"
+                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:ring-2 focus:ring-amber-200 h-24 resize-none"
                         placeholder="Jelaskan masalah yang ditemukan"></textarea>
                 </div>
 
@@ -650,8 +695,8 @@
                         <input type="file" id="bug-file" accept="image/*" class="hidden"
                             onchange="handleBugFileSelect(event)">
                         <label for="bug-file"
-                            class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50 cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-all group overflow-hidden">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6"
+                            class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50 cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-all group overflow-hidden">
+                            <div class="flex flex-col items-center justify-center pt-4 pb-5"
                                 id="bug-upload-placeholder">
                                 <svg class="w-8 h-8 mb-3 text-gray-400 group-hover:text-amber-500 transition-colors"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
