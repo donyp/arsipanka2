@@ -41,6 +41,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     setupEventListeners();
     setupIntersectionObserver();
+
+    // Global close for dropdowns
+    document.addEventListener('click', (e) => {
+        const notifDropdown = document.getElementById('notif-dropdown-parent');
+        const notifMenu = document.getElementById('notif-menu');
+        if (notifDropdown && !notifDropdown.contains(e.target)) {
+            notifMenu?.classList.add('invisible', 'opacity-0', 'translate-y-2');
+        }
+    });
 });
 
 
@@ -320,12 +329,28 @@ function setupIntersectionObserver() {
             currentPage++;
             loadArchives(true);
         }
-    }, { rootMargin: '100px' });
+    }, {
+        rootMargin: '200px', // Trigger earlier for smoother experience
+        threshold: 0.1
+    });
 
-    // Attach to loader once available (we will add this in HTML)
     const sentinel = document.getElementById('infinite-scroll-trigger');
     if (sentinel) observer.observe(sentinel);
 }
+
+// ---- Notification UI ----
+window.toggleNotifMenu = function () {
+    const menu = document.getElementById('notif-menu');
+    if (!menu) return;
+
+    if (menu.classList.contains('invisible')) {
+        menu.classList.remove('invisible', 'opacity-0', 'translate-y-2');
+        menu.classList.add('opacity-100', 'translate-y-0');
+    } else {
+        menu.classList.add('invisible', 'opacity-0', 'translate-y-2');
+        menu.classList.remove('opacity-100', 'translate-y-0');
+    }
+};
 
 // ---- Render Table ----
 function renderTable() {
@@ -410,7 +435,7 @@ function renderTable() {
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 Preview
                             </button>
-                            <a href="${CONFIG.API_URL}/api/files/${a.id}/download?token=${API.getToken()}" target="_blank" class="flex items-center gap-3 px-4 py-2 text-[13px] text-gray-600 hover:text-blue-600 hover:bg-blue-50 w-full text-left transition-colors font-medium">
+                            <a href="${CONFIG.API_URL}/api/files/${a.id}/download?token=${API.getToken()}" class="flex items-center gap-3 px-4 py-2 text-[13px] text-gray-600 hover:text-blue-600 hover:bg-blue-50 w-full text-left transition-colors font-medium">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 Download
                             </a>

@@ -163,18 +163,6 @@
             <nav class="flex-1 py-4 space-y-0.5 overflow-y-auto custom-scrollbar">
                 ${navHTML}
             </nav>
-
-            <div class="p-6 border-t border-gray-100 bg-gray-50/50">
-                <div class="flex items-center gap-3">
-                    <div id="user-avatar-sidebar" class="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-[10px] font-black text-blue-600 uppercase">
-                        ?
-                    </div>
-                    <div class="min-w-0">
-                        <p id="user-name-sidebar" class="text-[11px] font-bold text-gray-900 truncate">Memuat...</p>
-                        <p id="user-role-sidebar" class="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate">Guest</p>
-                    </div>
-                </div>
-            </div>
         `;
 
         const mainContent = document.getElementById('main-content');
