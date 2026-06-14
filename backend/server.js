@@ -407,7 +407,7 @@ app.get('/api/files/trash', authenticateToken, requirePermission('restore_trash'
     try {
         let query = supabase
             .from('files')
-            .select('*, zonas(kode, nama), toko(kode, nama), users!deleted_by(name)', { count: 'exact' })
+            .select('*, zonas(kode, nama), toko(kode, nama), users:deleted_by(name)', { count: 'exact' })
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false });
 
@@ -1045,7 +1045,10 @@ app.post('/api/files/bulk-delete', authenticateToken, requirePermission('soft_de
         const now = new Date().toISOString();
         let query = supabase
             .from('files')
-            .update({ deleted_at: now })
+            .update({
+                deleted_at: now,
+                deleted_by: req.user.userId
+            })
             .in('id', ids);
 
         if (req.user.role === 'admin_zona') {
@@ -1157,8 +1160,8 @@ app.post('/api/files/bulk-trash-delete', authenticateToken, requirePermission('h
     }
 });
 
-// PUT /api/files/:id/restore — Super Admin only
-app.put('/api/files/:id/restore', authenticateToken, authorizeRole('super_admin'), async (req, res) => {
+// PUT /api/files/:id/restore
+app.put('/api/files/:id/restore', authenticateToken, requirePermission('restore_trash'), async (req, res) => {
     try {
         const { error } = await supabase
             .from('files')
@@ -1510,10 +1513,12 @@ app.get('/api/system/maintenance', async (req, res) => {
     res.json(getMaintenanceStatus());
 });
 
-// POST /api/system/maintenance — Toggle maintenance mode
-app.post('/api/system/maintenance', authenticateToken, authorizeRole('super_admin', 'moderator'), async (req, res) => {
+// POST/PUT /api/system/maintenance — Toggle maintenance mode
+app.all('/api/system/maintenance', authenticateToken, authorizeRole('super_admin', 'moderator'), async (req, res) => {
+    if (req.method === 'GET') return res.json(getMaintenanceStatus());
     try {
-        const { isMaintenance, result } = req.body;
+        const isMaintenance = req.body.isMaintenance !== undefined ? req.body.isMaintenance : req.body.is_maintenance;
+        const result = req.body.result;
 
         // Read current status to merge with lastResult
         const currentStatus = getMaintenanceStatus();
