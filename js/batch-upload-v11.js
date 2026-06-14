@@ -155,12 +155,12 @@ function renderBatchTable() {
                 </span>
                 ${row.errorMsg ? `<p class="text-[9px] text-red-500/80 mt-1 font-medium">${row.errorMsg}</p>` : ''}
             </td>
-            <td class="px-6 py-4 text-sm font-medium text-gray-300">${row.tanggal || '-'}</td>
+            <td class="px-6 py-4 text-sm font-medium text-gray-700">${row.tanggal || '-'}</td>
             <td class="px-6 py-4">
-                <p class="text-sm font-bold text-white">${row.konsumen || '-'}</p>
+                <p class="text-sm font-bold text-gray-900">${row.konsumen || '-'}</p>
                 <p class="text-[10px] text-gray-500">${row.no_invoice || '-'}</p>
             </td>
-            <td class="px-6 py-4 text-sm font-bold text-indigo-400 font-mono">${formatCurrency(row.total)}</td>
+            <td class="px-6 py-4 text-sm font-bold text-blue-600 font-mono">${formatCurrency(row.total)}</td>
             <td class="px-6 py-4">
                 <div class="flex items-center gap-2">
                     <input type="file" id="pdf-${row.id}" accept="application/pdf" class="hidden" onchange="attachPDF(${row.id}, event)">

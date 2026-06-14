@@ -45,16 +45,16 @@ function renderBatches(batches) {
             <tr class="animate-fade-in hover:bg-white/[0.02] transition-colors" style="animation-delay: ${Math.min(i * 30, 500)}ms">
                 <td class="px-5 py-4">
                     <div class="flex flex-col">
-                        <span class="text-sm font-medium text-white">${dateStr}</span>
+                        <span class="text-sm font-medium text-gray-900">${dateStr}</span>
                         <span class="text-xs text-gray-500">${timeStr}</span>
                     </div>
                 </td>
                 <td class="px-5 py-4">
-                    <span class="text-sm text-gray-300">${b.uploader_name || '-'}</span>
+                    <span class="text-sm text-gray-700 font-medium">${b.uploader_name || '-'}</span>
                 </td>
                 <td class="px-5 py-4 text-center">
                     <div class="flex items-center justify-center gap-2">
-                        <span class="text-sm font-bold text-white">${b.success_files}</span>
+                        <span class="text-sm font-bold text-gray-900">${b.success_files}</span>
                         <span class="text-xs text-gray-500">/ ${b.total_files}</span>
                         ${successRate === 100 ?
                 `<span class="ml-1 flex items-center justify-center p-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm" title="Berhasil">
@@ -126,7 +126,7 @@ async function openNoticePanel(batchId) {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 </svg>
                             </div>
-                            <span class="text-sm font-bold text-white">${zonaName}</span>
+                            <span class="text-sm font-bold text-gray-900">${zonaName}</span>
                             <span class="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-500">${files.length} file</span>
                         </div>
                         <button onclick="copyTemplate(this, '${escapedTemplate}')"
@@ -137,7 +137,7 @@ async function openNoticePanel(batchId) {
                             Salin Pesan
                         </button>
                     </div>
-                    <pre class="text-xs text-gray-400 bg-black/30 rounded-xl p-4 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-64 overflow-y-auto border border-white/5">${escapeHtml(template)}</pre>
+                    <pre class="text-xs text-gray-700 bg-gray-100 rounded-xl p-4 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-64 overflow-y-auto border border-gray-200">${escapeHtml(template)}</pre>
                 </div>
             `;
         });

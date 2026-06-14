@@ -129,11 +129,11 @@ function createRowHtml(u, i) {
                     <div class="w-5 h-5 rounded-full bg-indigo-500/10 flex items-center justify-center text-[8px] font-bold text-indigo-400 uppercase border border-indigo-500/20">
                         ${(u.name || 'A')[0]}
                     </div>
-                    <span class="text-sm font-medium text-gray-300">${u.name || 'Admin (System)'}</span>
+                    <span class="text-sm font-medium text-gray-800">${u.name || 'Admin (System)'}</span>
                 </div>
             </td>
-            <td class="text-gray-400 text-sm font-mono">${u.email}</td>
-            <td class="text-gray-400 text-sm">${u.contact_email || '-'}</td>
+            <td class="text-gray-600 text-sm font-mono">${u.email}</td>
+            <td class="text-gray-600 text-sm">${u.contact_email || '-'}</td>
             <td>
                 ${(u.role === 'moderator' || (u.permissions && u.permissions.includes('IS_MODERATOR'))) ? `
                     <span class="badge bg-purple-500/15 text-purple-400 border-purple-500/30">Moderator</span>
@@ -145,7 +145,7 @@ function createRowHtml(u, i) {
                     </span>
                 `}
             </td>
-            <td class="text-gray-400 text-sm">${u.zonas?.nama || '-'}</td>
+            <td class="text-gray-600 text-sm">${u.zonas?.nama || '-'}</td>
             <td>
                 <span class="px-2 py-0.5 rounded-full text-[10px] ${u.is_active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}">
                     ${u.is_active ? 'Aktif' : 'Nonaktif'}
@@ -438,7 +438,7 @@ function renderLoginHistory() {
             <td>
                 <div class="flex items-center gap-3">
                     <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(log.users?.name || '?')}&background=1e293b&color=cbd5e1" class="w-7 h-7 rounded-full ring-1 ring-white/10">
-                    <span class="font-semibold text-gray-200 text-sm">${log.users?.name || 'System'}</span>
+                    <span class="font-semibold text-gray-800 text-sm">${log.users?.name || 'System'}</span>
                 </div>
             </td>
             <td>${roleBadge}</td>
@@ -447,8 +447,8 @@ function renderLoginHistory() {
                 <div class="flex items-center gap-2">
                     <span class="text-lg">${uaData.icon}</span>
                     <div>
-                        <p class="text-xs text-gray-400 font-medium">${uaData.browser}</p>
-                        <p class="text-[10px] text-gray-600">${uaData.os}</p>
+                        <p class="text-xs text-gray-600 font-medium">${uaData.browser}</p>
+                        <p class="text-[10px] text-gray-500">${uaData.os}</p>
                     </div>
                 </div>
             </td>
@@ -525,15 +525,15 @@ function renderActivityLogs() {
                 <div class="flex items-center gap-3">
                     <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(log.users?.name || '?')}&background=1e293b&color=cbd5e1" class="w-7 h-7 rounded-full ring-1 ring-white/5">
                     <div class="flex flex-col">
-                        <span class="font-semibold text-gray-200 text-sm">${log.users?.name || 'System'}</span>
+                        <span class="font-semibold text-gray-800 text-sm">${log.users?.name || 'System'}</span>
                         <div class="scale-90 origin-left">${roleBadge}</div>
                     </div>
                 </div>
             </td>
             <td>
-                <span class="px-3 py-1 font-medium text-xs rounded-lg border border-white/10 bg-white/5 text-gray-300 tracking-wide">${log.action}</span>
+                <span class="px-3 py-1 font-medium text-xs rounded-lg border border-gray-200 bg-gray-50 text-gray-700 tracking-wide">${log.action}</span>
             </td>
-            <td class="text-sm text-gray-400 truncate max-w-sm" title="${log.context}">
+            <td class="text-sm text-gray-600 truncate max-w-sm" title="${log.context}">
                 ${log.context}
             </td>
         </tr>

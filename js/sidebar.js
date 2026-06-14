@@ -215,6 +215,8 @@ console.log("Sidebar Version 3.0.0 - Light Theme");
                 bar.classList.remove('hidden');
                 const speed = Math.max(20, broadcast.content.length / 5);
                 ticker.style.animationDuration = `${speed}s`;
+            } else if (bar) {
+                bar.classList.add('hidden');
             }
         } catch (err) {
             console.warn('Global broadcast failed:', err);

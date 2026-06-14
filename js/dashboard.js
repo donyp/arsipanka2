@@ -686,7 +686,7 @@ async function openManageBroadcasts() {
                         </span>
                         <span class="text-[10px] text-gray-500">${new Date(b.created_at).toLocaleString('id-ID')}</span>
                     </div>
-                    <p class="text-sm text-gray-200 truncate" title="${b.content}">${b.content}</p>
+                    <p class="text-sm text-gray-700 truncate" title="${b.content}">${b.content}</p>
                 </div>
                 <button onclick="deleteBroadcast('${b.id}')" class="p-2 rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -783,7 +783,7 @@ async function loadAnalyticsChart() {
             chartCard.style.borderColor = 'rgba(16,185,129,0.15)';
             chartCard.innerHTML = `
                 <div class="flex items-center justify-between mb-5">
-                    <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                    <h3 class="text-gray-900 font-semibold text-sm flex items-center gap-2">
                         <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -795,7 +795,7 @@ async function loadAnalyticsChart() {
                 <div class="rounded-2xl p-6 border border-emerald-500/10 mb-4"
                      style="background: linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(16,185,129,0.01) 100%);">
                     <p class="text-xs text-emerald-400/70 font-medium uppercase tracking-wider mb-2">Total Nilai Invoice Merah</p>
-                    <p class="text-3xl md:text-4xl font-bold text-white tracking-tight">${formatted}</p>
+                    <p class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">${formatted}</p>
                     <div class="flex items-center gap-2 mt-3">
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-red-500/15 text-red-400 border border-red-500/20">
                             📄 ${invoiceCount} Invoice
@@ -857,7 +857,7 @@ async function loadAnalyticsChart() {
                         position: 'top',
                         align: 'end',
                         labels: {
-                            color: '#9ca3af',
+                            color: '#4b5563',
                             font: { family: "'Inter', sans-serif", size: 11, weight: '500' },
                             usePointStyle: true,
                             pointStyle: 'rectRounded',
@@ -903,11 +903,11 @@ async function loadAnalyticsChart() {
                         beginAtZero: true,
                         border: { display: false },
                         grid: {
-                            color: 'rgba(255,255,255,0.04)',
+                            color: 'rgba(0,0,0,0.05)',
                             drawTicks: false
                         },
                         ticks: {
-                            color: '#64748b',
+                            color: '#4b5563',
                             font: { family: "'Inter', sans-serif", size: 10, weight: '500' },
                             padding: 8,
                             callback: function (value) {
@@ -923,7 +923,7 @@ async function loadAnalyticsChart() {
                         border: { display: false },
                         grid: { display: false },
                         ticks: {
-                            color: '#64748b',
+                            color: '#4b5563',
                             font: { family: "'Inter', sans-serif", size: 10, weight: '500' },
                             autoSkip: false,
                             maxRotation: 45,
