@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,60 +9,101 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md animate-fade-in-up">
-        <div class="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-10">
+    <div class="w-full max-w-[400px] animate-fade-in-up">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 p-10">
             <div class="text-center mb-10">
                 <h1 class="text-3xl font-extrabold text-blue-600 tracking-tight">Team Ads</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Performance Management System</p>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Performance Management
+                    System</p>
             </div>
             <form id="login-form" class="space-y-6">
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Username / Email</label>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Username /
+                        Email</label>
                     <input type="text" id="username" placeholder="Masukkan username" required
                         class="w-full px-5 py-4 bg-white border border-blue-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Password</label>
-                    <input type="password" id="password" placeholder="Masukkan password" required
-                        class="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-400 transition-all">
+                <div class="relative">
+                    <label
+                        class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="password" placeholder="Masukkan password" required
+                            class="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-400 transition-all">
+                        <button type="button" onclick="togglePasswordVisibility()"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 transition-colors">
+                            <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="pt-2">
                     <button type="submit" id="login-btn"
-                        class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-200 transition-all transform hover:-translate-y-0.5">
+                        class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-200 transition-all transform hover:-translate-y-0.5 active:scale-[0.98]">
                         Masuk Sekarang
                     </button>
                 </div>
-                <div class="text-center">
-                    <a href="#" class="text-xs font-semibold text-gray-400 hover:text-blue-600">Lupa Password?</a>
-                </div>
-                <div class="relative flex items-center py-2">
-                    <div class="flex-grow border-t border-gray-100"></div>
-                    <span class="flex-shrink mx-4 text-[9px] font-bold text-gray-300 uppercase tracking-widest">Atau Masuk Dengan</span>
-                    <div class="flex-grow border-t border-gray-100"></div>
-                </div>
-                <button type="button" class="w-full py-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-50 transition-all">
-                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" class="w-5 h-5">
-                    <span class="text-sm font-bold text-gray-700">Akun Google Kantor</span>
-                </button>
             </form>
             <div class="mt-12 text-center">
-                <p class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">© 2026 Mega Group Indonesia. Internal Use Only.</p>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Anka Aksesoris. Internal Use
+                    Only.</p>
             </div>
         </div>
     </div>
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        function togglePasswordVisibility() {
+            const pwdInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.04m5.752-1.854A9.959 9.959 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-4.221-4.221L3 3" />
+                `;
+            } else {
+                pwdInput.type = 'password';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                `;
+            }
+        }
+
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('login-btn');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
             btn.disabled = true;
-            btn.innerHTML = `<div class="flex items-center justify-center gap-2"><span>Memproses...</span></div>`;
+            btn.innerHTML = `<div class="flex items-center justify-center gap-2">
+                <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Memproses...</span>
+            </div>`;
+
             try {
-                const success = await login(document.getElementById('username').value, document.getElementById('password').value);
-                if (!success) { btn.disabled = false; btn.innerText = 'Masuk Sekarang'; }
-            } catch (err) { btn.disabled = false; btn.innerText = 'Masuk Sekarang'; }
+                // Correct function name from auth.js
+                await loginWithCredentials(username, password);
+                // Auth.js handles redirect to dashboard.html
+            } catch (err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerText = 'Masuk Sekarang';
+                if (err.message && err.message.includes('401')) {
+                    alert('Username atau password salah.');
+                } else {
+                    alert('Terjadi kesalahan sistem. Silakan coba lagi.');
+                }
+            }
         });
     </script>
 </body>
+
 </html>
