@@ -193,17 +193,32 @@ function renderUsers() {
     let globalIndex = 0;
 
     if (superAdmins.length > 0) {
-        html += `<tr><td colspan="8" class="bg-indigo-500/10 py-3 px-4 text-xs font-bold text-indigo-400 tracking-widest uppercase border-y border-indigo-500/20">🚀 Super Admin</td></tr>`;
+        html += `<tr><td colspan="8" class="bg-indigo-500/10 py-3 px-4 text-xs font-bold text-indigo-400 tracking-widest uppercase border-y border-indigo-500/20">
+            <div class="flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z"/></svg>
+                Super Admin
+            </div>
+        </td></tr>`;
         html += superAdmins.map(u => createRowHtml(u, globalIndex++)).join('');
     }
 
     if (moderators.length > 0) {
-        html += `<tr><td colspan="8" class="bg-purple-500/10 py-3 px-4 text-xs font-bold text-purple-400 tracking-widest uppercase border-y border-purple-500/20">🛡️ Moderator</td></tr>`;
+        html += `<tr><td colspan="8" class="bg-purple-500/10 py-3 px-4 text-xs font-bold text-purple-400 tracking-widest uppercase border-y border-purple-500/20">
+            <div class="flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 21a11.959 11.959 0 01-9.618-7.016A11.955 11.955 0 0112 3c1.74 0 3.391.462 4.818 1.274"/></svg>
+                Moderator
+            </div>
+        </td></tr>`;
         html += moderators.map(u => createRowHtml(u, globalIndex++)).join('');
     }
 
     if (adminZonas.length > 0) {
-        html += `<tr><td colspan="8" class="bg-emerald-500/10 py-3 px-4 text-xs font-bold text-emerald-400 tracking-widest uppercase border-y border-emerald-500/20">🏪 Admin Zona</td></tr>`;
+        html += `<tr><td colspan="8" class="bg-emerald-500/10 py-3 px-4 text-xs font-bold text-emerald-400 tracking-widest uppercase border-y border-emerald-500/20">
+            <div class="flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 012-2H9a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                Admin Zona
+            </div>
+        </td></tr>`;
         html += adminZonas.map(u => createRowHtml(u, globalIndex++)).join('');
     }
 
@@ -449,22 +464,22 @@ function renderLoginHistory() {
 
 function parseUserAgent(uaString) {
     if (!uaString || uaString === 'Unknown' || uaString === '-') {
-        return { browser: 'Unknown', os: 'Unknown', icon: '💻' };
+        return { browser: 'Unknown', os: 'Unknown', icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>' };
     }
 
     let browser = 'Unknown';
-    let icon = '💻';
-    if (uaString.includes('Edg/')) { browser = 'Edge'; icon = '🌐'; }
-    else if (uaString.includes('Chrome/')) { browser = 'Chrome'; icon = '🌍'; }
-    else if (uaString.includes('Firefox/')) { browser = 'Firefox'; icon = '🦊'; }
-    else if (uaString.includes('Safari/') && !uaString.includes('Chrome')) { browser = 'Safari'; icon = '🧭'; }
+    let icon = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9-3-9m-9 9a9 9 0 019-9"/></svg>';
+    if (uaString.includes('Edg/')) { browser = 'Edge'; }
+    else if (uaString.includes('Chrome/')) { browser = 'Chrome'; }
+    else if (uaString.includes('Firefox/')) { browser = 'Firefox'; }
+    else if (uaString.includes('Safari/') && !uaString.includes('Chrome')) { browser = 'Safari'; }
 
     let os = 'Unknown';
     if (uaString.includes('Windows')) os = 'Windows';
     else if (uaString.includes('Mac OS')) os = 'macOS';
     else if (uaString.includes('Linux')) os = 'Linux';
-    else if (uaString.includes('Android')) { os = 'Android'; icon = '📱'; }
-    else if (uaString.includes('iPhone') || uaString.includes('iPad')) { os = 'iOS'; icon = '📱'; }
+    else if (uaString.includes('Android')) { os = 'Android'; icon = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>'; }
+    else if (uaString.includes('iPhone') || uaString.includes('iPad')) { os = 'iOS'; icon = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>'; }
 
     return { browser, os, icon };
 }

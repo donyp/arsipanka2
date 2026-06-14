@@ -210,14 +210,10 @@ console.log("Sidebar Version 2.1.2 - Clean Build Executed");
             updateUserUI();
         }
 
-        // --- DESPERATION GUARD: Forced Cleanup of Rogue Links ---
+        // --- FINAL UI AUDIT: Ensuring consistency ---
         setTimeout(() => {
-            document.querySelectorAll('a[href*="renamer"]').forEach(el => {
-                console.log("[Desperation Guard] Removing rogue link:", el.href);
-                el.remove();
-            });
-            // Also check for text-nodes containing Renamer if necessary
-        }, 1000);
+            document.querySelectorAll('a[href*="renamer"]').forEach(el => el.remove());
+        }, 500);
     }
 
     async function loadGlobalBroadcast() {

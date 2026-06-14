@@ -57,8 +57,12 @@ function renderBatches(batches) {
                         <span class="text-sm font-bold text-white">${b.success_files}</span>
                         <span class="text-xs text-gray-500">/ ${b.total_files}</span>
                         ${successRate === 100 ?
-                `<span class="ml-1 text-xs px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">✓</span>` :
-                `<span class="ml-1 text-xs px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400">${successRate}%</span>`
+                `<span class="ml-1 flex items-center justify-center p-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm" title="Berhasil">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </span>` :
+                `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">${successRate}%</span>`
             }
                     </div>
                 </td>

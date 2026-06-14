@@ -372,7 +372,12 @@ function renderTable() {
             <td class="text-gray-400 text-sm whitespace-nowrap font-medium">${a.zonas?.nama || '-'}</td>
             <td class="text-gray-400 text-sm whitespace-nowrap">${a.toko?.nama || '-'}</td>
             <td class="text-gray-400 text-sm whitespace-nowrap">
-                <span class="font-medium">${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID') : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID'))}</span>
+                <span class="flex items-center gap-1.5 font-medium text-gray-400">
+                    <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    ${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID') : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID'))}
+                </span>
             </td>
             <td class="text-gray-500 text-[11px] whitespace-nowrap italic">${new Date(a.created_at).toLocaleDateString('id-ID')}</td>
             <td>

@@ -153,7 +153,10 @@ function updateFileUI() {
                             </select>
                         </div>
                         <div class="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-md border border-white/5">
-                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">📅 ${item.date || '<span class="text-red-400">?</span>'}</span>
+                            <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">${item.date || '<span class="text-red-400">?</span>'}</span>
                         </div>
                         <span class="px-2 py-1 rounded text-[10px] ${item.tipe_ppn === 'PPN' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : item.tipe_ppn === 'NON' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-gray-500/10 text-gray-500 border border-white/5'} font-black italic tracking-tighter">
                             ${item.tipe_ppn || 'REGULAR'}

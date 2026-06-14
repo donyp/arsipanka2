@@ -62,8 +62,9 @@ function renderCategoryTabs() {
             ? 'active px-4 py-2 rounded-xl text-xs font-semibold transition-all border border-white/10 bg-white/5 text-white'
             : 'px-4 py-2 rounded-xl text-xs font-semibold transition-all border border-white/5 text-gray-500 hover:text-white hover:border-white/10';
         html += `
-            <button onclick="filterCategory('${cat.nama}')" data-cat="${cat.nama}" class="cat-tab ${cls}">
-                ${cat.emoji} ${capitalize(cat.nama)}
+            <button onclick="filterCategory('${cat.nama}')" data-cat="${cat.nama}" class="cat-tab ${cls} flex items-center gap-2">
+                <div class="w-4 h-4 flex items-center justify-center">${getCatSVG(cat.nama, cat.warna)}</div>
+                ${capitalize(cat.nama)}
             </button>
         `;
     });
@@ -78,10 +79,10 @@ function renderCategoryDropdown() {
     }
 
     container.innerHTML = allCategories.map(cat => `
-        <button type="button" onclick="selectCategory('${cat.nama}','${cat.emoji}','${capitalize(cat.nama)}','bg-${cat.warna}-500/15')"
+        <button type="button" onclick="selectCategory('${cat.nama}','${cat.warna}','${capitalize(cat.nama)}','bg-${cat.warna}-500/15')"
             class="cat-option w-full flex items-center justify-between px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-all group">
             <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-lg bg-${cat.warna}-500/15 flex items-center justify-center text-base">${cat.emoji}</span>
+                <span class="w-8 h-8 rounded-lg bg-${cat.warna}-500/15 flex items-center justify-center">${getCatSVG(cat.nama, cat.warna)}</span>
                 <div class="text-left">
                     <p class="font-medium text-white group-hover:text-indigo-400 transition-colors">${capitalize(cat.nama)}</p>
                     <p class="text-[11px] text-gray-500">${escapeHtml(cat.deskripsi)}</p>
@@ -238,7 +239,7 @@ function renderFileQueue() {
     container.innerHTML = fileQueue.map((f, i) => `
         <div class="flex items-center gap-3 px-3 py-2.5 bg-white/[0.03] rounded-xl border border-white/5 group" id="queue-item-${i}">
             <div class="w-8 h-8 rounded-lg ${getFileIconBg(f.name)} flex items-center justify-center flex-shrink-0">
-                <span class="text-sm">${getFileEmoji(f.name)}</span>
+                ${getFileSVG(f.name)}
             </div>
             <div class="flex-1 min-w-0">
                 <p class="text-xs font-medium text-gray-300 truncate">${escapeHtml(f.name)}</p>
@@ -290,10 +291,10 @@ function toggleDropdown() {
     arrow.style.transform = isHidden ? 'rotate(180deg)' : '';
 }
 
-function selectCategory(value, emoji, label, bgClass) {
+function selectCategory(value, warna, label, bgClass) {
     document.getElementById('media-category').value = value;
     document.getElementById('selected-cat-display').innerHTML = `
-        <span class="w-8 h-8 rounded-lg ${bgClass} flex items-center justify-center text-base">${emoji}</span>
+        <span class="w-8 h-8 rounded-lg ${bgClass} flex items-center justify-center text-base">${getCatSVG(value, warna)}</span>
         <span class="font-medium text-white">${label}</span>
     `;
     toggleDropdown();
@@ -459,8 +460,9 @@ function renderGrid() {
             <div class="relative h-44 bg-gradient-to-br from-white/5 to-white/[0.02] flex items-center justify-center overflow-hidden">
                 ${getPreview(m)}
                 <!-- Category Badge -->
-                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${getCatBadgeColor(m.category)}">
-                    ${getCatEmoji(m.category)} ${m.category}
+                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${getCatBadgeColor(m.category)} flex items-center gap-1.5">
+                    ${getCatSVG(m.category)}
+                    ${m.category}
                 </span>
                 <!-- Hover Actions -->
                 <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
@@ -735,9 +737,24 @@ function getCatBadgeColor(cat) {
     return map[cat] || map.lainnya;
 }
 
-function getCatEmoji(cat) {
-    const map = { footage: '🎬', mentahan: '🎨', poster: '🖼️', lainnya: '📁' };
-    return map[cat] || '📁';
+function getCatSVG(cat, warna = 'gray') {
+    const map = {
+        footage: `<svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        mentahan: `<svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>`,
+        poster: `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
+        lainnya: `<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>`
+    };
+    return map[cat] || map.lainnya;
+}
+
+function getFileSVG(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) return `<svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
+    if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) return `<svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
+    if (['psd', 'ai', 'eps'].includes(ext)) return `<svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>`;
+    if (['pdf'].includes(ext)) return `<svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`;
+    if (['zip', 'rar'].includes(ext)) return `<svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`;
+    return `<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
 }
 
 function escapeHtml(text) {
