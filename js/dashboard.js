@@ -699,6 +699,47 @@ async function submitDispute() {
     }
 }
 
+// ---- Bug Report System ----
+function openBugModal() {
+    const modal = document.getElementById('bug-modal');
+    if (!modal) return;
+    document.getElementById('bug-tipe').value = '';
+    document.getElementById('bug-deskripsi').value = '';
+    document.getElementById('bug-tautan').value = '';
+    const mediumRadio = document.querySelector('input[name="bug-level"][value="Medium"]');
+    if (mediumRadio) mediumRadio.checked = true;
+    modal.classList.remove('hidden');
+}
+
+function closeBugModal() {
+    const modal = document.getElementById('bug-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function submitBugReport() {
+    const tipe = document.getElementById('bug-tipe').value;
+    const deskripsi = document.getElementById('bug-deskripsi').value.trim();
+    const tautan_file = document.getElementById('bug-tautan').value.trim();
+    const level = document.querySelector('input[name="bug-level"]:checked')?.value || 'Medium';
+
+    if (!tipe) {
+        Toast.warning('Pilih tipe bug terlebih dahulu.');
+        return;
+    }
+    if (!deskripsi) {
+        Toast.warning('Deskripsi bug wajib diisi.');
+        return;
+    }
+
+    try {
+        await API.post('/api/bugs', { tipe, level, deskripsi, tautan_file: tautan_file || null });
+        Toast.success('Laporan bug berhasil dikirim! Tim kami akan segera menindaklanjuti.');
+        closeBugModal();
+    } catch (err) {
+        Toast.error('Gagal mengirim laporan bug: ' + err.message);
+    }
+}
+
 // ---- Preview via PDF.js ----
 function openPreview(fileId, fileName) {
     try {

@@ -2797,6 +2797,89 @@ app.delete('/api/requests/:id', authenticateToken, async (req, res) => {
 });
 
 // ============================================================
+// BUG REPORT SYSTEM
+// ============================================================
+
+// POST /api/bugs
+app.post('/api/bugs', authenticateToken, async (req, res) => {
+    try {
+        const { tipe, level, deskripsi, tautan_file } = req.body;
+        if (!tipe || !deskripsi) {
+            return res.status(400).json({ error: 'Tipe bug dan deskripsi wajib diisi.' });
+        }
+        const { data, error } = await supabase.from('bug_reports').insert({
+            user_id: req.user.userId || req.user.id,
+            zona_id: req.user.zona_id,
+            tipe, level: level || 'Medium',
+            deskripsi, tautan_file: tautan_file || null,
+            status: 'Pending'
+        }).select().single();
+        if (error) throw error;
+        res.json({ success: true, message: 'Laporan bug berhasil dikirim.', report: data });
+    } catch (err) {
+        console.error('Create Bug Error:', err);
+        res.status(500).json({ error: 'Gagal mengirim laporan bug.' });
+    }
+});
+
+// GET /api/bugs
+app.get('/api/bugs', authenticateToken, async (req, res) => {
+    try {
+        if (!['super_admin', 'moderator', 'admin_zona'].includes(req.user.role)) {
+            return res.status(403).json({ error: 'Akses ditolak.' });
+        }
+        let query = supabase.from('bug_reports')
+            .select('*, users(name, email), zonas(nama)')
+            .order('created_at', { ascending: false });
+        if (req.user.role === 'admin_zona') {
+            query = query.eq('user_id', req.user.userId || req.user.id);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        res.json({ reports: data || [] });
+    } catch (err) {
+        console.error('Fetch Bugs Error:', err);
+        res.status(500).json({ error: 'Gagal memuat daftar laporan bug.' });
+    }
+});
+
+// PUT /api/bugs/:id
+app.put('/api/bugs/:id', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'super_admin' && req.user.role !== 'moderator') {
+            return res.status(403).json({ error: 'Akses ditolak.' });
+        }
+        const { status, admin_notes } = req.body;
+        if (!['Pending', 'Diproses', 'Selesai', 'Dibatalkan'].includes(status)) {
+            return res.status(400).json({ error: 'Status tidak valid.' });
+        }
+        const payload = { status, updated_at: new Date().toISOString() };
+        if (admin_notes !== undefined) payload.admin_notes = admin_notes;
+        const { error } = await supabase.from('bug_reports').update(payload).eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true, message: 'Laporan bug berhasil diupdate.' });
+    } catch (err) {
+        console.error('Update Bug Error:', err);
+        res.status(500).json({ error: 'Gagal mengubah status bug.' });
+    }
+});
+
+// DELETE /api/bugs/:id
+app.delete('/api/bugs/:id', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'super_admin' && req.user.role !== 'moderator') {
+            return res.status(403).json({ error: 'Akses ditolak.' });
+        }
+        const { error } = await supabase.from('bug_reports').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true, message: 'Laporan bug berhasil dihapus.' });
+    } catch (err) {
+        console.error('Delete Bug Error:', err);
+        res.status(500).json({ error: 'Gagal menghapus laporan bug.' });
+    }
+});
+
+// ============================================================
 // HEALTH CHECK
 // ============================================================
 app.get('/health', (req, res) => {

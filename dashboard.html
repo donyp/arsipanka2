@@ -64,6 +64,16 @@
                             class="text-[9px] font-black text-gray-500 uppercase tracking-tight">Mode Perbaikan</span>
                     </div>
 
+                    <!-- Bug Report Button (Admin Zona) -->
+                    <button id="btn-lapor-bug" onclick="openBugModal()"
+                        class="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all relative"
+                        title="Lapor Bug">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </button>
+
                     <!-- Notifications Dropdown -->
                     <div class="relative" id="notif-dropdown-parent">
                         <button onclick="toggleNotifMenu()"
@@ -555,6 +565,101 @@
             </div>
         </div>
     </div>
+
+    <!-- Bug Report Modal -->
+    <div id="bug-modal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeBugModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg p-8 relative space-y-5 animate-fade-in">
+                <div class="flex items-center gap-4 pb-4 border-b border-gray-100">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shadow-inner">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight">Lapor Bug</h3>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Laporkan masalah pada
+                            sistem</p>
+                    </div>
+                    <button onclick="closeBugModal()"
+                        class="absolute top-6 right-6 p-2 text-gray-300 hover:text-red-500 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tipe
+                        Bug *</label>
+                    <select id="bug-tipe"
+                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-amber-200 appearance-none cursor-pointer">
+                        <option value="">— Pilih tipe masalah —</option>
+                        <option value="Tampilan Rusak">🎨 Tampilan Rusak / UI Berantakan</option>
+                        <option value="Fitur Tidak Berfungsi">⚙️ Fitur Tidak Berfungsi</option>
+                        <option value="Data Tidak Akurat">📊 Data Tidak Akurat / Salah</option>
+                        <option value="Error Sistem">🔴 Error Sistem / Server</option>
+                        <option value="Lainnya">📝 Lainnya</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label
+                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tingkat
+                        Urgensi</label>
+                    <div class="flex gap-3">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="bug-level" value="Rendah" class="sr-only peer">
+                            <div
+                                class="text-center py-3 rounded-2xl border border-gray-100 bg-gray-50 text-[10px] font-black uppercase tracking-wider text-gray-400 peer-checked:bg-emerald-50 peer-checked:border-emerald-200 peer-checked:text-emerald-600 transition-all">
+                                Rendah</div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="bug-level" value="Medium" class="sr-only peer" checked>
+                            <div
+                                class="text-center py-3 rounded-2xl border border-gray-100 bg-gray-50 text-[10px] font-black uppercase tracking-wider text-gray-400 peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-600 transition-all">
+                                Medium</div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="bug-level" value="Tinggi" class="sr-only peer">
+                            <div
+                                class="text-center py-3 rounded-2xl border border-gray-100 bg-gray-50 text-[10px] font-black uppercase tracking-wider text-gray-400 peer-checked:bg-red-50 peer-checked:border-red-200 peer-checked:text-red-600 transition-all">
+                                Tinggi</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label
+                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Deskripsi
+                        Detail *</label>
+                    <textarea id="bug-deskripsi"
+                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:ring-2 focus:ring-amber-200 h-28 resize-none"
+                        placeholder="Jelaskan masalah yang ditemukan secara detail. Sertakan langkah-langkah untuk mereplikasi bug jika memungkinkan..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tautan
+                        File / Screenshot (Opsional)</label>
+                    <input id="bug-tautan" type="text"
+                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:ring-2 focus:ring-amber-200"
+                        placeholder="https://... (link gambar error, drive, dll)">
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="submitBugReport()"
+                        class="w-full py-4 bg-amber-600 text-white font-black rounded-2xl hover:bg-amber-700 transition-all shadow-xl shadow-amber-200 active:scale-95 uppercase tracking-[0.2em] text-[10px]">
+                        Kirim Laporan Bug
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="preview-modal" class="fixed inset-0 z-[110] hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closePreview()"></div>
         <div class="absolute inset-4 md:inset-10 flex flex-col bg-white rounded-3xl overflow-hidden shadow-2xl">
