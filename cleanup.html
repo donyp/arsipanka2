@@ -4,26 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimasi Penyimpanan — Pusat Arsip Anka</title>
+    <title>Optimasi Penyimpanan | Pusat Arsip Anka</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 
     <script>
-        // Strengthened Anti-Flash (FOUC) System v2.0
-        (function () {
-            document.documentElement.classList.add('auth-loading');
-            try {
-                const userData = localStorage.getItem('user_data');
-                if (userData) {
-                    const user = JSON.parse(userData);
-                    if (user.role === 'admin_zona') {
-                        document.documentElement.classList.add('role-admin-zona');
-                    }
-                }
-            } catch (e) { }
-        })();
+        document.documentElement.style.opacity = '0';
+        document.documentElement.style.transition = 'opacity 0.4s ease-in-out';
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.documentElement.style.opacity = '1';
+            }, 50);
+        });
     </script>
 </head>
 
@@ -85,7 +79,7 @@
                                 storage, dan file redundan untuk mengoptimalkan kapasitas penyimpanan sistem.
                             </p>
                             <button id="scan-btn" onclick="startScan()"
-                                class="mt-8 px-10 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm transition-all shadow-xl shadow-blue-200 flex items-center gap-3">
+                                class="mt-8 px-10 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm transition-all shadow-xl shadow-blue-200 flex items-center gap-3 active:scale-95">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3"
                                         stroke-linecap="round" />
@@ -107,85 +101,90 @@
                                 class="bg-blue-600 h-full rounded-full transition-all duration-500 shadow-lg shadow-blue-200"
                                 style="width: 0%"></div>
                         </div>
-                        <p id="scan-status" class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        <p id="scan-status" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                             Menganalisis file...</p>
                     </div>
 
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
-                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">File Duplikat</p>
-                            <h4 id="count-dupes" class="text-3xl font-black text-amber-500 mt-2">0</h4>
+                        <div
+                            class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5 text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">File Duplikat</p>
+                            <h4 id="count-dupes" class="text-4xl font-black text-amber-500 mt-2">0</h4>
                         </div>
-                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
-                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">File Hilang
-                                (Ghost)</p>
-                            <h4 id="count-ghosts" class="text-3xl font-black text-red-500 mt-2">0</h4>
-                        </div>
-                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
-                            <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">Kandidat Sampah
+                        <div
+                            class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5 text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">File Hilang (Ghost)
                             </p>
-                            <h4 id="count-cands" class="text-3xl font-black text-blue-600 mt-2">0</h4>
+                            <h4 id="count-ghosts" class="text-4xl font-black text-red-500 mt-2">0</h4>
+                        </div>
+                        <div
+                            class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5 text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Kandidat Sampah</p>
+                            <h4 id="count-cands" class="text-4xl font-black text-blue-600 mt-2">0</h4>
                         </div>
                     </div>
 
                     <!-- Detailed Lists -->
                     <div class="space-y-6">
                         <!-- Duplicates Section -->
-                        <div id="section-dupes" class="hidden glass-card p-6 rounded-2xl">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <div id="section-dupes"
+                            class="hidden bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-sm font-bold text-gray-900 flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
                                     File Duplikat Ditemukan
                                 </h3>
                                 <button onclick="cleanup('duplicates')"
-                                    class="text-xs font-bold text-amber-400 hover:underline">Hapus Semua
-                                    Duplikat</button>
+                                    class="text-[10px] font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg uppercase tracking-wider hover:bg-amber-100 transition-all">Hapus
+                                    Semua Duplikat</button>
                             </div>
-                            <div id="list-dupes" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
+                            <div id="list-dupes" class="space-y-3 max-h-80 overflow-y-auto pr-3 custom-scrollbar"></div>
                         </div>
 
                         <!-- Ghosts Section -->
-                        <div id="section-ghosts" class="hidden glass-card p-6 rounded-2xl">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                                    File Hilang di Terabox
+                        <div id="section-ghosts"
+                            class="hidden bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-sm font-bold text-gray-900 flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                    File Hilang (Ghost Record)
                                 </h3>
                                 <button onclick="cleanup('ghosts')"
-                                    class="text-xs font-bold text-red-400 hover:underline">Hapus Record Hilang</button>
+                                    class="text-[10px] font-bold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg uppercase tracking-wider hover:bg-red-100 transition-all">Hapus
+                                    Record Hilang</button>
                             </div>
-                            <div id="list-ghosts" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                            <div id="list-ghosts" class="space-y-3 max-h-80 overflow-y-auto pr-3 custom-scrollbar">
                             </div>
                         </div>
                     </div>
 
                     <!-- Final Action -->
-                    <div class="flex justify-center pt-4">
+                    <div class="flex justify-center pt-6">
                         <button onclick="cleanupAll()"
-                            class="px-10 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-2xl shadow-indigo-500/30">
-                            Bersihkan Semua Berdasarkan Rekomendasi Sistem
+                            class="px-12 py-5 rounded-[2rem] bg-gray-900 text-white font-bold uppercase tracking-widest text-xs hover:bg-black transition-all shadow-2xl active:scale-95">
+                            Bersihkan Berdasarkan Rekomendasi Sistem
                         </button>
                     </div>
 
                 </div>
 
                 <!-- Empty State -->
-                <div id="empty-state" class="hidden text-center py-20">
-                    <div class="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="empty-state" class="hidden text-center py-20 bg-white rounded-[2.5rem] border border-gray-100">
+                    <div class="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-12 h-12 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                     </div>
-                    <h3 class="text-white font-bold">Penyimpanan Bapak Sempurna!</h3>
-                    <p class="text-sm text-gray-500 mt-2">Tidak ditemukan file sampah atau duplikat saat ini.</p>
+                    <h3 class="text-xl font-bold text-gray-900">Database Sempurna!</h3>
+                    <p class="text-sm text-gray-500 mt-2 font-medium">Tidak ditemukan file sampah atau duplikat saat
+                        ini.</p>
                 </div>
 
             </div>
         </div>
     </main>
     <script src="js/sidebar.js?v=ULTRACLEAN_2026"></script>
-
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/utils.js"></script>
@@ -225,7 +224,7 @@
                 if (p > 90) clearInterval(interval);
                 bar.style.width = Math.min(p, 90) + '%';
                 if (p < 30) status.textContent = 'Membaca database...';
-                else if (p < 60) status.textContent = 'Memeriksa jalur file Terabox...';
+                else if (p < 60) status.textContent = 'Memeriksa jalur file...';
                 else status.textContent = 'Menganalisis kemiripan file...';
             }, 300);
 
@@ -241,13 +240,14 @@
                     progress.classList.add('hidden');
                     renderResults(results);
                     btn.disabled = false;
-                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2"/></svg><span class="ml-2">Scan Ulang</span>';
+                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3" stroke-linecap="round"/></svg><span class="ml-2">Scan Ulang</span>';
                 }, 800);
 
             } catch (err) {
                 Toast.error('Gagal menjalankan scan.');
                 clearInterval(interval);
                 btn.disabled = false;
+                btn.innerHTML = 'Coba Lagi';
             }
         }
 
@@ -283,16 +283,18 @@
         }
 
         function createItemRow(f, type) {
-            const color = type === 'Ghost' ? 'red' : 'amber';
+            const colorClass = type === 'Ghost' ? 'red' : 'amber';
+            const colorHex = type === 'Ghost' ? '#ef4444' : '#f59e0b';
+
             return `
-                <div class="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="w-8 h-8 rounded-lg bg-${color}-500/10 flex items-center justify-center shrink-0">
-                            <svg class="w-4 h-4 text-${color}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/></svg>
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 group hover:bg-white hover:border-${colorClass}-200 transition-all">
+                    <div class="flex items-center gap-4 overflow-hidden">
+                        <div class="w-10 h-10 rounded-xl bg-${colorClass}-50 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5 text-${colorClass}-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/></svg>
                         </div>
                         <div class="truncate">
-                            <p class="text-xs font-medium text-gray-300 truncate">${f.nama_file}</p>
-                            <p class="text-[9px] text-gray-600 uppercase font-bold">${type} • ${(f.ukuran_bytes / 1024).toFixed(0)} KB</p>
+                            <p class="text-[13px] font-bold text-gray-900 truncate">${f.nama_file}</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">${type} • ${(f.ukuran_bytes / 1024).toFixed(0)} KB</p>
                         </div>
                     </div>
                 </div>

@@ -4,26 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Toko � Pusat Arsip Anka</title>
+    <title>Manajemen Toko | Pusat Arsip Anka</title>
     <meta name="description" content="Kelola daftar toko dan klasifikasi zona">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <script>
-        // Strengthened Anti-Flash (FOUC) System v2.0
-        (function () {
-            document.documentElement.classList.add('auth-loading');
-            try {
-                const userData = localStorage.getItem('user_data');
-                if (userData) {
-                    const user = JSON.parse(userData);
-                    if (user.role === 'admin_zona') {
-                        document.documentElement.classList.add('role-admin-zona');
-                    }
-                }
-            } catch (e) { }
-        })();
+        document.documentElement.style.opacity = '0';
+        document.documentElement.style.transition = 'opacity 0.4s ease-in-out';
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.documentElement.style.opacity = '1';
+            }, 50);
+        });
     </script>
 </head>
 
@@ -86,15 +80,16 @@
             </div>
 
             <!-- List Content -->
-            <div class="glass-card rounded-2xl overflow-hidden animate-fade-in text-sm">
+            <div
+                class="glass-card rounded-2xl overflow-hidden animate-fade-in text-sm border border-gray-100 shadow-xl shadow-blue-500/5">
                 <div class="overflow-x-auto">
-                    <table class="data-table" id="tokos-table">
+                    <table class="data-table w-full text-left" id="tokos-table">
                         <thead>
                             <tr>
-                                <th>Nama Toko</th>
-                                <th>Kode Toko</th>
-                                <th>Zona</th>
-                                <th class="text-right px-6">Aksi</th>
+                                <th class="pl-8 py-5">Nama Toko</th>
+                                <th class="py-5">Kode Toko</th>
+                                <th class="py-5">Zona</th>
+                                <th class="pr-8 py-5 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tokos-body">
@@ -127,27 +122,27 @@
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Nama
                             Toko</label>
                         <input id="modal-nama" type="text" required placeholder="Contoh: Toko Berkah"
-                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all">
+                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all font-medium">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Kode
                             Toko</label>
                         <input id="modal-kode" type="text" required placeholder="Contoh: TRK-01"
-                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all uppercase">
+                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all uppercase font-bold">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 ml-1">Alokasi
                             Zona</label>
                         <select id="modal-zona" required
-                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all">
+                            class="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:bg-white focus:border-blue-400 transition-all font-bold">
                             <option value="">Pilih zona</option>
                         </select>
                     </div>
                     <div class="flex gap-3 pt-2">
                         <button type="button" onclick="closeTokoModal()"
-                            class="btn-ghost flex-1 py-2.5 rounded-xl text-sm font-medium">Batal</button>
+                            class="btn-ghost flex-1 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Batal</button>
                         <button type="submit"
-                            class="btn-primary flex-1 py-2.5 rounded-xl text-sm font-medium">Simpan</button>
+                            class="btn-primary flex-1 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 active:scale-95 transition-all">Simpan</button>
                     </div>
                 </form>
             </div>

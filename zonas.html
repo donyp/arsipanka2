@@ -4,30 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Zona � Pusat Arsip Anka</title>
+    <title>Manajemen Zona | Pusat Arsip Anka</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <script>
-        // Strengthened Anti-Flash (FOUC) System v2.0
-        (function () {
-            document.documentElement.classList.add('auth-loading');
-            try {
-                const userData = localStorage.getItem('user_data');
-                if (userData) {
-                    const user = JSON.parse(userData);
-                    if (user.role === 'admin_zona') {
-                        document.documentElement.classList.add('role-admin-zona');
-                    }
-                }
-            } catch (e) { }
-        })();
+        document.documentElement.style.opacity = '0';
+        document.documentElement.style.transition = 'opacity 0.4s ease-in-out';
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.documentElement.style.opacity = '1';
+            }, 50);
+        });
     </script>
 </head>
 
 <body class="bg-[#F0F2F5] min-h-screen text-gray-800 font-sans">
     <div class="flex">
+        <!-- Mobile Overlay -->
+        <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar -->
         <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
         <aside id="sidebar"
@@ -283,7 +280,7 @@
 
                     <div class="flex gap-3 pt-2">
                         <button type="button" onclick="closeZonaModal()"
-                            class="btn-ghost flex-1 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 transition-all">Batal</button>
+                            class="btn-ghost flex-1 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Batal</button>
                         <button type="submit"
                             class="btn-primary flex-1 py-3 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Simpan</button>
                     </div>
@@ -292,10 +289,8 @@
         </div>
     </div>
 
-    <!-- Mobile Overlay -->
-    <div id="mobile-overlay" class="mobile-overlay" onclick="toggleSidebar()"></div>
+    <!-- Scripts -->
     <script src="js/sidebar.js?v=ULTRACLEAN_2026"></script>
-
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/utils.js?v=1778387279965"></script>

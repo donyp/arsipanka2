@@ -4,26 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Invoice Merah � Pusat Arsip Anka</title>
+    <title>Upload Invoice Merah | Pusat Arsip Anka</title>
     <meta name="description" content="Upload dokumen arsip ke Google Drive">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <script>
-        // Strengthened Anti-Flash (FOUC) System v2.0
-        (function () {
-            document.documentElement.classList.add('auth-loading');
-            try {
-                const userData = localStorage.getItem('user_data');
-                if (userData) {
-                    const user = JSON.parse(userData);
-                    if (user.role === 'admin_zona') {
-                        document.documentElement.classList.add('role-admin-zona');
-                    }
-                }
-            } catch (e) { }
-        })();
+        document.documentElement.style.opacity = '0';
+        document.documentElement.style.transition = 'opacity 0.4s ease-in-out';
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.documentElement.style.opacity = '1';
+            }, 50);
+        });
     </script>
 </head>
 

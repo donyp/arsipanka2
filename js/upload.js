@@ -24,8 +24,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadRecentUploads();
 });
 
-
-
 // ---- Load Toko List (for dropdown selection) ----
 async function loadAllTokos() {
     try {
@@ -36,8 +34,6 @@ async function loadAllTokos() {
     }
 }
 
-
-
 // ---- Drag & Drop Setup ----
 function setupDragDrop() {
     const dropZone = document.getElementById('drop-zone');
@@ -46,13 +42,13 @@ function setupDragDrop() {
     ['dragenter', 'dragover'].forEach(evt => {
         dropZone.addEventListener(evt, (e) => {
             e.preventDefault();
-            dropZone.classList.add('border-indigo-500', 'bg-indigo-500/5');
+            dropZone.classList.add('border-blue-500', 'bg-blue-50/50');
         });
     });
     ['dragleave', 'drop'].forEach(evt => {
         dropZone.addEventListener(evt, (e) => {
             e.preventDefault();
-            dropZone.classList.remove('border-indigo-500', 'bg-indigo-500/5');
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50/50');
         });
     });
     dropZone.addEventListener('drop', (e) => {
@@ -69,8 +65,9 @@ function handleFileSelect(input) {
 
 function addFiles(files) {
     const newFiles = Array.from(files).filter(f => {
-        if (f.type !== 'application/pdf') {
-            Toast.warning(`File "${f.name}" bukan PDF, dilewati.`);
+        const ext = f.name.split('.').pop().toLowerCase();
+        if (ext !== 'pdf' && ext !== 'jpg' && ext !== 'jpeg' && ext !== 'png') {
+            Toast.warning(`File "${f.name}" format tidak didukung.`);
             return false;
         }
         // Check duplicate
@@ -80,20 +77,17 @@ function addFiles(files) {
         }
         return true;
     }).map(f => {
-    }).map(f => {
         return {
             file: f,
             toko: null,
-            date: null,
-            tipe_ppn: null
+            date: new Date().toISOString().split('T')[0],
+            tipe_ppn: 'REGULAR'
         };
     });
 
     selectedFiles = [...selectedFiles, ...newFiles];
     updateFileUI();
 }
-
-// ---- Meta Extraction (REMOVED) ----
 
 function removeFile(index, e) {
     e.stopPropagation();
@@ -102,15 +96,10 @@ function removeFile(index, e) {
 }
 
 function clearFile(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     selectedFiles = [];
     updateFileUI();
-    // Clear detection badge if any
-    const badge = document.getElementById('toko-detect-badge');
-    if (badge) badge.remove();
 }
-
-
 
 function updateFileUI() {
     const listDisplay = document.getElementById('file-list-display');
@@ -134,40 +123,34 @@ function updateFileUI() {
 
     listDisplay.innerHTML = selectedFiles.map((item, i) => {
         const tokoOptions = window._allTokos.map(t => `<option value="${t.id}" ${item.toko && item.toko.id === t.id ? 'selected' : ''}>${t.nama}</option>`).join('');
+        const ext = item.file.name.split('.').pop().toLowerCase();
+        const isPdf = ext === 'pdf';
 
         return `
         <li class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-blue-200 transition-all group/item shadow-sm">
             <div class="flex items-center gap-4 min-w-0 flex-1 w-full">
-                <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0 border border-red-500/20 group-hover/item:border-red-500/40 transition-colors">
-                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-xl ${isPdf ? 'bg-red-500/10 border-red-500/20' : 'bg-blue-500/10 border-blue-500/20'} flex items-center justify-center shrink-0 border group-hover/item:shadow-lg transition-all">
+                    <svg class="w-6 h-6 ${isPdf ? 'text-red-500' : 'text-blue-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                     </svg>
                 </div>
                 <div class="flex flex-col truncate flex-1 min-w-0">
-                    <p class="text-sm font-bold text-gray-900 truncate mb-2 group-hover/item:text-blue-600 transition-colors">${item.file.name}</p>
+                    <p class="text-[13px] font-bold text-gray-900 truncate mb-2 group-hover/item:text-blue-600 transition-colors">${item.file.name}</p>
                     <div class="flex flex-wrap items-center gap-3">
-                        <div class="relative w-full sm:w-auto">
-                            <select onchange="setFileToko(${i}, this.value)" class="w-full sm:w-auto bg-white border border-gray-200 text-gray-700 text-[11px] font-bold rounded-lg px-3 py-1.5 outline-none focus:ring-4 focus:ring-blue-100 hover:bg-gray-50 transition-all cursor-pointer appearance-none">
-                                <option value="">-- Pilih Toko --</option>
-                                ${tokoOptions}
-                            </select>
+                        <select onchange="setFileToko(${i}, this.value)" class="bg-white border border-gray-200 text-gray-700 text-[10px] font-bold rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100 hover:bg-gray-50 transition-all cursor-pointer">
+                            <option value="">-- Pilih Toko --</option>
+                            ${tokoOptions}
+                        </select>
+                        <div class="flex items-center gap-1.5 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
+                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">${formatFileSize(item.file.size)}</span>
                         </div>
-                        <div class="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-md border border-gray-200">
-                            <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">${item.date || '<span class="text-red-400">?</span>'}</span>
-                        </div>
-                        <span class="px-2 py-1 rounded text-[10px] ${item.tipe_ppn === 'PPN' ? 'bg-blue-100 text-blue-700 border border-blue-200' : item.tipe_ppn === 'NON' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-600 border border-gray-200'} font-black italic tracking-tighter">
-                            ${item.tipe_ppn || 'REGULAR'}
-                        </span>
                     </div>
                 </div>
             </div>
             <div class="flex items-center justify-end w-full sm:w-auto mt-4 sm:mt-0 sm:ml-4">
-                <button type="button" onclick="removeFile(${i}, event)" class="p-2.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20" title="Hapus dari antrean">
+                <button type="button" onclick="removeFile(${i}, event)" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
@@ -182,7 +165,6 @@ function setFileToko(index, tokoId) {
         const toko = window._allTokos.find(t => t.id === tokoId);
         selectedFiles[index].toko = toko;
     }
-    updateFileUI();
 }
 
 function formatFileSize(bytes) {
@@ -201,37 +183,30 @@ function setupForm() {
         const category = document.getElementById('upload-category')?.value || 'INVOICE';
 
         if (selectedFiles.length === 0) {
-            Toast.warning('Pilih file PDF terlebih dahulu.');
+            Toast.warning('Pilih file terlebih dahulu.');
             return;
         }
 
-        // Validate all files have detected toko and date
+        // Validate all files have detected toko
         const undetectedToko = selectedFiles.filter(f => !f.toko).length;
-        const undetectedDate = selectedFiles.filter(f => !f.date).length;
+        if (undetectedToko > 0) {
+            Toast.error(`Pilih toko untuk semua ${undetectedToko} file.`);
+            return;
+        }
 
-        if (undetectedToko > 0 || undetectedDate > 0) {
-            let msg = 'Mohon perbaiki file berikut:\n';
-            if (undetectedToko > 0) msg += `- ${undetectedToko} file toko tidak terdeteksi\n`;
-            if (undetectedDate > 0) msg += `- ${undetectedDate} file tanggal tidak terdeteksi\n`;
-            Toast.error(msg + 'Lengkapi data manual untuk melanjutkan.');
+        const dateVal = document.getElementById('upload-date')?.value;
+        if (!dateVal) {
+            Toast.error('Tentukan tanggal dokumen.');
             return;
         }
 
         const btn = document.getElementById('upload-btn');
         btn.disabled = true;
-        btn.innerHTML = `
-            <div class="loader-mini">
-                <div class="loader-ring"></div>
-                <div class="loader-ring"></div>
-                <div class="loader-ring"></div>
-            </div>
-            <span class="ml-2">Mengupload...</span>
-        `;
+        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span class="ml-2 font-bold uppercase tracking-widest">Mengupload...</span>';
 
         const progressContainer = document.getElementById('upload-progress-container');
         const progressPct = document.getElementById('upload-progress-pct');
         const progressBar = document.getElementById('upload-progress-bar');
-
         if (progressContainer) progressContainer.classList.remove('hidden');
 
         const CONCURRENCY_LIMIT = 5;
@@ -240,19 +215,12 @@ function setupForm() {
 
         const uploadTask = async (item) => {
             try {
-                // Ambil nilai nominal dari frontend
-                const nominalValue = document.getElementById('upload-nominal')?.value;
-
                 const formData = new FormData();
                 formData.append('file', item.file);
                 formData.append('zona_id', item.toko.zona_id);
                 formData.append('toko_id', item.toko.id);
                 formData.append('category', category);
-                formData.append('tanggal_dokumen', item.date);
-                formData.append('tipe_ppn', item.tipe_ppn || '');
-                if (nominalValue !== undefined && nominalValue !== '') {
-                    formData.append('total_jual', nominalValue);
-                }
+                formData.append('tanggal_dokumen', dateVal);
                 formData.append('tanggal_upload', new Date().toISOString().split('T')[0]);
 
                 await API.upload('/api/files/upload', formData);
@@ -264,31 +232,23 @@ function setupForm() {
             } catch (err) {
                 console.error('Upload error:', err);
                 Toast.error(`Gagal upload "${item.file.name}": ${err.message}`);
-                throw err; // Allow Promise.all to catch if needed, though we handle individually
             }
         };
 
-        // Process in chunks of 5
         for (let i = 0; i < selectedFiles.length; i += CONCURRENCY_LIMIT) {
             const chunk = selectedFiles.slice(i, i + CONCURRENCY_LIMIT);
-            await Promise.all(chunk.map(item => uploadTask(item).catch(err => {
-                // Individual error caught, loop continues to next chunk
-                console.error(`Chunk error for ${item.file.name}:`, err);
-            })));
+            await Promise.all(chunk.map(item => uploadTask(item)));
         }
 
         Toast.success(`${uploaded}/${total} file berhasil diupload!`);
-
-        // Reset
-        selectedFiles = [];
-        updateFileUI();
+        clearFile();
         if (progressContainer) progressContainer.classList.add('hidden');
         btn.disabled = false;
         btn.innerHTML = `
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Upload Semua File
+            UPLOAD SEMUA FILE
         `;
         loadRecentUploads();
     });
@@ -304,33 +264,33 @@ async function loadRecentUploads() {
         const recent = (files || []).slice(0, 5);
 
         if (recent.length === 0) {
-            container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Belum ada upload terbaru</p>';
+            container.innerHTML = '<p class="text-sm font-medium text-gray-400 text-center py-6">Belum ada upload terbaru hari ini.</p>';
             return;
         }
 
         container.innerHTML = recent.map((a, i) => `
-            <div class="flex items-center justify-between p-4 rounded-2xl bg-white border border-gray-100 hover:border-emerald-100 hover:bg-emerald-50/20 transition-all group/recent shadow-sm animate-fade-in" style="animation-delay: ${i * 50}ms">
+            <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 group/recent hover:bg-white transition-all shadow-sm animate-fade-in" style="animation-delay: ${i * 50}ms">
                 <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover/recent:border-emerald-500/40 transition-colors">
-                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover/recent:bg-emerald-500 group-hover/recent:text-white transition-all">
+                        <svg class="w-5 h-5 text-emerald-500 group-hover/recent:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-sm font-bold text-gray-900 truncate group-hover/recent:text-emerald-700 transition-colors">${a.nama_file.toUpperCase()}</p>
+                        <p class="text-[13px] font-bold text-gray-900 truncate group-hover/recent:text-emerald-700 transition-colors uppercase">${a.nama_file}</p>
                         <div class="flex items-center gap-2 mt-0.5">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${a.zonas?.nama || 'Tanpa Zona'}</span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${a.zonas?.nama || 'UMUM'}</span>
                             <span class="text-[10px] text-gray-300">•</span>
-                            <span class="text-[10px] font-medium text-gray-500 italic">${new Date(a.created_at).toLocaleDateString('id-ID')}</span>
+                            <span class="text-[10px] font-black italic text-gray-400 uppercase tracking-widest">${new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                         </div>
                     </div>
                 </div>
-                <div class="hidden sm:flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded text-[9px] bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold tracking-widest uppercase">Berhasil</span>
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-1 rounded-[6px] text-[8px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-600 border border-emerald-200">SUKSES</span>
                 </div>
             </div>
         `).join('');
     } catch (err) {
-        container.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Gagal memuat data.</p>';
+        container.innerHTML = '<p class="text-xs font-bold text-red-400 text-center py-6 uppercase tracking-widest">Gagal memuat riwayat upload.</p>';
     }
 }

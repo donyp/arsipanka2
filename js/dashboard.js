@@ -378,7 +378,7 @@ function renderTable() {
                         </p>
                         <div class="flex flex-wrap gap-1 items-center mt-0.5">
                             ${isSuperAdmin() && a.status === 'Unread' && !isAnomali ? '<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase">BELUM DIBACA</span>' : ''}
-                            ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ? '<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">TERVERIFIKASI</span>' : ''}
+                            ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ? '<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">SUDAH DIBACA</span>' : ''}
                             ${isAnomali ? '<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-red-50 text-red-600 border border-red-100 animate-pulse uppercase">ANOMALI</span>' : ''}
                             ${a.status === 'Revision' ? `<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase" title="Alasan: ${a.dispute_reason || '-'}\nCatatan: ${a.dispute_note || '-'}">REVISI</span>` : ''}
                         </div>
@@ -393,50 +393,50 @@ function renderTable() {
             <td class="px-2 text-gray-600 text-xs whitespace-nowrap font-medium">${a.toko?.nama?.replace(/Karawang\s+/i, 'Kwg ') || '-'}</td>
             <td class="px-2 text-gray-600 text-[11px] whitespace-nowrap">
                 <span class="flex items-center gap-1 font-bold text-gray-900">
-                    ${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }))}
+                    ${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }))}
                 </span>
             </td>
-            <td class="px-3 text-gray-400 text-[10px] whitespace-nowrap font-bold uppercase tracking-tighter">${new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</td>
+            <td class="px-3 text-gray-400 text-[10px] whitespace-nowrap font-bold uppercase tracking-tighter">${new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
             <td class="pr-4 pl-2 text-right">
                 <div class="relative group flex justify-end" style="z-index: ${40 - i}">
                     <button class="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-all duration-200" title="Aksi">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                     </button>
                     <!-- Dropdown -->
-                    <div class="absolute right-0 top-9 mt-1 w-40 bg-[#1e293b] border border-white/5 rounded-2xl shadow-2xl transition-all opacity-0 invisible group-hover:opacity-100 group-hover:visible flex flex-col py-2 z-50 backdrop-blur-xl">
+                    <div class="absolute right-0 top-9 mt-1 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl transition-all opacity-0 invisible group-hover:opacity-100 group-hover:visible flex flex-col py-2 z-50">
                         ${viewMode === 'active' ? `
-                            <button onclick="openPreview('${a.id}', '${a.nama_file}')" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-300 hover:text-white hover:bg-white/5 w-full text-left transition-colors">
+                            <button onclick="openPreview('${a.id}', '${a.nama_file}')" class="flex items-center gap-3 px-4 py-2 text-[13px] text-gray-600 hover:text-blue-600 hover:bg-blue-50 w-full text-left transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 Preview
                             </button>
-                            <a href="${CONFIG.API_URL}/api/files/${a.id}/download?token=${API.getToken()}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-300 hover:text-white hover:bg-white/5 w-full text-left transition-colors font-medium">
+                            <a href="${CONFIG.API_URL}/api/files/${a.id}/download?token=${API.getToken()}" target="_blank" class="flex items-center gap-3 px-4 py-2 text-[13px] text-gray-600 hover:text-blue-600 hover:bg-blue-50 w-full text-left transition-colors font-medium">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 Download
                             </a>
                             ${currentUser?.role === 'admin_zona' && a.category === 'INVOICE' && a.status !== 'Revision' ? `
                                 <button onclick="openDisputeModal('${a.id}', '${a.nama_file.replace(/'/g, "\\'")}')"
-                                    class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 w-full text-left transition-colors font-semibold">
+                                    class="flex items-center gap-3 px-4 py-2 text-[13px] text-amber-600 hover:bg-amber-50 w-full text-left transition-colors font-semibold">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
                                     Ajukan Revisi
                                 </button>
                             ` : ''}
                             ${isSuperAdmin() ? `
-                                <div class="h-px bg-white/5 my-1 mx-2"></div>
-                                <button onclick="copyFileLink('${a.id}', this)" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-300 hover:text-white hover:bg-white/5 w-full text-left transition-colors">
+                                <div class="h-px bg-gray-50 my-1 mx-2"></div>
+                                <button onclick="copyFileLink('${a.id}', this)" class="flex items-center gap-3 px-4 py-2 text-[13px] text-gray-600 hover:text-blue-600 hover:bg-blue-50 w-full text-left transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                     Salin Link
                                 </button>
-                                <button onclick="deleteArchive('${a.id}', '${a.nama_file}')" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-400 hover:text-red-300 hover:bg-red-500/10 w-full text-left transition-colors font-medium">
+                                <button onclick="deleteArchive('${a.id}', '${a.nama_file}')" class="flex items-center gap-3 px-4 py-2 text-[13px] text-red-500 hover:bg-red-50 w-full text-left transition-colors font-medium">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     Hapus
                                 </button>
                             ` : ''}
                         ` : `
-                            <button onclick="restoreArchive('${a.id}', '${a.nama_file}')" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 w-full text-left transition-colors font-medium">
+                            <button onclick="restoreArchive('${a.id}', '${a.nama_file}')" class="flex items-center gap-3 px-4 py-2 text-[13px] text-emerald-600 hover:bg-emerald-50 w-full text-left transition-colors font-medium">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                 Pulihkan
                             </button>
-                            <button onclick="deleteArchive('${a.id}', '${a.nama_file}', true)" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-400 hover:text-red-300 hover:bg-red-500/10 w-full text-left transition-colors font-medium">
+                            <button onclick="deleteArchive('${a.id}', '${a.nama_file}', true)" class="flex items-center gap-3 px-4 py-2 text-[13px] text-red-500 hover:bg-red-50 w-full text-left transition-colors font-medium">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 Hapus Permanen
                             </button>
