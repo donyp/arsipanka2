@@ -1423,10 +1423,10 @@ async function toggleMaintenance() {
     if (isActive) {
         const formHtml = `
             <div class="space-y-4 text-left">
-                <p class="text-[11px] text-gray-400 leading-relaxed">Dokumentasikan perbaikan ini agar user tahu apa saja yang telah diperbarui saat mereka login nanti.</p>
+                <p class="text-[11px] text-gray-500 leading-relaxed">Dokumentasikan perbaikan ini agar user tahu apa saja yang telah diperbarui saat mereka login nanti.</p>
                 <div>
                     <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1 font-bold">Judul Perbaikan</label>
-                    <select id="maint-res-title" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all cursor-pointer">
+                    <select id="maint-res-title" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/10 transition-all cursor-pointer">
                         <option value="" disabled selected>Pilih Kategori...</option>
                         <option value="Update Website">Update Website</option>
                         <option value="Perbaikan Bug">Perbaikan Bug</option>
@@ -1437,10 +1437,10 @@ async function toggleMaintenance() {
                 <div id="maint-details-container" class="space-y-3">
                     <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1 font-bold">Detail Perbaikan</label>
                     <div class="maint-detail-item flex gap-2">
-                        <input type="text" class="maint-detail-input w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Contoh: Loading halaman lebih cepat">
+                        <input type="text" class="maint-detail-input w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/10 transition-all" placeholder="Contoh: Loading halaman lebih cepat">
                     </div>
                 </div>
-                <button type="button" id="btn-add-detail" class="w-full py-3 rounded-xl border border-dashed border-white/10 hover:border-indigo-500/30 hover:bg-indigo-500/5 text-gray-400 hover:text-indigo-400 text-xs transition-all flex items-center justify-center gap-2">
+                <button type="button" id="btn-add-detail" class="w-full py-3 rounded-xl border border-dashed border-gray-300 hover:border-indigo-500 hover:bg-indigo-50 text-gray-500 hover:text-indigo-600 text-xs font-bold transition-all flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     Tambah Detail
                 </button>
@@ -1470,7 +1470,7 @@ async function toggleMaintenance() {
             },
             'Simpan & Selesaikan',
             'Batal',
-            true
+            false // Light mode
         );
 
         // Handle dynamic detail inputs
@@ -1482,8 +1482,8 @@ async function toggleMaintenance() {
                     const div = document.createElement('div');
                     div.className = 'maint-detail-item flex gap-2 animate-fade-in';
                     div.innerHTML = `
-                        <input type="text" class="maint-detail-input w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Detail tambahan...">
-                        <button onclick="this.parentElement.remove()" class="p-3 text-gray-500 hover:text-red-400 transition-colors">
+                        <input type="text" class="maint-detail-input w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/10 transition-all" placeholder="Detail tambahan...">
+                        <button onclick="this.parentElement.remove()" class="p-3 text-gray-400 hover:text-red-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     `;

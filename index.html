@@ -60,20 +60,59 @@
     <script src="js/supabase.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        // Check for Maintenance Mode on Load
+        async function checkMaintenanceOnLogin() {
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/system/maintenance`);
+                const status = await response.json();
+
+                if (status && status.isMaintenance) {
+                    const noticeEl = document.createElement('div');
+                    noticeEl.className = 'mb-8 p-4 bg-red-50 border border-red-100 rounded-3xl animate-fade-in-up';
+                    noticeEl.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 shadow-inner">
+                    <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <p class="text-[10px] font-black text-red-600 uppercase tracking-widest leading-none mb-1">System Maintenance</p>
+                    <p class="text-[11px] font-bold text-red-500/70 leading-normal">Mohon maaf, sistem sedang dalam perbaikan berkala. Silakan coba login beberapa saat lagi.</p>
+                </div>
+            </div>
+            `;
+                    document.getElementById('login-form').prepend(noticeEl);
+
+                    // Optional: Disable login button
+                    const btn = document.getElementById('login-btn');
+                    if (btn) {
+                        btn.className = 'w-full py-4 bg-gray-200 text-gray-500 font-black rounded-2xl cursor-not-allowed transition-all opacity-70';
+                        btn.disabled = true;
+                        btn.innerText = 'Sistem Sedang Perbaikan';
+                    }
+                }
+            } catch (err) {
+                console.warn('Gagal mengecek status perbaikan:', err);
+            }
+        }
+
+        checkMaintenanceOnLogin();
+
         function togglePasswordVisibility() {
             const pwdInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eye-icon');
             if (pwdInput.type === 'password') {
                 pwdInput.type = 'text';
                 eyeIcon.innerHTML = `
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.04m5.752-1.854A9.959 9.959 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-4.221-4.221L3 3" />
-                `;
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.04m5.752-1.854A9.959 9.959 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-4.221-4.221L3 3" />
+            `;
             } else {
                 pwdInput.type = 'password';
                 eyeIcon.innerHTML = `
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                `;
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            `;
             }
         }
 
