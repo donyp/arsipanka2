@@ -288,6 +288,31 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// POST /api/auth/verify-admin — quick check for admin bypass during maintenance
+app.post('/api/auth/verify-admin', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) return res.json({ isAdmin: false });
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('role, password_hash, is_active')
+            .eq('email', email.toLowerCase().trim())
+            .single();
+
+        if (error || !user || !user.is_active) return res.json({ isAdmin: false });
+
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) return res.json({ isAdmin: false });
+
+        const isAdmin = user.role === 'super_admin' || user.role === 'moderator';
+        res.json({ isAdmin });
+
+    } catch (err) {
+        res.json({ isAdmin: false });
+    }
+});
+
 // POST /api/auth/logout (stateless â€” just for audit logging)
 app.post('/api/auth/logout', authenticateToken, async (req, res) => {
     await supabase.from('audit_logs').insert({
