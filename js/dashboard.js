@@ -356,16 +356,16 @@ function renderTable() {
         const trClass = isAnomali ? 'bg-red-500/5 hover:bg-red-500/10 border-b border-red-500/20' : (a.status === 'Unread' && !isSuperAdmin() ? 'bg-indigo-900/10 border-l-2 border-indigo-500' : 'border-b border-white/5 hover:bg-white/5');
 
         return `
-        <tr class="animate-fade-in ${trClass} group/row" style="animation-delay: ${i * 30}ms">
-            <td>
+        <tr class="animate-fade-in ${trClass} group/row text-[13px]" style="animation-delay: ${i * 30}ms">
+            <td class="pl-4 pr-2">
                 <input type="checkbox" class="custom-checkbox row-checkbox" data-id="${a.id}" 
                     ${selectedIds.includes(a.id) ? 'checked' : ''} 
                     onclick="toggleItemSelection('${a.id}', this)">
             </td>
-            <td>
-                <div class="flex items-center gap-4 max-w-full">
-                    <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-all duration-300 border border-gray-100 ${isAnomali ? 'bg-red-50 text-red-600' : (isSuperAdmin() && a.status && a.status.includes('Read') ? 'bg-emerald-50 text-emerald-600' : (isSuperAdmin() && a.status === 'Unread' ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-500'))}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <td class="py-3 pr-4">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center border border-gray-100 ${isAnomali ? 'bg-red-50 text-red-600' : (isSuperAdmin() && a.status && a.status.includes('Read') ? 'bg-emerald-50 text-emerald-600' : (isSuperAdmin() && a.status === 'Unread' ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-500'))}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ?
                 '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' :
                 (isAnomali ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>' :
@@ -373,42 +373,37 @@ function renderTable() {
                         </svg>
                     </div>
                     <div class="flex flex-col min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <p class="font-bold text-sm truncate ${isAnomali ? 'text-red-600' : (a.status === 'Unread' ? 'text-blue-600' : 'text-gray-900')} transition-colors" title="${a.nama_file}">
-                                ${truncate(cleanName, 45)}
-                            </p>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5 items-center">
-                            ${isSuperAdmin() && a.status === 'Unread' && !isAnomali ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase">UNREAD</span>' : ''}
-                            ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">CHECKED</span>' : ''}
-                            ${isAnomali ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-600 border border-red-100 animate-pulse uppercase">ANOMALY</span>' : ''}
-                            ${a.status === 'Revision' ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase" title="Alasan: ${a.dispute_reason || '-'}\nCatatan: ${a.dispute_note || '-'}">REVISION</span>` : ''}
+                        <p class="font-bold text-xs truncate ${isAnomali ? 'text-red-600' : (a.status === 'Unread' ? 'text-blue-600' : 'text-gray-900')} transition-colors" title="${a.nama_file}">
+                            ${truncate(cleanName, 35)}
+                        </p>
+                        <div class="flex flex-wrap gap-1 items-center mt-0.5">
+                            ${isSuperAdmin() && a.status === 'Unread' && !isAnomali ? '<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase">BELUM DIBACA</span>' : ''}
+                            ${isSuperAdmin() && a.status && a.status.includes('Read') && !isAnomali ? '<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">TERVERIFIKASI</span>' : ''}
+                            ${isAnomali ? '<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-red-50 text-red-600 border border-red-100 animate-pulse uppercase">ANOMALI</span>' : ''}
+                            ${a.status === 'Revision' ? `<span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase" title="Alasan: ${a.dispute_reason || '-'}\nCatatan: ${a.dispute_note || '-'}">REVISI</span>` : ''}
                         </div>
                     </div>
                 </div>
             </td>
-            <td><span class="px-2 py-1 rounded-lg border border-gray-100 bg-gray-50 text-gray-600 text-[11px] font-bold uppercase tracking-wider">${getCategoryLabel(a.category)}</span></td>
-            <td>
-                ${a.tipe_ppn ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-black tracking-widest ${a.tipe_ppn === 'PPN' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'} uppercase shadow-sm">${a.tipe_ppn}</span>` : '<span class="text-gray-300 text-xs">-</span>'}
+            <td class="px-2"><span class="px-1.5 py-0.5 rounded-lg border border-gray-100 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-wider">${getCategoryLabel(a.category)}</span></td>
+            <td class="px-2">
+                ${a.tipe_ppn ? `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-black tracking-widest ${a.tipe_ppn === 'PPN' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'} uppercase shadow-sm">${a.tipe_ppn}</span>` : '<span class="text-gray-300 text-[10px] font-bold">-</span>'}
             </td>
-            <td class="text-gray-900 text-sm whitespace-nowrap font-bold">${a.zonas?.nama || '-'}</td>
-            <td class="text-gray-600 text-sm whitespace-nowrap font-medium">${a.toko?.nama || '-'}</td>
-            <td class="text-gray-600 text-sm whitespace-nowrap">
-                <span class="flex items-center gap-1.5 font-bold text-gray-900">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    ${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID') : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID'))}
+            <td class="px-2 text-gray-900 text-xs whitespace-nowrap font-bold">${a.zonas?.nama || '-'}</td>
+            <td class="px-2 text-gray-600 text-xs whitespace-nowrap font-medium">${a.toko?.nama?.replace(/Karawang\s+/i, 'Kwg ') || '-'}</td>
+            <td class="px-2 text-gray-600 text-[11px] whitespace-nowrap">
+                <span class="flex items-center gap-1 font-bold text-gray-900">
+                    ${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }))}
                 </span>
             </td>
-            <td class="text-gray-400 text-[10px] whitespace-nowrap font-bold uppercase tracking-tighter">${new Date(a.created_at).toLocaleDateString('id-ID')}</td>
-            <td>
+            <td class="px-3 text-gray-400 text-[10px] whitespace-nowrap font-bold uppercase tracking-tighter">${new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</td>
+            <td class="pr-4 pl-2 text-right">
                 <div class="relative group flex justify-end" style="z-index: ${40 - i}">
-                    <button class="p-2 rounded-xl hover:bg-white/10 text-gray-500 hover:text-white transition-all duration-200" title="Aksi">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                    <button class="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-all duration-200" title="Aksi">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                     </button>
                     <!-- Dropdown -->
-                    <div class="absolute right-0 top-10 mt-1 w-44 bg-[#162032] border border-white/10 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col py-2 z-50 backdrop-blur-xl">
+                    <div class="absolute right-0 top-9 mt-1 w-40 bg-[#1e293b] border border-white/5 rounded-2xl shadow-2xl transition-all opacity-0 invisible group-hover:opacity-100 group-hover:visible flex flex-col py-2 z-50 backdrop-blur-xl">
                         ${viewMode === 'active' ? `
                             <button onclick="openPreview('${a.id}', '${a.nama_file}')" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-300 hover:text-white hover:bg-white/5 w-full text-left transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
