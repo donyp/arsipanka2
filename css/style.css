@@ -316,12 +316,83 @@ body {
     font-size: 0.8125rem;
 }
 
-/* ---- Table ---- */
+/* ---- Data Tables ---- */
 .data-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: fixed;
+    /* Enforce column widths */
+    font-size: 0.85rem;
+    /* Slightly smaller for density */
 }
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Specific Column Widths */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+    width: 40px;
+    text-align: center;
+}
+
+/* Checkbox */
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+    width: 25%;
+}
+
+/* Nama File */
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+    width: 100px;
+}
+
+/* Kategori */
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+    width: 80px;
+}
+
+/* Tipe */
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) {
+    width: 80px;
+}
+
+/* Zona */
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+    width: 15%;
+}
+
+/* Toko */
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) {
+    width: 110px;
+}
+
+/* Tanggal */
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) {
+    width: 60px;
+}
+
+/* Upload */
+.data-table th:nth-child(9),
+.data-table td:nth-child(9) {
+    width: 90px;
+    text-align: right;
+}
+
+/* Aksi */
 
 .data-table thead th {
     background: #162032;

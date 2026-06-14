@@ -1667,9 +1667,13 @@ app.get('/api/stats/chart', authenticateToken, async (req, res) => {
             }
         }
 
-        const labels = allZonas.map(z => z.nama);
+        // Naturally sort labels (Zona 1, Zona 2, ..., Zona 10)
+        const labels = allZonas
+            .map(z => z.nama)
+            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
         const values = labels.map(label => chartData[label] || 0);
-        console.log(`[DEBUG_CHART] Result:`, { labels, values });
+        console.log(`[DEBUG_CHART] Result (Sorted):`, { labels, values });
 
         res.json({ labels, values });
     } catch (err) {
