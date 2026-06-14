@@ -10,13 +10,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <script>
+        // Cloak the page until Auth and UI checks are done
         document.documentElement.style.opacity = '0';
-        document.documentElement.style.transition = 'opacity 0.4s ease-in-out';
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.documentElement.style.opacity = '1';
-            }, 50);
-        });
+        document.documentElement.classList.add('auth-loading');
     </script>
 </head>
 
@@ -28,11 +24,12 @@
         <!-- Sidebar -->
         <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
         <aside id="sidebar"
-            class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
+            class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40 hidden">
         </aside>
 
         <!-- Main Content -->
-        <main id="main-content" class="ml-64 min-h-screen transition-all duration-300 flex-1">
+        <!-- Main Content (Default to 0 margin, will be set to ml-64 via JS if not admin_zona) -->
+        <main id="main-content" class="min-h-screen transition-all duration-300 flex-1">
             <!-- Top Bar -->
             <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">

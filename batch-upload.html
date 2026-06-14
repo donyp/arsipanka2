@@ -38,13 +38,9 @@
     </style>
 
     <script>
+        // Cloak the page until Auth and UI checks are done
         document.documentElement.style.opacity = '0';
-        document.documentElement.style.transition = 'opacity 0.4s ease-in-out';
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.documentElement.style.opacity = '1';
-            }, 50);
-        });
+        document.documentElement.classList.add('auth-loading');
     </script>
 </head>
 
@@ -53,10 +49,11 @@
 
     <!-- Sidebar (rendered by js/sidebar.js?v=ULTRACLEAN_2026) -->
     <aside id="sidebar"
-        class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40">
+        class="sidebar fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40 hidden">
     </aside>
 
-    <main id="main-content" class="ml-64 min-h-screen relative">
+    <!-- Main Content (Default to 0 margin, will be set to ml-64 via JS if not admin_zona) -->
+    <main id="main-content" class="min-h-screen transition-all duration-300">
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
             <h2 class="text-xl font-bold text-gray-900">Batch Upload</h2>
             <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pilih Excel POS atau langsung

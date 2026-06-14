@@ -190,22 +190,40 @@ function updateUserUI() {
         }
     });
 
-    // --- Admin Zona: Hide sidebar, expand main to full-width ---
+    // --- Sidebar & Layout Logic ---
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.querySelector('main');
+    const headerLogout = document.getElementById('header-logout-btn');
+    const headerRequest = document.getElementById('header-request-btn');
+
     if (currentUser.role === 'admin_zona') {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.querySelector('main');
-        const headerLogout = document.getElementById('header-logout-btn');
-        const headerRequest = document.getElementById('header-request-btn');
-        if (sidebar) sidebar.style.display = 'none';
+        // Admin Zona: Full-width, no sidebar
+        if (sidebar) {
+            sidebar.classList.add('hidden');
+            sidebar.style.display = 'none';
+        }
         if (mainContent) {
             mainContent.classList.remove('ml-64');
             mainContent.style.marginLeft = '0';
         }
         if (headerLogout) headerLogout.classList.replace('hidden', 'flex');
         if (headerRequest) headerRequest.classList.replace('hidden', 'flex');
+    } else {
+        // Super Admin / Moderator: Show sidebar, use offset
+        if (sidebar) {
+            sidebar.classList.remove('hidden');
+            sidebar.style.display = 'flex';
+        }
+        if (mainContent) {
+            mainContent.classList.add('ml-64');
+            mainContent.style.marginLeft = '';
+        }
     }
 
     // --- RELEASE CLOAK ---
+    // Use transition for premium feel
+    document.documentElement.style.transition = 'opacity 0.5s ease-in-out';
+    document.documentElement.style.opacity = '1';
     document.documentElement.classList.remove('auth-loading');
 }
 
