@@ -206,7 +206,7 @@ async function loadArchives(append = false) {
 
         filteredArchives = archives;
         renderTable();
-        updateStats();
+        updateStats(res);
         if (!append) await populateTokoFilter();
     } catch (err) {
         Toast.error('Gagal memuat arsip: ' + err.message);
@@ -261,10 +261,12 @@ async function populateTokoFilter() {
 }
 
 // ---- Update Stats ----
-function updateStats() {
+function updateStats(res = {}) {
     const el = (id) => document.getElementById(id);
-    const invoiceCount = filteredArchives.filter(a => a.category === 'INVOICE').length;
-    const piutangCount = filteredArchives.filter(a => a.category === 'PIUTANG').length;
+
+    // Use true totals from backend if available, fallback to filtered chunk
+    const invoiceCount = res.totalInvoice ?? filteredArchives.filter(a => a.category === 'INVOICE').length;
+    const piutangCount = res.totalPiutang ?? filteredArchives.filter(a => a.category === 'PIUTANG').length;
 
     if (el('stat-invoice')) el('stat-invoice').textContent = invoiceCount;
     if (el('stat-piutang')) el('stat-piutang').textContent = piutangCount;
@@ -411,18 +413,16 @@ function renderTable() {
                     </div>
                 </div>
             </td>
-            <td class="px-2"><span class="px-1.5 py-0.5 rounded-lg border border-gray-100 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-wider">${getCategoryLabel(a.category)}</span></td>
+            <td class="px-2"><span class="px-1.5 py-0.5 rounded-lg border border-gray-100 bg-gray-50 text-gray-500 text-[10px] uppercase tracking-wider">${getCategoryLabel(a.category)}</span></td>
             <td class="px-2">
-                ${a.tipe_ppn ? `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-black tracking-widest ${a.tipe_ppn === 'PPN' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'} uppercase shadow-sm">${a.tipe_ppn}</span>` : '<span class="text-gray-300 text-[10px] font-bold">-</span>'}
+                ${a.tipe_ppn ? `<span class="px-1.5 py-0.5 rounded-md text-[9px] tracking-widest ${a.tipe_ppn === 'PPN' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'} uppercase shadow-sm">${a.tipe_ppn}</span>` : '<span class="text-gray-300 text-[10px] font-medium">-</span>'}
             </td>
-            <td class="px-2 text-gray-900 text-xs whitespace-nowrap font-bold">${a.zonas?.nama || '-'}</td>
-            <td class="px-2 text-gray-600 text-xs whitespace-nowrap font-medium">${a.toko?.nama?.replace(/Karawang\s+/i, 'Kwg ') || '-'}</td>
-            <td class="px-2 text-gray-600 text-[11px] whitespace-nowrap">
-                <span class="flex items-center gap-1 font-bold text-gray-900">
-                    ${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }))}
-                </span>
+            <td class="px-2 text-gray-900 text-xs whitespace-nowrap font-medium">${a.zonas?.nama || '-'}</td>
+            <td class="px-2 text-gray-600 text-xs whitespace-nowrap font-normal">${a.toko?.nama?.replace(/Karawang\s+/i, 'Kwg ') || '-'}</td>
+            <td class="px-2 text-gray-600 text-[11px] whitespace-nowrap font-medium">
+                ${a.tanggal_dokumen ? new Date(a.tanggal_dokumen).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (extractDateFromFilename(a.nama_file) || new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }))}
             </td>
-            <td class="px-3 text-gray-400 text-[10px] whitespace-nowrap font-bold uppercase tracking-tighter">${new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+            <td class="px-3 text-gray-400 text-[10px] whitespace-nowrap font-medium uppercase tracking-tighter">${new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
             <td class="pr-4 pl-2 text-right">
                 <div class="relative group flex justify-end" style="z-index: ${40 - i}">
                     <button class="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-all duration-200" title="Aksi">
@@ -674,9 +674,12 @@ async function sendBroadcast() {
         await API.post('/api/broadcasts', { content, target_zona_id });
         Toast.success('Pengumuman berhasil disiarkan!');
         input.value = '';
+
+        // Live updates — reload management list and global bar
         if (typeof window.loadGlobalBroadcast === 'function') {
             await window.loadGlobalBroadcast();
         }
+        await openManageBroadcasts();
     } catch (err) {
         Toast.error('Gagal mengirim pengumuman: ' + err.message);
     }
@@ -1423,7 +1426,6 @@ async function toggleMaintenance() {
     const isActive = currentStatus === 'active';
 
     if (isActive) {
-        // Show form for results before finishing
         const formHtml = `
             <div class="space-y-4 text-left">
                 <p class="text-[11px] text-gray-400 leading-relaxed">Dokumentasikan perbaikan ini agar user tahu apa saja yang telah diperbarui saat mereka login nanti.</p>
@@ -1444,7 +1446,7 @@ async function toggleMaintenance() {
                     </div>
                 </div>
                 <button type="button" id="btn-add-detail" class="w-full py-3 rounded-xl border border-dashed border-white/10 hover:border-indigo-500/30 hover:bg-indigo-500/5 text-gray-400 hover:text-indigo-400 text-xs transition-all flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     Tambah Detail
                 </button>
             </div>
@@ -1454,42 +1456,29 @@ async function toggleMaintenance() {
             'Selesaikan Perbaikan',
             formHtml,
             async () => {
-                const title = document.getElementById('maint-res-title').value.trim();
-                const inputs = document.querySelectorAll('.maint-detail-input');
-                const details = Array.from(inputs).map(i => i.value.trim()).filter(v => v !== '');
+                const title = document.getElementById('maint-res-title').value;
+                const details = Array.from(document.querySelectorAll('.maint-detail-input')).map(i => i.value.trim()).filter(v => v);
 
                 if (!title) {
                     Toast.error('Harap pilih judul perbaikan');
                     return false;
                 }
-
                 if (details.length === 0) {
-                    Toast.error('Harap isi minimal satu detail perbaikan');
+                    Toast.error('Harap isi minimal satu detail');
                     return false;
                 }
 
-                try {
-                    const res = await API.post('/api/system/maintenance', {
-                        isMaintenance: false,
-                        result: { title, details }
-                    });
-
-                    if (res && res.success) {
-                        updateMaintenanceUI(false);
-                        Toast.success('Perbaikan selesai dan diumumkan!');
-                        return true;
-                    } else {
-                        throw new Error(res?.error || 'Gagal merespon status sistem');
-                    }
-                } catch (err) {
-                    console.error('Maintenance deactivation error:', err);
-                    Toast.error('Gagal: ' + err.message);
-                    return false;
-                }
+                await API.put('/api/system/maintenance', { is_maintenance: false, result: { title, details } });
+                Toast.success('Sistem kembali Online');
+                loadMaintenanceStatus();
+                return true;
             },
-            'Simpan & Selesaikan'
+            'Simpan & Selesaikan',
+            'Batal',
+            true
         );
 
+        // Handle dynamic detail inputs
         setTimeout(() => {
             const addBtn = document.getElementById('btn-add-detail');
             const container = document.getElementById('maint-details-container');
@@ -1500,34 +1489,27 @@ async function toggleMaintenance() {
                     div.innerHTML = `
                         <input type="text" class="maint-detail-input w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Detail tambahan...">
                         <button onclick="this.parentElement.remove()" class="p-3 text-gray-500 hover:text-red-400 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     `;
                     container.appendChild(div);
                 };
             }
         }, 100);
+
     } else {
         showConfirm(
             'Aktifkan Perbaikan',
             'Sistem akan masuk ke mode perbaikan. Semua Admin Zona akan otomatis diperintahkan logout.',
             async () => {
-                try {
-                    const res = await API.post('/api/system/maintenance', { isMaintenance: true });
-                    if (res && res.success) {
-                        updateMaintenanceUI(true);
-                        Toast.success('Mode Perbaikan diaktifkan');
-                        return true;
-                    } else {
-                        throw new Error(res?.error || 'Gagal mengaktifkan perbaikan');
-                    }
-                } catch (err) {
-                    console.error('Maintenance activation error:', err);
-                    Toast.error('Gagal: ' + err.message);
-                    return false;
-                }
+                await API.put('/api/system/maintenance', { is_maintenance: true });
+                Toast.success('Mode Perbaikan Aktif');
+                loadMaintenanceStatus();
+                return true;
             },
-            'Aktifkan Sekarang'
+            'Aktifkan Sekarang',
+            'Batal',
+            true // Image 4: Dark Modal
         );
     }
 }

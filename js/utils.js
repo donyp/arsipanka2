@@ -25,10 +25,10 @@ const Toast = {
         };
 
         const colors = {
-            success: 'from-emerald-500/20 border-emerald-500/40 text-emerald-300',
-            error: 'from-red-500/20 border-red-500/40 text-red-300',
-            warning: 'from-amber-500/20 border-amber-500/40 text-amber-300',
-            info: 'from-blue-500/20 border-blue-500/40 text-blue-300'
+            success: 'bg-[#ecfdf5]/95 border-[#10b981]/30 text-[#065f46]',
+            error: 'bg-[#fef2f2]/95 border-[#ef4444]/30 text-[#991b1b]',
+            warning: 'bg-[#fffbeb]/95 border-[#f59e0b]/30 text-[#92400e]',
+            info: 'bg-[#f0f9ff]/95 border-[#0ea5e9]/30 text-[#075985]'
         };
 
         const toast = document.createElement('div');
@@ -80,25 +80,30 @@ function showAlert(title, message, onOk) {
     });
 }
 
-function showConfirm(title, message, onConfirm, okText = 'Konfirmasi', cancelText = 'Batal') {
+function showConfirm(title, message, onConfirm, okText = 'Konfirmasi', cancelText = 'Batal', isDark = false) {
     const overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-md animate-fade-in';
+
+    const bgColor = isDark ? 'bg-[#1e293b]/95' : 'bg-gray-900/95';
+    const textColor = isDark ? 'text-white' : 'text-white';
+    const subTextColor = isDark ? 'text-gray-300' : 'text-gray-400';
+
     overlay.innerHTML = `
-        <div class="relative bg-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
+        <div class="relative ${bgColor} border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
             <div class="flex items-start gap-4 mb-6">
-                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/20">
+                <div class="flex-shrink-0 w-12 h-12 rounded-xl ${isDark ? 'bg-red-500/20' : 'bg-red-500/10'} text-red-400 flex items-center justify-center border border-red-500/20">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-white mb-1">${title}</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">${message}</p>
+                    <h3 class="text-xl font-bold ${textColor} mb-1">${title}</h3>
+                    <p class="${subTextColor} text-sm leading-relaxed">${message}</p>
                 </div>
             </div>
             <div class="flex gap-3">
                 <button id="confirm-cancel" class="flex-1 py-3.5 rounded-2xl text-sm font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200">${cancelText}</button>
-                <button id="confirm-ok" class="flex-2 px-8 py-3.5 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/25 transition-all duration-200">${okText}</button>
+                <button id="confirm-ok" class="flex-1 px-8 py-3.5 rounded-2xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/25 transition-all duration-200">${okText}</button>
             </div>
         </div>
     `;
