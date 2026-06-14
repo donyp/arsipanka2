@@ -334,9 +334,13 @@ async function populateTokoFilter() {
 
     try {
         const { tokos } = await API.get(`/api/toko?zona_id=${zonaId}`);
+        const seenNames = new Set();
         (tokos || []).forEach(t => {
+            if (seenNames.has(t.nama)) return;
+            seenNames.add(t.nama);
+
             const opt = document.createElement('option');
-            opt.value = t.id; // Switch tracking to ID internally or handle mapping
+            opt.value = t.id;
             opt.textContent = t.nama;
             tokoSelect.appendChild(opt);
         });
@@ -481,7 +485,12 @@ function renderTable() {
         cleanName = cleanName.replace(/\s+\d{1,2}\s+(JAN|FEB|MAR|APR|MEI|MAY|JUN|JUL|AGU|AUG|SEP|OKT|OCT|NOV|DES|DEC)[A-Z]*\b/i, '').trim();
 
         const isAnomali = a.status && a.status.includes('Anomali');
-        const trClass = isAnomali ? 'bg-red-500/5 hover:bg-red-500/10 border-b border-red-500/20' : (a.status === 'Unread' && !isSuperAdmin() ? 'bg-indigo-900/10 border-l-2 border-indigo-500' : 'border-b border-white/5 hover:bg-white/5');
+        // Standardize row colors: White by default, subtle tint for unread
+        const trClass = isAnomali
+            ? 'bg-red-500/5 hover:bg-red-500/10 border-b border-red-500/20'
+            : (a.status === 'Unread' && !isSuperAdmin()
+                ? 'bg-blue-50/40 hover:bg-blue-50/60 border-b border-gray-100 shadow-sm'
+                : 'bg-white hover:bg-gray-50 border-b border-gray-100');
 
         return `
         <tr class="animate-fade-in ${trClass} group/row text-[13px]" style="animation-delay: ${i * 30}ms">
