@@ -84,12 +84,10 @@
             `;
                     document.getElementById('login-form').prepend(noticeEl);
 
-                    // Optional: Disable login button
+                    // Allow admins to bypass maintenance (Backend will handle blocking non-admins)
                     const btn = document.getElementById('login-btn');
                     if (btn) {
-                        btn.className = 'w-full py-4 bg-gray-200 text-gray-500 font-black rounded-2xl cursor-not-allowed transition-all opacity-70';
-                        btn.disabled = true;
-                        btn.innerText = 'Sistem Sedang Perbaikan';
+                        btn.innerText = 'Masuk Sekarang (Admin Bypass)';
                     }
                 }
             } catch (err) {
