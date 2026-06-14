@@ -88,22 +88,23 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            <span
-                                class="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
+                            <span id="notif-badge"
+                                class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white hidden animate-pulse"></span>
                         </button>
 
                         <!-- Notif Menu -->
                         <div id="notif-menu"
                             class="absolute right-0 mt-3 w-80 bg-white border border-gray-100 rounded-2xl shadow-2xl transition-all opacity-0 invisible translate-y-2 py-4 z-50">
-                            <div class="px-6 mb-4 flex items-center justify-between">
+                            <div class="px-6 mb-3 flex items-center justify-between">
                                 <h3 class="text-xs font-black text-gray-900 uppercase tracking-widest">Notifikasi</h3>
-                                <span
-                                    class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase">Baru</span>
+                                <button onclick="markAllNotifRead()" id="btn-mark-read"
+                                    class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase hover:bg-blue-100 transition-all hidden">Tandai
+                                    Dibaca</button>
                             </div>
-                            <div class="max-h-64 overflow-y-auto px-2 space-y-1">
+                            <div class="max-h-64 overflow-y-auto px-2 space-y-1" id="notif-list">
                                 <p
-                                    class="text-center py-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                    Belum ada notifikasi baru</p>
+                                    class="text-center py-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">
+                                    Memuat...</p>
                             </div>
                         </div>
                     </div>
@@ -447,7 +448,8 @@
             <div class="p-4 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar" id="bug-history-list">
                 <!-- Data will be loaded here -->
                 <div class="p-12 text-center">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">Memuat riwayat...</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">Memuat
+                        riwayat...</p>
                 </div>
             </div>
         </div>

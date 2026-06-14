@@ -1562,6 +1562,10 @@ app.post('/api/broadcasts', authenticateToken, authorizeRole('super_admin', 'mod
             });
 
         if (error) throw error;
+
+        // Notification: New broadcast
+        createNotification({ role: target_zona_id ? 'admin_zona' : null, zona_id: target_zona_id || null, title: '📢 Pengumuman Baru', message: content.length > 50 ? content.substring(0, 47) + '...' : content, type: 'warning' });
+
         res.json({ success: true, message: 'Pengumuman berhasil disiarkan.' });
     } catch (err) {
         console.error('Broadcast Error:', err);
@@ -1670,6 +1674,11 @@ app.all('/api/system/maintenance', authenticateToken, authorizeRole('super_admin
             action: isMaintenance ? 'Enable Maintenance' : 'Disable Maintenance',
             context: JSON.stringify(status)
         });
+
+        // Notification: Maintenance status change
+        if (!isMaintenance && result) {
+            createNotification({ title: '✅ Perbaikan Selesai', message: 'Sistem kembali online: ' + (result.title || 'Selesai'), type: 'success' });
+        }
 
         res.json({ success: true, status });
     } catch (err) {
@@ -2857,6 +2866,15 @@ app.put('/api/bugs/:id', authenticateToken, async (req, res) => {
         if (admin_notes !== undefined) payload.admin_notes = admin_notes;
         const { error } = await supabase.from('bug_reports').update(payload).eq('id', req.params.id);
         if (error) throw error;
+
+        // Notification: Bug status changed
+        try {
+            const { data: bugData } = await supabase.from('bug_reports').select('user_id').eq('id', req.params.id).single();
+            if (bugData && bugData.user_id) {
+                createNotification({ user_id: bugData.user_id, title: '🔄 Status Bug Diperbarui', message: 'Laporan bug Anda kini berstatus "' + status + '".', type: 'info' });
+            }
+        } catch (ne) {}
+
         res.json({ success: true, message: 'Laporan bug berhasil diupdate.' });
     } catch (err) {
         console.error('Update Bug Error:', err);
@@ -2919,6 +2937,58 @@ app.get('/api/bugs/view', authenticateToken, async (req, res) => {
 // ============================================================
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Pusat Arsip Anka Backend v2.3 running (JWT + Rclone)' });
+});
+
+// ============================================================
+// NOTIFICATION SYSTEM
+// ============================================================
+
+/**
+ * Helper to create notifications
+ */
+async function createNotification({ user_id, role, zona_id, title, message, type = 'info' }) {
+    try {
+        await supabase.from('notifications').insert({
+            user_id: user_id || null,
+            target_role: role || null,
+            target_zona_id: zona_id || null,
+            title,
+            message,
+            type,
+            is_read: false,
+            created_at: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('[Notification Trigger Error]', err);
+    }
+}
+
+// GET /api/notifications
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+    try {
+        let query = supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30);
+        let orFilter = `user_id.eq.${req.user.userId},and(user_id.is.null,target_role.is.null)`;
+        if (req.user.role === 'admin_zona') {
+            orFilter += `,and(target_role.eq.admin_zona,target_zona_id.eq.${req.user.zona_id})`;
+        } else {
+            orFilter += `,target_role.eq.${req.user.role}`;
+        }
+        const { data, error } = await query.or(orFilter);
+        if (error) throw error;
+        res.json({ notifications: data || [] });
+    } catch (err) {
+        res.status(500).json({ error: 'Gagal memuat notifikasi.' });
+    }
+});
+
+// PUT /api/notifications/read-all
+app.put('/api/notifications/read-all', authenticateToken, async (req, res) => {
+    try {
+        await supabase.from('notifications').update({ is_read: true }).eq('user_id', req.user.userId).eq('is_read', false);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Gagal update status.' });
+    }
 });
 
 // ============================================================

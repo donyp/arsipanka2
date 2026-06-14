@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadZonas();
     populateFilters();
     await loadArchives();
+    loadNotifications();
     // await loadBroadcast(); // Removed: now handled globally by sidebar.js
 
     await loadStorageStats();
@@ -444,7 +445,9 @@ function setupIntersectionObserver() {
     if (sentinel) observer.observe(sentinel);
 }
 
-// ---- Notification UI ----
+// ---- Notification System ----
+let notifData = [];
+
 window.toggleNotifMenu = function () {
     const menu = document.getElementById('notif-menu');
     if (!menu) return;
@@ -452,11 +455,83 @@ window.toggleNotifMenu = function () {
     if (menu.classList.contains('invisible')) {
         menu.classList.remove('invisible', 'opacity-0', 'translate-y-2');
         menu.classList.add('opacity-100', 'translate-y-0');
+        loadNotifications(); // Refresh on open
     } else {
         menu.classList.add('invisible', 'opacity-0', 'translate-y-2');
         menu.classList.remove('opacity-100', 'translate-y-0');
     }
 };
+
+async function loadNotifications() {
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    try {
+        const res = await API.get('/api/notifications');
+        notifData = res.notifications || [];
+        renderNotifications();
+        updateNotifBadge();
+    } catch (err) {
+        list.innerHTML = `<p class="text-center py-8 text-[10px] font-bold text-red-400 uppercase">Gagal memuat</p>`;
+    }
+}
+
+function renderNotifications() {
+    const list = document.getElementById('notif-list');
+    const btnRead = document.getElementById('btn-mark-read');
+    if (!list) return;
+
+    const unreadCount = notifData.filter(n => !n.is_read).length;
+    if (btnRead) btnRead.classList.toggle('hidden', unreadCount === 0);
+
+    if (notifData.length === 0) {
+        list.innerHTML = `<p class="text-center py-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Belum ada notifikasi</p>`;
+        return;
+    }
+
+    list.innerHTML = notifData.map(n => {
+        const time = new Date(n.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const unreadClass = n.is_read ? 'bg-white' : 'bg-blue-50/60';
+        const dotClass = n.is_read ? 'hidden' : '';
+        let iconColor = 'text-blue-500';
+        if (n.type === 'success') iconColor = 'text-emerald-500';
+        if (n.type === 'warning') iconColor = 'text-amber-500';
+
+        return `
+            <div class="flex items-start gap-3 px-4 py-3 rounded-xl ${unreadClass} hover:bg-gray-50 transition-all group cursor-default">
+                <div class="mt-0.5 w-2 h-2 rounded-full ${iconColor} bg-current shrink-0 ${dotClass}"></div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[11px] font-black text-gray-900 leading-snug">${n.title}</p>
+                    <p class="text-[10px] text-gray-500 mt-0.5 leading-relaxed line-clamp-2">${n.message}</p>
+                    <p class="text-[9px] text-gray-400 mt-1 font-bold uppercase">${time}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateNotifBadge() {
+    const badge = document.getElementById('notif-badge');
+    if (!badge) return;
+    const hasUnread = notifData.some(n => !n.is_read);
+    badge.classList.toggle('hidden', !hasUnread);
+}
+
+window.markAllNotifRead = async function () {
+    try {
+        await API.put('/api/notifications/read-all');
+        notifData.forEach(n => n.is_read = true);
+        renderNotifications();
+        updateNotifBadge();
+    } catch (err) {
+        Toast.error('Gagal menandai notifikasi.');
+    }
+};
+
+// Auto-refresh notifications every 60 seconds
+setInterval(() => {
+    loadNotifications();
+}, 60000);
 
 // ---- Render Table ----
 function renderTable() {
