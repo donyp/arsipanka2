@@ -35,12 +35,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (hasPermission('view_dashboard_stats')) {
         document.getElementById('admin-controls')?.classList.remove('hidden');
     }
-    // Load Maintenance Status for Pusat
+    // Admin controls only for super admin / moderator
     if (hasPermission('manage_system') || user.role === 'moderator' || user.role === 'super_admin') {
+        document.getElementById('maintenance-btn')?.classList.remove('hidden');
         loadMaintenanceStatus();
+    } else {
+        // Explicitly hide restricted elements for Admin Zona
+        document.getElementById('maintenance-btn')?.remove();
+        document.getElementById('btn-manage-broadcast')?.remove();
+        document.getElementById('stat-storage-box')?.remove();
+        document.getElementById('stat-today-box')?.remove();
     }
 
-    // Check for Post-Maintenance Update Notice
+    // Check for Post-Maintenance Update Notice (Run for ALL users)
     await checkUpdateNotice();
 
     setupEventListeners();
@@ -60,16 +67,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ---- Check for Post-Maintenance Update Notice ("What's New") ----
 async function checkUpdateNotice() {
     try {
+        console.log('[Update Notice] Checking for new updates...');
         const status = await API.get('/api/system/maintenance');
-        if (!status || !status.lastResult) return;
+
+        if (!status || !status.lastResult) {
+            console.log('[Update Notice] No updates found in system status.');
+            return;
+        }
 
         const lastReadId = localStorage.getItem('last_read_update_id');
-        if (lastReadId === status.lastResult.id) return;
+        console.log(`[Update Notice] System ID: ${status.lastResult.id}, Local ID: ${lastReadId}`);
+
+        if (lastReadId === status.lastResult.id) {
+            console.log('[Update Notice] Update already read.');
+            return;
+        }
 
         // Show Modal
+        console.log('[Update Notice] Displaying What\'s New modal!');
         showUpdateModal(status.lastResult);
     } catch (err) {
-        console.warn('[Update Notice] Skip:', err.message);
+        console.warn('[Update Notice] Error:', err.message);
     }
 }
 
