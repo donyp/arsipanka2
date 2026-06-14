@@ -700,12 +700,15 @@ async function submitDispute() {
 }
 
 // ---- Bug Report System ----
+let _bugFile = null;
+
 function openBugModal() {
     const modal = document.getElementById('bug-modal');
     if (!modal) return;
     document.getElementById('bug-tipe').value = '';
     document.getElementById('bug-deskripsi').value = '';
-    document.getElementById('bug-tautan').value = '';
+    removeBugFile(); // Reset file
+
     const mediumRadio = document.querySelector('input[name="bug-level"][value="Medium"]');
     if (mediumRadio) mediumRadio.checked = true;
     modal.classList.remove('hidden');
@@ -716,11 +719,40 @@ function closeBugModal() {
     if (modal) modal.classList.add('hidden');
 }
 
+function handleBugFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        Toast.warning('Ukuran file maksimal 5MB.');
+        e.target.value = '';
+        return;
+    }
+
+    _bugFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('bug-preview-img').src = e.target.result;
+        document.getElementById('bug-preview-container').classList.remove('hidden');
+        document.getElementById('bug-upload-placeholder').classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeBugFile(e) {
+    if (e) e.preventDefault();
+    _bugFile = null;
+    document.getElementById('bug-file').value = '';
+    document.getElementById('bug-preview-container').classList.add('hidden');
+    document.getElementById('bug-upload-placeholder').classList.remove('hidden');
+    document.getElementById('bug-preview-img').src = '';
+}
+
 async function submitBugReport() {
     const tipe = document.getElementById('bug-tipe').value;
     const deskripsi = document.getElementById('bug-deskripsi').value.trim();
-    const tautan_file = document.getElementById('bug-tautan').value.trim();
     const level = document.querySelector('input[name="bug-level"]:checked')?.value || 'Medium';
+    const btn = document.getElementById('btn-submit-bug');
 
     if (!tipe) {
         Toast.warning('Pilih tipe bug terlebih dahulu.');
@@ -731,12 +763,37 @@ async function submitBugReport() {
         return;
     }
 
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<div class="loader-mini"><div class="loader-ring"></div><div class="loader-ring"></div><div class="loader-ring"></div></div><span>Mengirim...</span>`;
+
     try {
-        await API.post('/api/bugs', { tipe, level, deskripsi, tautan_file: tautan_file || null });
-        Toast.success('Laporan bug berhasil dikirim! Tim kami akan segera menindaklanjuti.');
+        let tautan_file = null;
+
+        // 1. Upload File if exists
+        if (_bugFile) {
+            const formData = new FormData();
+            formData.append('file', _bugFile);
+            const uploadRes = await fetch(`${CONFIG.API_URL}/api/bugs/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${API.getToken()}` },
+                body: formData
+            });
+            const uploadData = await uploadRes.json();
+            if (!uploadRes.ok) throw new Error(uploadData.error || 'Gagal upload screenshot');
+            tautan_file = uploadData.url;
+        }
+
+        // 2. Submit Report
+        await API.post('/api/bugs', { tipe, level, deskripsi, tautan_file });
+
+        Toast.success('Laporan bug berhasil dikirim! Terimakasih atas masukannya.');
         closeBugModal();
     } catch (err) {
         Toast.error('Gagal mengirim laporan bug: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
     }
 }
 

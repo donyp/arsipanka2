@@ -2879,6 +2879,41 @@ app.delete('/api/bugs/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// POST /api/bugs/upload — Upload bug screenshot
+app.post('/api/bugs/upload', authenticateToken, uploadMediaMulter.single('file'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'Tidak ada file.' });
+
+        const fileName = `bug_${req.user.id || req.user.userId}_${Date.now()}${path.extname(req.file.originalname)}`;
+        const { storagePath } = await RcloneStorage.uploadMedia(req.file.buffer, fileName, 'bugs');
+
+        res.json({ success: true, url: `/api/bugs/view?path=${encodeURIComponent(storagePath)}` });
+    } catch (err) {
+        console.error('Bug Upload Error:', err);
+        res.status(500).json({ error: 'Gagal upload screenshot.' });
+    }
+});
+
+// GET /api/bugs/view — View bug screenshot (proxied stream)
+app.get('/api/bugs/view', authenticateToken, async (req, res) => {
+    try {
+        const storagePath = req.query.path;
+        if (!storagePath) return res.status(400).json({ error: 'Path required' });
+
+        const stream = await RcloneStorage.getStream(storagePath);
+
+        const ext = path.extname(storagePath).toLowerCase();
+        const mimeMap = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp' };
+        res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+
+        stream.pipe(res);
+    } catch (err) {
+        console.error('Bug View Error:', err);
+        res.status(404).send('Image not found');
+    }
+});
+
 // ============================================================
 // HEALTH CHECK
 // ============================================================

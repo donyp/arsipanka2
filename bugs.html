@@ -104,14 +104,15 @@
                                 <th class="py-5 font-bold w-[12%] text-left">Pelapor</th>
                                 <th class="py-5 font-bold w-[15%] text-left">Tipe Bug</th>
                                 <th class="py-5 font-bold w-[8%] text-left">Level</th>
-                                <th class="py-5 font-bold w-[30%] text-left">Deskripsi</th>
+                                <th class="py-5 font-bold w-[25%] text-left">Deskripsi</th>
+                                <th class="py-5 font-bold w-[10%] text-center">Bukti</th>
                                 <th class="py-5 font-bold w-[10%] text-left">Status</th>
                                 <th class="pr-8 py-5 font-bold w-[13%] text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="bugs-table-body" class="text-sm divide-y divide-gray-50">
                             <tr>
-                                <td colspan="7" class="text-center py-16">
+                                <td colspan="8" class="text-center py-16">
                                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Memuat
                                         data...</p>
                                 </td>
@@ -123,6 +124,37 @@
             </div>
         </div>
     </main>
+
+    <!-- Image Lightbox Modal -->
+    <div id="image-modal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeImageModal()"></div>
+        <div class="absolute inset-4 md:inset-10 flex flex-col items-center justify-center pointer-events-none">
+            <div class="relative max-w-5xl w-full h-full flex flex-col pointer-events-auto">
+                <button onclick="closeImageModal()"
+                    class="absolute -top-12 right-0 p-3 text-white/50 hover:text-white transition-colors">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <div class="bg-white rounded-3xl overflow-hidden shadow-2xl flex-1 flex flex-col relative group">
+                    <div id="image-modal-loader"
+                        class="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
+                        <div class="loader-ring"></div>
+                    </div>
+                    <img id="image-modal-img"
+                        class="w-full h-full object-contain bg-gray-900 opacity-0 transition-opacity duration-300"
+                        onload="document.getElementById('image-modal-loader').classList.add('hidden'); this.classList.remove('opacity-0')">
+                    <div
+                        class="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <a id="image-modal-download" href="#" target="_blank"
+                            class="px-6 py-3 bg-white/10 backdrop-blur-xl border border-white/20 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all shadow-xl">Unduh
+                            Gambar Asli</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="js/sidebar.js?v=ULTRACLEAN_2026"></script>
     <script src="js/config.js"></script>
@@ -163,7 +195,7 @@
                 document.getElementById('stat-selesai').textContent = allBugs.filter(b => b.status === 'Selesai').length;
 
                 if (filtered.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-16"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Belum ada laporan bug</p></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-16"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Belum ada laporan bug</p></td></tr>`;
                     return;
                 }
 
@@ -202,9 +234,18 @@
                         <td class="py-5 align-top">
                             <div class="text-xs text-gray-500 leading-relaxed font-medium max-w-sm">
                                 ${b.deskripsi.replace(/\n/g, '<br>')}
-                                ${b.tautan_file ? `<a href="${b.tautan_file}" target="_blank" class="block mt-2 text-blue-500 text-[10px] font-bold hover:underline">📎 Lihat Lampiran</a>` : ''}
                                 ${b.admin_notes ? `<div class="mt-2 p-3 bg-blue-50 rounded-xl border border-blue-100 text-[10px] text-blue-600 font-bold leading-relaxed"><b>Catatan Admin:</b> ${b.admin_notes}</div>` : ''}
                             </div>
+                        </td>
+                        <td class="py-5 align-top text-center">
+                            ${b.tautan_file ? `
+                                <div class="inline-block relative group/img cursor-pointer" onclick="openImageModal('${API.getAuthenticatedUrl(b.tautan_file)}')">
+                                    <img src="${API.getAuthenticatedUrl(b.tautan_file)}" class="w-12 h-12 object-cover rounded-xl border border-gray-100 group-hover/img:brightness-75 transition-all">
+                                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                    </div>
+                                </div>
+                            ` : `<span class="text-[10px] font-black text-gray-200 uppercase tracking-widest">No Bukti</span>`}
                         </td>
                         <td class="py-5 align-top">${statusBadge}</td>
                         <td class="pr-8 py-5 align-top text-right">
@@ -230,7 +271,7 @@
                 }).join('');
             } catch (err) {
                 console.error('Load Bugs Error:', err);
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-16"><p class="text-xs font-bold text-red-500">Gagal memuat laporan bug: ${err.message}</p></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-16"><p class="text-xs font-bold text-red-500">Gagal memuat laporan bug: ${err.message}</p></td></tr>`;
             }
         }
 
@@ -259,6 +300,26 @@
                 },
                 'Hapus'
             );
+        }
+
+        function openImageModal(url) {
+            const modal = document.getElementById('image-modal');
+            const img = document.getElementById('image-modal-img');
+            const dl = document.getElementById('image-modal-download');
+            const loader = document.getElementById('image-modal-loader');
+
+            loader.classList.remove('hidden');
+            img.classList.add('opacity-0');
+            img.src = url;
+            dl.href = url;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
         }
     </script>
 </body>
