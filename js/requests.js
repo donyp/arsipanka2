@@ -53,51 +53,77 @@ function renderTable() {
 
     tbody.innerHTML = requests.map((r, i) => {
         const d = new Date(r.created_at);
-        const dateStr = d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const dateStr = d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+        const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
         let statusBadge = '';
         if (r.status === 'Pending') {
-            statusBadge = '<span class="px-2 py-1 rounded-md text-[10px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-bold tracking-wide uppercase">PENDING</span>';
+            statusBadge = '<span class="px-2.5 py-1 rounded-lg text-[9px] bg-amber-50 text-amber-600 border border-amber-100 font-black tracking-[0.1em] uppercase">Pending</span>';
         } else if (r.status === 'Selesai') {
-            statusBadge = '<span class="px-2 py-1 rounded-md text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold tracking-wide uppercase">SELESAI</span>';
+            statusBadge = '<span class="px-2.5 py-1 rounded-lg text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-black tracking-[0.1em] uppercase">Selesai</span>';
         } else {
-            statusBadge = '<span class="px-2 py-1 rounded-md text-[10px] bg-red-500/10 text-red-500 border border-red-500/20 font-bold tracking-wide uppercase">DITOLAK</span>';
+            statusBadge = '<span class="px-2.5 py-1 rounded-lg text-[9px] bg-red-50 text-red-600 border border-red-100 font-black tracking-[0.1em] uppercase">Ditolak</span>';
         }
 
         const isAdmin = currentUser.role === 'super_admin' || currentUser.role === 'moderator';
 
+        // Extracted Nama File logic
+        let fileName = '-';
+        if (r.files && r.files.nama_file) {
+            fileName = `<p class="text-xs font-bold text-gray-900 break-all">${r.files.nama_file}</p>`;
+        } else if (r.pesan && r.pesan.startsWith('REVISI:')) {
+            // Fallback: try to parse from message string if file_id link failed
+            const match = r.pesan.match(/"([^"]+)"/);
+            if (match) fileName = `<p class="text-xs font-bold text-gray-900 break-all">${match[1]}</p>`;
+        }
+
+        // Message cleaning (if revision, show only the details or formatted)
+        let displayMessage = r.pesan;
+        if (r.pesan && r.pesan.startsWith('REVISI:')) {
+            const parts = r.pesan.split('\n');
+            if (parts.length > 1) {
+                displayMessage = parts.slice(1).join('<br>').replace('Alasan:', '<b>Alasan:</b>').replace('Catatan:', '<b>Catatan:</b>');
+            }
+        }
+
         return `
-        <tr class="animate-fade-in border-b border-white/5 hover:bg-white/5 transition-colors" style="animation-delay: ${i * 30}ms">
-            <td class="p-4 align-top">
-                <p class="text-sm font-medium text-gray-300">${dateStr}</p>
-                ${r.resolved_at ? `<p class="text-[11px] text-gray-500 mt-1">Diselesaikan: ${new Date(r.resolved_at).toLocaleDateString('id-ID')}</p>` : ''}
+        <tr class="animate-fade-in border-b border-gray-50 hover:bg-gray-50/50 transition-colors" style="animation-delay: ${i * 30}ms">
+            <td class="pl-8 py-5 align-top">
+                <p class="text-xs font-black text-gray-900">${dateStr}</p>
+                <p class="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">${timeStr} WIB</p>
             </td>
-            <td class="p-4 align-top">
-                <p class="font-medium text-white text-sm">${r.users?.name || 'Unknown'}</p>
-                <p class="text-xs text-indigo-400 mt-0.5">${r.zonas?.nama || '-'}</p>
+            <td class="py-5 align-top">
+                <p class="font-black text-gray-900 text-xs">${r.users?.name || 'Unknown'}</p>
+                <p class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-0.5">${r.zonas?.nama || '-'}</p>
             </td>
-            <td class="p-4 align-top">
-                <p class="text-sm text-gray-300 leading-relaxed">${escapeHtml(r.pesan)}</p>
+            <td class="py-5 align-top">
+                ${fileName}
             </td>
-            <td class="p-4 align-top">
+            <td class="py-5 align-top">
+                <div class="text-xs text-gray-500 leading-relaxed font-medium">
+                    ${displayMessage.replace(/\n/g, '<br>')}
+                    ${r.notes ? `<div class="mt-2 p-3 bg-red-50 rounded-xl border border-red-100 text-[10px] text-red-600 font-bold leading-relaxed"><b>Alasan Penolakan:</b> ${r.notes}</div>` : ''}
+                </div>
+            </td>
+            <td class="py-5 align-top">
                 ${statusBadge}
             </td>
-            <td class="p-4 align-top text-right">
+            <td class="pr-8 py-5 align-top text-right">
                 ${isAdmin ? `
                     <div class="flex items-center justify-end gap-2">
                         ${r.status === 'Pending' ? `
-                            <button onclick="updateRequestStatus(${r.id}, 'Selesai')" class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all transform hover:scale-105" title="Tandai Selesai">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <button onclick="updateRequestStatus(${r.id}, 'Selesai')" class="p-2.5 rounded-xl bg-white border border-gray-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95" title="Tandai Selesai">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             </button>
-                            <button onclick="openRejectModal(${r.id})" class="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all transform hover:scale-105" title="Tolak">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <button onclick="openRejectModal(${r.id})" class="p-2.5 rounded-xl bg-white border border-gray-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95" title="Tolak">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         ` : ''}
-                        <button onclick="deleteRequest(${r.id})" class="p-2 rounded-lg bg-gray-500/10 text-gray-500 hover:bg-red-600 hover:text-white transition-all transform hover:scale-105" title="Hapus Tiket Permanen">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <button onclick="deleteRequest(${r.id})" class="p-2.5 rounded-xl bg-white border border-gray-100 text-gray-400 hover:bg-red-900 hover:text-white transition-all shadow-sm active:scale-95" title="Hapus Permanen">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                     </div>
-                ` : '<span class="text-gray-600 text-sm">-</span>'}
+                ` : '<span class="text-gray-300 font-black text-[10px]">---</span>'}
             </td>
         </tr>`;
     }).join('');

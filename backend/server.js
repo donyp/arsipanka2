@@ -1877,6 +1877,7 @@ app.post('/api/files/:id/dispute', authenticateToken, async (req, res) => {
         await supabase.from('upload_requests').insert({
             user_id: req.user.userId || req.user.id,
             zona_id: req.user.zona_id,
+            file_id: req.params.id, // Link to the file
             pesan: pesanRequest,
             status: 'Pending'
         });
@@ -2702,7 +2703,7 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
 app.get('/api/requests', authenticateToken, async (req, res) => {
     try {
         let query = supabase.from('upload_requests')
-            .select(`*, users!upload_requests_user_id_fkey(name, email), zonas!upload_requests_zona_id_fkey(nama)`)
+            .select(`*, users!upload_requests_user_id_fkey(name, email), zonas!upload_requests_zona_id_fkey(nama), files(nama_file)`)
             .order('created_at', { ascending: false });
 
         if (req.user.role === 'admin_zona') {
