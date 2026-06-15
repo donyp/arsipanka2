@@ -1563,8 +1563,6 @@ app.post('/api/broadcasts', authenticateToken, authorizeRole('super_admin', 'mod
 
         if (error) throw error;
 
-        // Notification: New broadcast
-        createNotification({ role: target_zona_id ? 'admin_zona' : null, zona_id: target_zona_id || null, title: '📢 Pengumuman Baru', message: content.length > 50 ? content.substring(0, 47) + '...' : content, type: 'warning' });
 
         res.json({ success: true, message: 'Pengumuman berhasil disiarkan.' });
     } catch (err) {
@@ -1677,7 +1675,7 @@ app.all('/api/system/maintenance', authenticateToken, authorizeRole('super_admin
 
         // Notification: Maintenance status change
         if (!isMaintenance && result) {
-            createNotification({ title: '✅ Perbaikan Selesai', message: 'Sistem kembali online: ' + (result.title || 'Selesai'), type: 'success' });
+            createNotification({ title: '✅ Perbaikan Selesai', message: 'Sistem kembali online: ' + (result.title || 'Selesai') + (result.details ? ' — ' + result.details : ''), type: 'success' });
         }
 
         res.json({ success: true, status });
@@ -2873,7 +2871,7 @@ app.put('/api/bugs/:id', authenticateToken, async (req, res) => {
             if (bugData && bugData.user_id) {
                 createNotification({ user_id: bugData.user_id, title: '🔄 Status Bug Diperbarui', message: 'Laporan bug Anda kini berstatus "' + status + '".', type: 'info' });
             }
-        } catch (ne) {}
+        } catch (ne) { }
 
         res.json({ success: true, message: 'Laporan bug berhasil diupdate.' });
     } catch (err) {
@@ -2984,7 +2982,16 @@ app.get('/api/notifications', authenticateToken, async (req, res) => {
 // PUT /api/notifications/read-all
 app.put('/api/notifications/read-all', authenticateToken, async (req, res) => {
     try {
+        // Mark personal notifications
         await supabase.from('notifications').update({ is_read: true }).eq('user_id', req.user.userId).eq('is_read', false);
+        // Mark global notifications (null user, null role)
+        await supabase.from('notifications').update({ is_read: true }).is('user_id', null).is('target_role', null).eq('is_read', false);
+        // Mark role-based notifications for this user's role
+        let roleQuery = supabase.from('notifications').update({ is_read: true }).eq('target_role', req.user.role).eq('is_read', false);
+        if (req.user.role === 'admin_zona' && req.user.zona_id) {
+            roleQuery = roleQuery.eq('target_zona_id', req.user.zona_id);
+        }
+        await roleQuery;
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Gagal update status.' });

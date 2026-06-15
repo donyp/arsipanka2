@@ -214,6 +214,13 @@ function populateFilters() {
         });
     }
 
+    // FIX 1: Lock zona filter for admin_zona — only show their own zona
+    if (zonaSelect && currentUser && currentUser.role === 'admin_zona' && currentUser.zona_id) {
+        zonaSelect.value = currentUser.zona_id;
+        zonaSelect.disabled = true;
+        zonaSelect.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
     // Inverted Permit: Inject restricted options ONLY for Super Admins
     const catSelect = document.getElementById('filter-category');
 
@@ -1403,13 +1410,13 @@ function setupEventListeners() {
         }
     });
 
-    // Search (debounced)
-    const searchHandler = debounce(() => applyFilters(), 300);
+    // Search (trigger on Enter key only)
     const searchInput = document.getElementById('search-input');
     const searchMobile = document.getElementById('search-input-mobile');
+    const searchOnEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); applyFilters(); } };
 
-    if (searchInput) searchInput.addEventListener('input', searchHandler);
-    if (searchMobile) searchMobile.addEventListener('input', searchHandler);
+    if (searchInput) searchInput.addEventListener('keydown', searchOnEnter);
+    if (searchMobile) searchMobile.addEventListener('keydown', searchOnEnter);
 
     // Close preview on Escape
     document.addEventListener('keydown', (e) => {
