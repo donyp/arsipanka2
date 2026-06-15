@@ -159,5 +159,15 @@ const API = {
         const token = this.getToken();
         const separator = path.includes('?') ? '&' : '?';
         return `${CONFIG.API_URL}${path}${separator}token=${token}`;
+    },
+
+    /**
+     * Specialized method for file uploads (FormData)
+     */
+    async upload(endpoint, formData) {
+        return this.request(endpoint, {
+            method: 'POST',
+            body: formData
+        });
     }
 };

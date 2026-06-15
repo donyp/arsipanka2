@@ -64,6 +64,8 @@ function handleFileSelect(input) {
 }
 
 function addFiles(files) {
+    const category = document.getElementById('upload-category')?.value || 'INVOICE';
+
     const newFiles = Array.from(files).filter(f => {
         const ext = f.name.split('.').pop().toLowerCase();
         if (ext !== 'pdf' && ext !== 'jpg' && ext !== 'jpeg' && ext !== 'png') {
@@ -77,16 +79,77 @@ function addFiles(files) {
         }
         return true;
     }).map(f => {
+        const scan = scanFilename(f.name);
         return {
             file: f,
-            toko: null,
-            date: new Date().toISOString().split('T')[0],
-            tipe_ppn: 'REGULAR'
+            toko: scan.toko || null,
+            date: scan.date || new Date().toISOString().split('T')[0],
+            tipe_ppn: scan.tipe || 'REGULAR',
+            nominal: scan.nominal || 0,
+            isAutoDetected: !!scan.toko
         };
     });
 
     selectedFiles = [...selectedFiles, ...newFiles];
     updateFileUI();
+}
+
+/**
+ * Robust filename parser for format: [Type] [Toko] [Nominal] [Date]
+ * Example: "PPN Cipondoh 2.983.000 12 Mei"
+ */
+function scanFilename(name) {
+    const result = {
+        tipe: 'REGULAR',
+        toko: null,
+        nominal: 0,
+        date: null
+    };
+
+    if (!name) return result;
+    const cleanName = name.replace(/\.[^/.]+$/, ""); // Remove extension
+    const parts = cleanName.split(/\s+/);
+
+    // 1. Detect Type (PPN/NON)
+    if (/^PPN/i.test(parts[0])) result.tipe = 'PPN';
+    else if (/^NON/i.test(parts[0])) result.tipe = 'NON_PPN';
+
+    // 2. Detect Toko (Match against window._allTokos)
+    if (window._allTokos) {
+        const matchedToko = window._allTokos.find(t =>
+            cleanName.toLowerCase().includes(t.nama.toLowerCase())
+        );
+        if (matchedToko) result.toko = matchedToko;
+    }
+
+    // 3. Detect Nominal (Look for pattern X.XXX.XXX)
+    const nominalMatch = cleanName.match(/(\d{1,3}(\.\d{3})+)/);
+    if (nominalMatch) {
+        result.nominal = parseInt(nominalMatch[0].replace(/\./g, ''));
+    }
+
+    // 4. Detect Date (e.g., "12 Mei")
+    const months = {
+        'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'mei': 4, 'may': 4,
+        'jun': 5, 'jul': 6, 'agu': 7, 'aug': 7, 'sep': 8, 'okt': 9, 'oct': 9,
+        'nov': 10, 'des': 11, 'dec': 11
+    };
+
+    const dateMatch = cleanName.match(/(\d{1,2})\s+([a-zA-Z]{3,})/);
+    if (dateMatch) {
+        const day = parseInt(dateMatch[1]);
+        const monthStr = dateMatch[2].toLowerCase().substring(0, 3);
+        if (months[monthStr] !== undefined) {
+            const d = new Date();
+            d.setDate(day);
+            d.setMonth(months[monthStr]);
+            // If the date is in the future relative to now, it's likely from last year
+            // But usually, it's the current year.
+            result.date = d.toISOString().split('T')[0];
+        }
+    }
+
+    return result;
 }
 
 function removeFile(index, e) {
@@ -135,20 +198,32 @@ function updateFileUI() {
                     </svg>
                 </div>
                 <div class="flex flex-col truncate flex-1 min-w-0">
-                    <p class="text-[13px] font-bold text-gray-900 truncate mb-2 group-hover/item:text-blue-600 transition-colors">${item.file.name}</p>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <select onchange="setFileToko(${i}, this.value)" class="bg-white border border-gray-200 text-gray-700 text-[10px] font-bold rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100 hover:bg-gray-50 transition-all cursor-pointer">
-                            <option value="">-- Pilih Toko --</option>
-                            ${tokoOptions}
-                        </select>
-                        <div class="flex items-center gap-1.5 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
-                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">${formatFileSize(item.file.size)}</span>
+                    <p class="text-[13px] font-bold text-gray-900 truncate mb-2 group-hover/item:text-blue-600 transition-colors uppercase">${item.file.name}</p>
+                    <div class="flex flex-wrap items-center gap-2">
+                        ${item.isAutoDetected ? `
+                            <div class="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg border border-emerald-100 shadow-sm animate-fade-in">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                <span class="text-[10px] font-black uppercase tracking-widest">${item.toko.nama}</span>
+                            </div>
+                        ` : `
+                            <select onchange="setFileToko(${i}, this.value)" class="bg-white border border-gray-200 text-gray-700 text-[10px] font-bold rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100 hover:bg-gray-50 transition-all cursor-pointer shadow-sm">
+                                <option value="">-- Pilih Toko --</option>
+                                ${tokoOptions}
+                            </select>
+                        `}
+                        
+                        <div class="flex items-center gap-1.5 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm font-bold text-blue-600">
+                             <span class="text-[10px] tracking-widest">${item.nominal > 0 ? formatCurrency(item.nominal) : 'RP 0'}</span>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">
+                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-none">${formatFileSize(item.file.size)}</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="flex items-center justify-end w-full sm:w-auto mt-4 sm:mt-0 sm:ml-4">
-                <button type="button" onclick="removeFile(${i}, event)" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                <button type="button" onclick="removeFile(${i}, event)" class="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -161,10 +236,13 @@ function updateFileUI() {
 function setFileToko(index, tokoId) {
     if (!tokoId) {
         selectedFiles[index].toko = null;
+        selectedFiles[index].isAutoDetected = false;
     } else {
         const toko = window._allTokos.find(t => t.id === tokoId);
         selectedFiles[index].toko = toko;
+        selectedFiles[index].isAutoDetected = false;
     }
+    updateFileUI();
 }
 
 function formatFileSize(bytes) {
@@ -222,6 +300,10 @@ function setupForm() {
                 formData.append('category', category);
                 formData.append('tanggal_dokumen', dateVal);
                 formData.append('tanggal_upload', new Date().toISOString().split('T')[0]);
+
+                // NEW: Send scanned metadata
+                formData.append('total_jual', item.nominal || 0);
+                formData.append('tipe_ppn', item.tipe_ppn || 'REGULAR');
 
                 await API.upload('/api/files/upload', formData);
                 uploaded++;
