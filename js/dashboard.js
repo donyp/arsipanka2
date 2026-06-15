@@ -515,6 +515,47 @@ function renderNotifications() {
         if (n.type === 'success') iconColor = 'text-emerald-500';
         if (n.type === 'warning') iconColor = 'text-amber-500';
 
+        // --- SPECIAL UI: Maintenance Completion ---
+        if (n.title.includes('Perbaikan Selesai')) {
+            const parts = n.message.split(' — ');
+            const header = parts[0].replace('Sistem kembali online: ', '');
+            const details = parts[1] || '';
+
+            return `
+                <div class="relative group px-4 py-3 rounded-xl ${unreadClass} hover:bg-gray-100/50 transition-all cursor-default border border-transparent hover:border-emerald-100">
+                    <div class="flex items-start gap-3">
+                        <div class="mt-1 w-2 h-2 rounded-full bg-emerald-500 shrink-0 ${dotClass}"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[11px] font-black text-gray-900 leading-none">✅ Perbaikan Selesai</span>
+                            </div>
+                            <p class="text-[10px] font-bold text-emerald-600 mt-1 line-clamp-1">${header}</p>
+                            <p class="text-[9px] text-gray-400 mt-1 font-bold uppercase">${time}</p>
+                        </div>
+                    </div>
+                    
+                    ${details ? `
+                    <!-- Hover Detail Card (Glassmorphism) -->
+                    <div class="absolute left-full ml-2 top-0 w-64 bg-white/90 backdrop-blur-md border border-emerald-100 shadow-xl rounded-2xl p-4 opacity-0 scale-95 translate-x-[-10px] group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0 pointer-events-none transition-all duration-300 z-50">
+                        <div class="flex items-center gap-2 mb-2 pb-2 border-b border-emerald-50">
+                            <div class="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center">
+                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-[11px] font-black text-gray-800 uppercase tracking-tight">Detail Perbaikan</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-gray-700 leading-relaxed mb-2">${header}</p>
+                        <div class="bg-emerald-50/50 rounded-xl p-2.5">
+                            <p class="text-[10px] text-gray-600 leading-relaxed whitespace-pre-wrap">${details}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // --- Standard UI ---
         return `
             <div class="flex items-start gap-3 px-4 py-3 rounded-xl ${unreadClass} hover:bg-gray-50 transition-all group cursor-default">
                 <div class="mt-0.5 w-2 h-2 rounded-full ${iconColor} bg-current shrink-0 ${dotClass}"></div>
