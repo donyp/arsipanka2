@@ -137,8 +137,8 @@ function scanFilename(name) {
         'may': 4, 'aug': 7, 'oct': 9, 'dec': 11
     };
 
-    // Try finding date pattern at the end: "12 Mei"
-    const dateMatch = cleanName.match(/(\d{1,2})\s+([a-zA-Z]{3,})$/i);
+    // Try finding date pattern: "12 Mei" (Now without strict $ anchor, using word boundaries)
+    const dateMatch = cleanName.match(/\b(\d{1,2})\s+([a-zA-Z]{3,})\b/i);
     if (dateMatch) {
         const day = parseInt(dateMatch[1]);
         const monthName = dateMatch[2].toLowerCase();
@@ -154,7 +154,6 @@ function scanFilename(name) {
 
         if (monthIdx !== -1) {
             const now = new Date();
-            // Use constructor to avoid rollover bugs (e.g. if today is 31 and we set month to Feb)
             const d = new Date(now.getFullYear(), monthIdx, day);
             result.date = d.toISOString().split('T')[0];
         }
@@ -183,6 +182,17 @@ function clearFile(e) {
     if (e) e.preventDefault();
     selectedFiles = [];
     updateFileUI();
+}
+
+function setFileToko(index, tokoId) {
+    const toko = window._allTokos.find(t => t.id == tokoId);
+    if (toko) {
+        selectedFiles[index].toko = toko;
+    }
+}
+
+function setFileDate(index, dateValue) {
+    selectedFiles[index].date = dateValue;
 }
 
 function updateFileUI() {
@@ -237,6 +247,10 @@ function updateFileUI() {
                              <span class="text-[10px] tracking-widest">${item.nominal > 0 ? formatCurrency(item.nominal) : 'RP 0'}</span>
                         </div>
 
+                        <div class="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-sm">
+                            <input type="date" value="${item.date}" onchange="setFileDate(${i}, this.value)" class="bg-transparent border-0 text-[10px] font-bold text-gray-700 p-0 outline-none w-28 cursor-pointer">
+                        </div>
+
                         <div class="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">
                             <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-none">${formatFileSize(item.file.size)}</span>
                         </div>
@@ -250,7 +264,8 @@ function updateFileUI() {
                     </svg>
                 </button>
             </div>
-        </li>`;
+        </li>
+        `;
     }).join('');
 }
 
@@ -319,7 +334,7 @@ function setupForm() {
                 formData.append('zona_id', item.toko.zona_id);
                 formData.append('toko_id', item.toko.id);
                 formData.append('category', category);
-                formData.append('tanggal_dokumen', dateVal);
+                formData.append('tanggal_dokumen', item.date || new Date().toISOString().split('T')[0]);
                 formData.append('tanggal_upload', new Date().toISOString().split('T')[0]);
 
                 // NEW: Send scanned metadata
