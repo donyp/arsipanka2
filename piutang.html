@@ -318,11 +318,30 @@
                     }
                 }
 
-                return { file: f, nominal, date, isDateDetected };
+                return { file: f, nominal, date, isDateDetected, isDuplicate: false };
             });
 
+            const startIndex = selectedPiutangFiles.length;
             selectedPiutangFiles = [...selectedPiutangFiles, ...newFiles];
             updatePiutangFileUI();
+
+            // Trigger background duplicate check
+            newFiles.forEach((item, index) => {
+                const actualIndex = startIndex + index;
+                checkPiutangBackgroundDuplicate(actualIndex, item.file.name, getEffectiveZonaId());
+            });
+        }
+
+        async function checkPiutangBackgroundDuplicate(index, name, zonaId) {
+            try {
+                const res = await API.get(`/api/files/check-duplicate?name=${encodeURIComponent(name)}&zona_id=${zonaId}`);
+                if (res && res.exists) {
+                    selectedPiutangFiles[index].isDuplicate = true;
+                    updatePiutangFileUI();
+                }
+            } catch (err) {
+                console.error('Duplicate check error:', err);
+            }
         }
 
         function removePiutangFile(index, e) {
@@ -391,6 +410,14 @@
                                     <span class="tracking-widest">${item.nominal > 0 ? formatCurrency(item.nominal) : 'RP 0'}</span>
                                 </div>
 
+                                <!-- Duplicate Warning Badge -->
+                                ${item.isDuplicate ? `
+                                    <div class="flex items-center gap-1.5 bg-red-50 text-red-600 px-2 py-0.5 rounded-lg border border-red-100 shadow-sm animate-fade-in">
+                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
+                                        <span class="text-[10px] font-black uppercase tracking-widest">File Sudah Ada</span>
+                                    </div>
+                                ` : ''}
+
                                 <!-- Date Badge (Amber Locked Style) -->
                                 ${item.isDateDetected ? `
                                     <div onclick="unlockPiutangDate(${i})" class="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-lg border border-amber-100 shadow-sm animate-fade-in cursor-pointer hover:bg-amber-100 transition-colors">
@@ -432,6 +459,12 @@
 
                 if (selectedPiutangFiles.length === 0) {
                     Toast.warning('Pilih file terlebih dahulu.');
+                    return;
+                }
+
+                const dupCount = selectedPiutangFiles.filter(f => f.isDuplicate).length;
+                if (dupCount > 0) {
+                    Toast.error(`${dupCount} file sudah ada di sistem. Hapus duplikat sebelum upload.`);
                     return;
                 }
 

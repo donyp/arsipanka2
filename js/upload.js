@@ -80,7 +80,7 @@ function addFiles(files) {
             Toast.warning(`File "${f.name}" format tidak didukung.`);
             return false;
         }
-        // Check duplicate
+        // Check duplicate in current queue
         if (selectedFiles.some(sf => sf.file.name === f.name)) {
             Toast.warning(`File "${f.name}" sudah ada dalam antrian.`);
             return false;
@@ -95,12 +95,37 @@ function addFiles(files) {
             isDateDetected: scan.isDateDetected,
             tipe_ppn: scan.tipe || 'REGULAR',
             nominal: scan.nominal || 0,
-            isAutoDetected: !!scan.toko
+            isAutoDetected: !!scan.toko,
+            isDuplicate: false // Default to false, check in background
         };
     });
 
+    const startIndex = selectedFiles.length;
     selectedFiles = [...selectedFiles, ...newFiles];
     updateFileUI();
+
+    // Trigger background duplicate check for new files
+    newFiles.forEach((item, index) => {
+        const actualIndex = startIndex + index;
+        if (item.toko) {
+            checkBackgroundDuplicate(actualIndex, item.file.name, item.toko.zona_id);
+        }
+    });
+}
+
+/**
+ * Silent background check for existing files
+ */
+async function checkBackgroundDuplicate(index, name, zonaId) {
+    try {
+        const res = await API.get(`/api/files/check-duplicate?name=${encodeURIComponent(name)}&zona_id=${zonaId}`);
+        if (res && res.exists) {
+            selectedFiles[index].isDuplicate = true;
+            updateFileUI(); // Silent update without animations
+        }
+    } catch (err) {
+        console.error('Duplicate check error:', err);
+    }
 }
 
 /**
@@ -203,6 +228,8 @@ function setFileToko(index, tokoId) {
         if (toko) {
             selectedFiles[index].toko = toko;
             selectedFiles[index].isAutoDetected = false;
+            // Re-check duplicate on toko change
+            checkBackgroundDuplicate(index, selectedFiles[index].file.name, toko.zona_id);
         }
     }
     updateFileUI();
@@ -275,6 +302,14 @@ function updateFileUI() {
                                 ${tokoOptions}
                             </select>
                         `}
+
+                        <!-- Duplicate Warning Badge -->
+                        ${item.isDuplicate ? `
+                            <div class="flex items-center gap-1.5 bg-red-50 text-red-600 px-2.5 py-1 rounded-lg border border-red-100 shadow-sm animate-fade-in">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
+                                <span class="text-[10px] font-black uppercase tracking-widest">File Sudah Ada</span>
+                            </div>
+                        ` : ''}
                         
                         <!-- Nominal Badge -->
                         <div class="flex items-center gap-1.5 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm font-bold text-blue-600">
@@ -336,6 +371,12 @@ function setupForm() {
         const undetectedToko = selectedFiles.filter(f => !f.toko).length;
         if (undetectedToko > 0) {
             Toast.error(`Pilih toko untuk semua ${undetectedToko} file.`);
+            return;
+        }
+
+        const duplicateCount = selectedFiles.filter(f => f.isDuplicate).length;
+        if (duplicateCount > 0) {
+            Toast.error(`${duplicateCount} file sudah ada di sistem. Hapus duplikat dari antrian sebelum upload.`);
             return;
         }
 

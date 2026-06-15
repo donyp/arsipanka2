@@ -848,6 +848,28 @@ app.get('/api/share/:token', async (req, res) => {
     }
 });
 
+// GET /api/files/check-duplicate — Background check for filename existence
+app.get('/api/files/check-duplicate', authenticateToken, async (req, res) => {
+    try {
+        const { name, zona_id } = req.query;
+        if (!name || !zona_id) return res.status(400).json({ error: 'Data tidak lengkap.' });
+
+        const { data, error } = await supabase
+            .from('files')
+            .select('id')
+            .eq('nama_file', name)
+            .eq('zona_id', parseInt(zona_id))
+            .is('deleted_at', null)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) throw error;
+        res.json({ exists: !!data });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- Helper for Filename Scanning (Direct Scan Logic) ---
 function extractMetadataFromFilename(filename) {
     const name = filename.replace(/\.pdf$/i, '').toUpperCase();
