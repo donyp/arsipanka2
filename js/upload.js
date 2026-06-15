@@ -161,12 +161,12 @@ function scanFilename(name) {
         // Remove suffix like (1), (2) etc AND normalize multiple spaces
         const nameToMatch = cleanName.replace(/\(\d+\)$/, "").replace(/\s+/g, ' ').trim().toLowerCase();
 
-        // Sort tokos by name length descending to catch multi-word matches first (e.g., "CIPONDOH BARU" before "CIPONDOH")
+        // Sort tokos by name length descending
         const sortedTokos = [...window._allTokos].sort((a, b) => b.nama.length - a.nama.length);
 
         for (const t of sortedTokos) {
-            const tokoName = t.nama.toLowerCase().trim();
-            // Match exact word or part of name
+            // Clean store name for better matching (e.g. "BANTAR GEBANG" -> "bantar gebang")
+            const tokoName = t.nama.replace(/\s+/g, ' ').trim().toLowerCase();
             if (nameToMatch.includes(tokoName)) {
                 result.toko = t;
                 break;
@@ -231,7 +231,10 @@ function removeFile(index, e) {
 }
 
 function clearFile(e) {
-    if (e) e.preventDefault();
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
     selectedFiles = [];
     updateFileUI();
 }
@@ -314,7 +317,7 @@ function updateFileUI() {
                                 <span class="text-[10px] font-black uppercase tracking-widest">${item.toko ? item.toko.nama : 'Unknown'}</span>
                             </div>
                         ` : `
-                            <select onchange="setFileToko(${i}, this.value)" class="bg-white border border-gray-200 text-gray-700 text-[10px] font-bold rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100 hover:bg-gray-50 transition-all cursor-pointer shadow-sm">
+                            <select onchange="setFileToko(${i}, this.value)" onclick="event.stopPropagation()" class="bg-white border border-gray-200 text-gray-700 text-[10px] font-bold rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100 hover:bg-gray-50 transition-all cursor-pointer shadow-sm">
                                 <option value="">-- Pilih Toko --</option>
                                 ${tokoOptions}
                             </select>

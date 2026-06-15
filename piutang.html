@@ -354,7 +354,10 @@
         }
 
         function clearFiles(e) {
-            e.preventDefault();
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             selectedPiutangFiles = [];
             updatePiutangFileUI();
         }
@@ -431,7 +434,7 @@
                                     </div>
                                 ` : `
                                     <div class="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-sm">
-                                        <input type="date" value="${item.date}" onchange="setPiutangFileDate(${i}, this.value)" class="bg-transparent border-0 text-[10px] font-bold text-gray-700 p-0 outline-none w-28 cursor-pointer">
+                                        <input type="date" value="${item.date}" onchange="setPiutangFileDate(${i}, this.value)" onclick="event.stopPropagation()" class="bg-transparent border-0 text-[10px] font-bold text-gray-700 p-0 outline-none w-28 cursor-pointer">
                                     </div>
                                 `}
                             </div>
