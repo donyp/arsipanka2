@@ -1110,26 +1110,33 @@ app.post('/api/files/upload', authenticateToken, requireUploadPermission, upload
 // DELETE /api/files/:id
 app.delete('/api/files/:id', authenticateToken, async (req, res) => {
     try {
+        const id = req.params.id;
         const isHardDelete = req.query.hard === 'true';
-        if (req.user.role !== 'super_admin') {
+
+        // Role-based bypass (consistent with requirePermission middleware)
+        const canBypass = req.user.role === 'super_admin' || req.user.role === 'moderator';
+
+        if (!canBypass) {
             const perms = req.user.permissions || [];
-            if (isHardDelete && !perms.includes('hard_delete')) return res.status(403).json({ error: 'Akses ditolak. Butuh izin Hapus Permanen.' });
-            if (!isHardDelete && !perms.includes('soft_delete')) return res.status(403).json({ error: 'Akses ditolak. Butuh izin Buang Ke Sampah.' });
+            if (isHardDelete && !perms.includes('hard_delete')) {
+                return res.status(403).json({ error: 'Akses ditolak. Butuh izin Hapus Permanen.' });
+            }
+            if (!isHardDelete && !perms.includes('soft_delete')) {
+                return res.status(403).json({ error: 'Akses ditolak. Butuh izin Buang Ke Sampah.' });
+            }
         }
 
-        const { data: file, error } = await supabase
+        const { data: file, error: fetchError } = await supabase
             .from('files')
             .select('*')
-            .eq('id', req.params.id)
-            .single();
+            .eq('id', id)
+            .maybeSingle();
 
-        if (error || !file) {
-            return res.status(404).json({ error: 'File tidak ditemukan.' });
-        }
+        if (fetchError || !file) return res.status(404).json({ error: 'File tidak ditemukan.' });
 
-        // --- SECURITY PATCH: Admin Zona Isolation ---
+        // Admin Zona restriction
         if (req.user.role === 'admin_zona' && file.zona_id !== req.user.zona_id) {
-            return res.status(403).json({ error: 'Keamanan: Akses ditolak untuk memodifikasi file di luar zona Anda.' });
+            return res.status(403).json({ error: 'Akses dilarang. File ini milik zona lain.' });
         }
 
         // Soft delete (set deleted_at)
