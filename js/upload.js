@@ -158,16 +158,17 @@ function scanFilename(name) {
 
     // 2. Detect Toko (Match against window._allTokos)
     if (window._allTokos && window._allTokos.length > 0) {
-        // Remove suffix like (1), (2) etc AND normalize multiple spaces
-        const nameToMatch = cleanName.replace(/\(\d+\)$/, "").replace(/\s+/g, ' ').trim().toLowerCase();
+        // ULTRA-NORMALIZATION: Remove ALL non-alphanumeric characters for matching
+        const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-        // Sort tokos by name length descending
+        const cleanToMatch = normalize(cleanName);
+
+        // Sort tokos by length descending to catch specific multi-word matches first
         const sortedTokos = [...window._allTokos].sort((a, b) => b.nama.length - a.nama.length);
 
         for (const t of sortedTokos) {
-            // Clean store name for better matching (e.g. "BANTAR GEBANG" -> "bantar gebang")
-            const tokoName = t.nama.replace(/\s+/g, ' ').trim().toLowerCase();
-            if (nameToMatch.includes(tokoName)) {
+            const cleanTokoName = normalize(t.nama);
+            if (cleanTokoName && cleanToMatch.includes(cleanTokoName)) {
                 result.toko = t;
                 break;
             }
