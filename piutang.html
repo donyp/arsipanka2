@@ -273,14 +273,19 @@
                     return false;
                 }
                 return true;
-            }).map(f => ({ file: f, toko_id: '' }));
+            }).map(f => {
+                // Scanning nominal only for Piutang as requested
+                let nominal = 0;
+                const cleanName = f.name.replace(/\.[^/.]+$/, "");
+                const nominalMatch = cleanName.match(/(\d{1,3}(\.\d{3})+)/);
+                if (nominalMatch) {
+                    nominal = parseInt(nominalMatch[0].replace(/\./g, ''));
+                }
+                return { file: f, nominal };
+            });
 
             selectedPiutangFiles = [...selectedPiutangFiles, ...newFiles];
             updatePiutangFileUI();
-        }
-
-        function setPiutangToko(index, tokoId) {
-            selectedPiutangFiles[index].toko_id = tokoId;
         }
 
         function removePiutangFile(index, e) {
@@ -312,8 +317,6 @@
             dropZoneContent.classList.add('hidden');
             if (submitBtn) submitBtn.disabled = false;
 
-            const tokoOptions = window._allTokos.map(t => `<option value="${t.id}">${t.nama}</option>`).join('');
-
             listDisplay.innerHTML = selectedPiutangFiles.map((item, i) => `
                 <li class="flex items-center justify-between px-5 py-4 rounded-[1.25rem] bg-gray-50 border border-gray-100 group transition-all hover:bg-white hover:border-emerald-200">
                     <div class="flex items-center gap-4 overflow-hidden flex-1">
@@ -323,14 +326,13 @@
                             </svg>
                         </div>
                         <div class="truncate flex-1">
-                            <p class="text-[13px] font-bold text-gray-900 truncate mb-1.5">${item.file.name}</p>
-                            <div class="flex items-center gap-2">
+                            <p class="text-[13px] font-bold text-gray-900 truncate mb-1.5 uppercase">${item.file.name}</p>
+                            <div class="flex items-center gap-3">
                                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">${formatPiutangSize(item.file.size)}</p>
-                                <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                                <select onchange="setPiutangToko(${i}, this.value)" class="bg-transparent border-0 text-emerald-600 text-[10px] font-black uppercase tracking-wider p-0 outline-none cursor-pointer">
-                                    <option value="">-- PILIH TOKO --</option>
-                                    ${tokoOptions}
-                                </select>
+                                
+                                <div class="flex items-center gap-1.5 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 text-emerald-700 font-black text-[10px]">
+                                    <span class="tracking-widest">${item.nominal > 0 ? formatCurrency(item.nominal) : 'RP 0'}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -382,10 +384,11 @@
                         const formData = new FormData();
                         formData.append('file', item.file);
                         formData.append('zona_id', getEffectiveZonaId());
-                        formData.append('toko_id', item.toko_id || '');
+                        formData.append('toko_id', ''); // Empty for Piutang category as requested
                         formData.append('category', 'PIUTANG');
                         formData.append('tanggal_dokumen', tanggal);
                         formData.append('tanggal_upload', new Date().toISOString().split('T')[0]);
+                        formData.append('total_jual', item.nominal || 0);
 
                         await API.upload('/api/files/upload', formData);
                         uploaded++;
