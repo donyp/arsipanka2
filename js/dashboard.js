@@ -53,6 +53,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Check for Post-Maintenance Update Notice (Run for ALL users)
     await checkUpdateNotice();
 
+    // Search Visibility Logic
+    if (user.role === 'super_admin') {
+        // Super admins keep header search, hide dashboard search
+        document.getElementById('header-search-container')?.classList.remove('hidden');
+        document.getElementById('dashboard-search-container')?.classList.add('hidden');
+    } else {
+        // Moderator and Admin Zona get large dashboard search, hide header search
+        document.getElementById('header-search-container')?.classList.add('hidden');
+        document.getElementById('dashboard-search-container')?.classList.remove('hidden');
+    }
+
     setupEventListeners();
     setupIntersectionObserver();
 
@@ -1864,4 +1875,18 @@ async function toggleMaintenance() {
             false // Light default for Premium look
         );
     }
+}
+
+// ---- Search Synchronization ----
+function syncSearch(value) {
+    const mainSearch = document.getElementById('search-input');
+    const dashboardSearch = document.getElementById('dashboard-search-input');
+
+    // Update both inputs to stay in sync
+    if (mainSearch) mainSearch.value = value;
+    if (dashboardSearch) dashboardSearch.value = value;
+
+    // Trigger search logic
+    currentPage = 1;
+    loadArchives();
 }

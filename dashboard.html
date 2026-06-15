@@ -39,7 +39,7 @@
                                 d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <div class="relative hidden lg:block">
+                    <div id="header-search-container" class="relative hidden lg:block">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -315,106 +315,123 @@
                     </div>
                 </div>
 
-                <!-- Filters -->
-                <div
-                    class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-wrap items-center gap-4">
-                    <div class="flex-1 min-w-[150px]">
-                        <label
-                            class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Kategori</label>
-                        <select id="filter-category" onchange="loadArchives()" data-role="super_admin"
-                            class="w-full bg-gray-50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
-                            <option value="">Semua Kat</option>
-                            <option value="INVOICE">Invoice Merah</option>
-                            <option value="PIUTANG">Bukti Pembayaran</option>
-                        </select>
-                    </div>
-                    <div class="flex-1 min-w-[120px]">
-                        <label
-                            class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Tipe
-                            PPN</label>
-                        <select id="filter-tipe" onchange="loadArchives()"
-                            class="w-full bg-gray-50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
-                            <option value="">Semua Tipe</option>
-                            <option value="PPN">PPN</option>
-                            <option value="NON">NON PPN</option>
-                        </select>
-                    </div>
-                    <div class="flex-1 min-w-[120px]">
-                        <label
-                            class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Zona</label>
-                        <select id="filter-zona" onchange="loadArchives()"
-                            class="w-full bg-gray-50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
-                            <option value="">Semua Zona</option>
-                        </select>
-                    </div>
-                    <div class="flex-1 min-w-[150px]">
-                        <label
-                            class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Toko
-                            / Merchant</label>
-                        <select id="filter-toko" onchange="loadArchives()"
-                            class="w-full bg-gray-50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
-                            <option value="">Semua Toko</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center gap-2 mt-auto">
-                        <div class="flex gap-2">
-                            <input id="filter-date-start" type="date"
-                                class="bg-gray-50 border border-gray-100 text-[11px] font-bold rounded-xl px-3 py-2.5 outline-none">
-                            <input id="filter-date-end" type="date"
-                                class="bg-gray-50 border border-gray-100 text-[11px] font-bold rounded-xl px-3 py-2.5 outline-none">
-                        </div>
-                        <button onclick="resetFilters()"
-                            class="p-3 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-xl transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Search & Filters -->
+                <div class="space-y-4">
+                    <!-- Dashboard Search (Hidden in Header for non-admins) -->
+                    <div id="dashboard-search-container" class="hidden">
+                        <div class="relative w-full max-w-2xl mx-auto">
+                            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Archive Table -->
-                <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto scrollbar-thin">
-                        <table class="w-full text-left border-collapse" id="archive-table">
-                            <thead>
-                                <tr
-                                    class="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
-                                    <th class="pl-8 py-6 w-10"><input type="checkbox" id="select-all"
-                                            onclick="toggleSelectAll(this)" class="accent-blue-600"></th>
-                                    <th class="py-6 pr-4">Nama Berkas</th>
-                                    <th class="py-6 px-2 w-20">Kategori</th>
-                                    <th class="py-6 px-2 w-16">Tipe</th>
-                                    <th class="py-6 px-2 w-24">Zona</th>
-                                    <th class="py-6 px-2 w-32">Toko</th>
-                                    <th class="py-6 px-2 w-32">Tgl Dokumen</th>
-                                    <th class="py-6 px-3 w-32">Tgl Upload</th>
-                                    <th class="py-6 pr-8 pl-4 text-right w-20">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="archive-body" class="divide-y divide-gray-50 text-xs font-bold"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Infinite Scroll Sentinel -->
-                <div id="infinite-scroll-trigger" class="h-20 w-full flex items-center justify-center">
-                    <div id="scroll-loader" class="hidden">
-                        <div
-                            class="inline-block w-8 h-8 border-4 border-blue-50 border-t-blue-600 rounded-full animate-spin">
+                            <input id="dashboard-search-input" type="text"
+                                placeholder="Cari nama berkas, nomor invoice, atau toko..."
+                                class="w-full pl-12 pr-6 py-4 bg-white border border-gray-100 shadow-sm focus:border-blue-500 rounded-[2rem] text-sm font-bold outline-none transition-all"
+                                oninput="syncSearch(this.value)">
                         </div>
                     </div>
-                </div>
 
-                <div id="loading-state" class="hidden py-24 text-center">
                     <div
-                        class="inline-block w-12 h-12 border-4 border-blue-50 border-t-blue-600 rounded-full animate-spin">
+                        class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-wrap items-center gap-4">
+                        <div class="flex-1 min-w-[150px]">
+                            <label
+                                class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Kategori</label>
+                            <select id="filter-category" onchange="loadArchives()" data-role="super_admin"
+                                class="w-full bg-gray-50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                                <option value="">Semua Kat</option>
+                                <option value="INVOICE">Invoice Merah</option>
+                                <option value="PIUTANG">Bukti Pembayaran</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[120px]">
+                            <label
+                                class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Tipe
+                                PPN</label>
+                            <select id="filter-tipe" onchange="loadArchives()"
+                                class="w-full bg-gray-50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                                <option value="">Semua Tipe</option>
+                                <option value="PPN">PPN</option>
+                                <option value="NON">NON PPN</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[120px]">
+                            <label
+                                class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Zona</label>
+                            <select id="filter-zona" onchange="loadArchives()"
+                                class="w-full bg-gray-50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                                <option value="">Semua Zona</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[150px]">
+                            <label
+                                class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Toko
+                                / Merchant</label>
+                            <select id="filter-toko" onchange="loadArchives()"
+                                class="w-full bg-gray-50 border border-gray-100 text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                                <option value="">Semua Toko</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2 mt-auto">
+                            <div class="flex gap-2">
+                                <input id="filter-date-start" type="date"
+                                    class="bg-gray-50 border border-gray-100 text-[11px] font-bold rounded-xl px-3 py-2.5 outline-none">
+                                <input id="filter-date-end" type="date"
+                                    class="bg-gray-50 border border-gray-100 text-[11px] font-bold rounded-xl px-3 py-2.5 outline-none">
+                            </div>
+                            <button onclick="resetFilters()"
+                                class="p-3 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-xl transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-4">Menyiapkan Data...
-                    </p>
+
+                    <!-- Archive Table -->
+                    <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto scrollbar-thin">
+                            <table class="w-full text-left border-collapse" id="archive-table">
+                                <thead>
+                                    <tr
+                                        class="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                                        <th class="pl-8 py-6 w-10"><input type="checkbox" id="select-all"
+                                                onclick="toggleSelectAll(this)" class="accent-blue-600"></th>
+                                        <th class="py-6 pr-4">Nama Berkas</th>
+                                        <th class="py-6 px-2 w-20">Kategori</th>
+                                        <th class="py-6 px-2 w-16">Tipe</th>
+                                        <th class="py-6 px-2 w-24">Zona</th>
+                                        <th class="py-6 px-2 w-32">Toko</th>
+                                        <th class="py-6 px-2 w-32">Tgl Dokumen</th>
+                                        <th class="py-6 px-3 w-32">Tgl Upload</th>
+                                        <th class="py-6 pr-8 pl-4 text-right w-20">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="archive-body" class="divide-y divide-gray-50 text-xs font-bold"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Infinite Scroll Sentinel -->
+                    <div id="infinite-scroll-trigger" class="h-20 w-full flex items-center justify-center">
+                        <div id="scroll-loader" class="hidden">
+                            <div
+                                class="inline-block w-8 h-8 border-4 border-blue-50 border-t-blue-600 rounded-full animate-spin">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="loading-state" class="hidden py-24 text-center">
+                        <div
+                            class="inline-block w-12 h-12 border-4 border-blue-50 border-t-blue-600 rounded-full animate-spin">
+                        </div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-4">Menyiapkan
+                            Data...
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
     </main>
 
     <!-- Bug History Modal -->
