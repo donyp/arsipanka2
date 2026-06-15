@@ -15,10 +15,19 @@ let isFetching = false;
 
 // Zona cache for labels
 window._zonaCache = [];
+window._notifDetailsMap = {}; // Global map for notification details
 
 // ---- Show Notification Detail Modal ----
-function showNotifDetail(event, header, details) {
+function showNotifDetail(event, header, details, id = null) {
     if (event) event.stopPropagation(); // Prevent marking notification as read
+
+    // Use map lookup if id is provided (prevents escaping issues)
+    if (id && window._notifDetailsMap[id]) {
+        header = window._notifDetailsMap[id].header;
+        details = window._notifDetailsMap[id].details;
+    }
+
+    if (!header) return; // Guard
 
     Swal.fire({
         title: '<div class="flex items-center gap-2 px-1"><span class="text-xs font-black text-gray-900 uppercase">Detail Perbaikan</span></div>',
@@ -569,6 +578,8 @@ function renderNotifications() {
             const parts = n.message.split(' — ');
             const header = parts[0].replace('Sistem kembali online: ', '');
             const details = parts[1] || '';
+            const mapId = `notif_${n.id}`;
+            window._notifDetailsMap[mapId] = { header, details };
 
             return `
                 <div class="relative group px-4 py-3 rounded-xl ${unreadClass} hover:bg-gray-100/50 transition-all cursor-default border border-transparent hover:border-emerald-100">
@@ -578,7 +589,7 @@ function renderNotifications() {
                             <div class="flex items-center justify-between gap-1.5">
                                 <span class="text-[11px] font-black text-gray-900 leading-none">✅ Perbaikan Selesai</span>
                                 ${details ? `
-                                    <button onclick="showNotifDetail(event, '${header.replace(/'/g, "\\'")}', '${details.replace(/'/g, "\\'").replace(/\n/g, '<br>')}')" 
+                                    <button onclick="showNotifDetail(event, null, null, '${mapId}')" 
                                             class="text-[8px] font-black text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-full animate-pulse hover:bg-emerald-500 hover:text-white transition-all">
                                         DETAIL
                                     </button>` : ''}
