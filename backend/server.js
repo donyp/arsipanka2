@@ -2828,7 +2828,6 @@ app.get('/api/requests', authenticateToken, async (req, res) => {
         if (error) throw error;
 
         // Manual Enrichment: If file_id is present, fetch the filenames separately
-        // This avoids PGRST200 error due to missing Foreign Key relationship
         const fileIds = [...new Set(requests.filter(r => r.file_id).map(r => r.file_id))];
         let enrichedRequests = requests;
 
@@ -2846,8 +2845,7 @@ app.get('/api/requests', authenticateToken, async (req, res) => {
                     files: r.file_id && fileMap[r.file_id] ? { nama_file: fileMap[r.file_id] } : null
                 }));
             } catch (joinErr) {
-                console.warn('[Requests] Manual join failed (possibly missing file_id column):', joinErr.message);
-                // Continue with raw requests, frontend has fallback parsing
+                console.warn('[Requests] Manual join failed:', joinErr.message);
             }
         }
 
@@ -3144,6 +3142,110 @@ setInterval(async () => {
         console.error('[CLEANUP] Fatal Error:', err);
     }
 }, 60 * 60 * 1000);
+
+
+// ============================================================
+// FLEET MANAGEMENT SYSTEM
+// ============================================================
+
+// GET /api/fleet
+app.get('/api/fleet', authenticateToken, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('system_fleet')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json({ fleet: data || [] });
+    } catch (err) {
+        console.error('Fetch Fleet Error:', err);
+        res.status(500).json({ error: 'Gagal memuat data armada.' });
+    }
+});
+
+// POST /api/fleet
+app.post('/api/fleet', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'super_admin' && req.user.role !== 'moderator') {
+            return res.status(403).json({ error: 'Akses ditolak.' });
+        }
+
+        const { nopol, merk, driver, pajak_stnk, pajak_plat, kir, status, notes } = req.body;
+        if (!nopol) return res.status(400).json({ error: 'Nomor Polisi wajib diisi.' });
+
+        const { data, error } = await supabase
+            .from('system_fleet')
+            .insert({
+                nopol, merk, driver,
+                pajak_stnk: pajak_stnk || null,
+                pajak_plat: pajak_plat || null,
+                kir: kir || null,
+                status: status || 'Aktif',
+                notes: notes || '-',
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // Audit Log
+        await supabase.from('audit_logs').insert({
+            user_id: req.user.userId || req.user.id,
+            action: 'Add Fleet',
+            context: `Added vehicle: ${nopol}`
+        });
+
+        res.json({ success: true, vehicle: data });
+    } catch (err) {
+        console.error('Create Fleet Error:', err);
+        res.status(500).json({ error: 'Gagal menambah kendaraan.' });
+    }
+});
+
+// PUT /api/fleet/:id
+app.put('/api/fleet/:id', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'super_admin' && req.user.role !== 'moderator') {
+            return res.status(403).json({ error: 'Akses ditolak.' });
+        }
+
+        const { nopol, merk, driver, pajak_stnk, pajak_plat, kir, status, notes } = req.body;
+        const { error } = await supabase
+            .from('system_fleet')
+            .update({
+                nopol, merk, driver,
+                pajak_stnk, pajak_plat, kir, status, notes,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+
+        res.json({ success: true, message: 'Data kendaraan berhasil diperbarui.' });
+    } catch (err) {
+        console.error('Update Fleet Error:', err);
+        res.status(500).json({ error: 'Gagal mengupdate data kendaraan.' });
+    }
+});
+
+// DELETE /api/fleet/:id
+app.delete('/api/fleet/:id', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'super_admin' && req.user.role !== 'moderator') {
+            return res.status(403).json({ error: 'Akses ditolak.' });
+        }
+
+        const { error } = await supabase.from('system_fleet').delete().eq('id', req.params.id);
+        if (error) throw error;
+
+        res.json({ success: true, message: 'Kendaraan berhasil dihapus.' });
+    } catch (err) {
+        console.error('Delete Fleet Error:', err);
+        res.status(500).json({ error: 'Gagal menghapus kendaraan.' });
+    }
+});
 
 app.listen(port, () => {
     console.log(`🚀 Pusat Arsip Anka Backend v2.1 running on http://localhost:${port}`);
