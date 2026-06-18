@@ -1105,6 +1105,9 @@ function openPreview(fileId, fileName) {
         // Reset iframe to avoid showing previous document
         iframe.src = 'about:blank';
 
+        const loading = document.getElementById('preview-loading');
+        if (loading) loading.classList.remove('hidden');
+
         const token = API.getToken();
         const viewUrl = `${CONFIG.API_URL}/api/files/${fileId}/view?token=${token}`;
         const downloadUrl = `${CONFIG.API_URL}/api/files/${fileId}/download?token=${token}`;

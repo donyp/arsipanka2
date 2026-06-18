@@ -3,13 +3,13 @@ let totalPages = 1;
 let isFetching = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await initAuth();
-    if (!isSuperAdmin()) {
-        window.location.href = 'dashboard.html';
-        return;
-    }
+    const user = await initAuth('super_admin');
+    if (!user) return;
+
+    // Use global currentUser from auth.js if needed, or the returned user
     document.querySelector('[data-user-name]').textContent = currentUser.name;
-    document.querySelector('[data-user-role]').textContent = currentUser.role;
+    document.querySelector('[data-user-role-label]').textContent = getRoleLabel(currentUser);
+
     loadLogs();
 });
 

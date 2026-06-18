@@ -190,7 +190,55 @@ function authorizeZone(req, res, next) {
     next();
 }
 
-// [DISABLED] Automatic WA Notification System removed — replaced by manual copy-paste notice system.
+// Helper to create system notifications
+async function createNotification({ user_id, zona_id, title, message, type = 'info', link = null }) {
+    try {
+        const { error } = await supabase
+            .from('system_notifications')
+            .insert({
+                user_id, // Null for global/moderator targeted
+                zona_id, // Optional
+                title,
+                message,
+                type,
+                link,
+                status: 'Unread',
+                created_at: new Date().toISOString()
+            });
+        if (error) console.error('[NOTIF] Create Error:', error.message);
+    } catch (err) {
+        console.error('[NOTIF] Trigger Error:', err);
+    }
+}
+
+// Helper to notify all Moderators and Super Admins
+async function notifyModerators(title, message, link = null) {
+    try {
+        // Fetch all users with role super_admin or moderator
+        const { data: mods, error } = await supabase
+            .from('users')
+            .select('id')
+            .in('role', ['super_admin', 'moderator']);
+
+        if (error) throw error;
+
+        const notifs = mods.map(m => ({
+            user_id: m.id,
+            title,
+            message,
+            type: 'request',
+            link,
+            status: 'Unread',
+            created_at: new Date().toISOString()
+        }));
+
+        if (notifs.length > 0) {
+            await supabase.from('system_notifications').insert(notifs);
+        }
+    } catch (err) {
+        console.error('[NOTIF] Moderator Alert Error:', err);
+    }
+}
 
 // ============================================================
 // AUTH ENDPOINTS
@@ -1936,6 +1984,15 @@ app.post('/api/files/:id/dispute', authenticateToken, async (req, res) => {
             context: `Revision for ${file.nama_file}. Reason: ${reason}`
         });
 
+        // 5. Notify Moderators
+        await createNotification({
+            role: 'moderator',
+            title: '📣 Request Revisi Baru',
+            message: `Zona ${req.user.zona_id || '-'} meminta revisi berkas: ${file.nama_file}`,
+            type: 'request',
+            link: 'requests.html'
+        });
+
         res.json({ success: true, message: 'Permintaan revisi berhasil dikirim ke moderator.' });
     } catch (err) {
         console.error('Revision Error:', err);
@@ -2731,14 +2788,24 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
         const { pesan } = req.body;
         if (!pesan) return res.status(400).json({ error: 'Pesan request wajib diisi.' });
 
-        const { error } = await supabase.from('upload_requests').insert({
+        const { data, error } = await supabase.from('upload_requests').insert({
             user_id: req.user.userId,
             zona_id: req.user.zona_id,
             pesan: pesan,
             status: 'Pending'
-        });
+        }).select().single();
 
         if (error) throw error;
+
+        // Notify Moderators
+        await createNotification({
+            role: 'moderator',
+            title: '📄 Request Dokumen Baru',
+            message: `Admin Zona ${req.user.zona_id || '-'} meminta dokumen: ${pesan.substring(0, 50)}${pesan.length > 50 ? '...' : ''}`,
+            type: 'request',
+            link: 'requests.html'
+        });
+
         res.json({ success: true, message: 'Request berhasil dikirim.' });
     } catch (err) {
         console.error('Create Request Error:', err);
@@ -2816,8 +2883,19 @@ app.put('/api/requests/:id', authenticateToken, async (req, res) => {
             payload.notes = null;
         }
 
-        const { error } = await supabase.from('upload_requests').update(payload).eq('id', req.params.id);
+        const { data: request, error } = await supabase.from('upload_requests').update(payload).eq('id', req.params.id).select().single();
         if (error) throw error;
+
+        // Notify User
+        if (request && request.user_id) {
+            await createNotification({
+                user_id: request.user_id,
+                title: '✅ Request Dokumen Diupdate',
+                message: `Status permintaan Anda telah diubah menjadi "${status}".`,
+                type: status === 'Selesai' ? 'success' : 'info',
+                link: 'requests.html'
+            });
+        }
 
         res.json({ success: true, message: 'Status tiket berhasil diupdate.' });
     } catch (err) {
@@ -2862,6 +2940,16 @@ app.post('/api/bugs', authenticateToken, async (req, res) => {
             status: 'Pending'
         }).select().single();
         if (error) throw error;
+
+        // Notify Moderators
+        await createNotification({
+            role: 'moderator',
+            title: '🐛 Laporan Bug Baru',
+            message: `Zona ${req.user.zona_id || '-'} melaporkan bug: ${tipe}`,
+            type: 'error',
+            link: 'bugs.html'
+        });
+
         res.json({ success: true, message: 'Laporan bug berhasil dikirim.', report: data });
     } catch (err) {
         console.error('Create Bug Error:', err);
