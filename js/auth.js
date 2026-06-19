@@ -44,15 +44,22 @@ async function initAuth(requiredRole = null) {
     // Role guard
     if (requiredRole) {
         let isAllowed = false;
-        if (requiredRole === 'super_admin' && (currentUser.role === 'super_admin' || currentUser.role === 'moderator')) {
+        if (Array.isArray(requiredRole)) {
+            isAllowed = requiredRole.includes(currentUser.role);
+        } else if (requiredRole === 'super_admin' && (currentUser.role === 'super_admin' || currentUser.role === 'moderator')) {
             isAllowed = true;
         } else if (currentUser.role === requiredRole) {
             isAllowed = true;
         }
 
         if (!isAllowed) {
-            Toast.error('Anda tidak memiliki akses ke halaman ini.');
-            setTimeout(() => window.location.href = 'dashboard.html', 1500);
+            // Remove cloak so user can see the error
+            document.documentElement.style.opacity = '1';
+            const msg = 'Anda tidak memiliki akses ke halaman ini. Mengalihkan...';
+            if (window.Toast) Toast.error(msg);
+            else alert(msg);
+
+            setTimeout(() => window.location.href = 'dashboard.html', 2000);
             return null;
         }
     }
