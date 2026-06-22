@@ -1741,6 +1741,123 @@ app.get('/api/system/maintenance', async (req, res) => {
     res.json(await getMaintenanceStatus());
 });
 
+// POST /api/system/sync-terabox — Sync Terabox files to database
+app.post('/api/system/sync-terabox', authenticateToken, authorizeRole('super_admin', 'moderator'), async (req, res) => {
+    try {
+        console.log('[Sync] Starting Terabox to Database sync...');
+        
+        // Get all zones
+        const { data: zones, error: zonesError } = await supabase
+            .from('zonas')
+            .select('id, kode, nama');
+        
+        if (zonesError) throw zonesError;
+        
+        // Get all tokos
+        const { data: tokos, error: tokosError } = await supabase
+            .from('toko')
+            .select('id, kode, nama, zona_id');
+        
+        if (tokosError) throw tokosError;
+        
+        let totalFilesFound = 0;
+        let totalFilesImported = 0;
+        let totalFilesSkipped = 0;
+        const errors = [];
+        
+        const baseStoragePath = '/arsip';
+        
+        for (const zona of zones) {
+            const zonaTokos = tokos.filter(t => t.zona_id === zona.id);
+            
+            for (const toko of zonaTokos) {
+                const categories = ['PPN', 'PPH', 'INVOICE', 'FAKTUR', 'BUKTI_BAYAR', 'LAINNYA'];
+                
+                for (const category of categories) {
+                    try {
+                        const storagePath = `${baseStoragePath}/${zona.kode}/${toko.kode}/${category}`;
+                        const files = await RcloneStorage.listFiles(storagePath);
+                        
+                        totalFilesFound += files.length;
+                        
+                        for (const file of files) {
+                            if (file.is_dir) continue;
+                            
+                            const fileName = file.name;
+                            const fileStoragePath = `${storagePath}/${fileName}`;
+                            
+                            // Check if exists
+                            const { data: existingFile } = await supabase
+                                .from('files')
+                                .select('id')
+                                .eq('storage_path', fileStoragePath)
+                                .maybeSingle();
+                            
+                            if (existingFile) {
+                                totalFilesSkipped++;
+                                continue;
+                            }
+                            
+                            // Import file
+                            const fileRecord = {
+                                name: fileName,
+                                original_name: fileName,
+                                zona_id: zona.id,
+                                toko_id: toko.id,
+                                category: category,
+                                storage_path: fileStoragePath,
+                                size: file.size || 0,
+                                mime_type: 'application/pdf',
+                                status: 'Unread',
+                                uploaded_by: req.user.userId,
+                                uploaded_at: file.modified || new Date().toISOString(),
+                                is_archived: false,
+                                deleted_at: null
+                            };
+                            
+                            const { error: insertError } = await supabase
+                                .from('files')
+                                .insert(fileRecord);
+                            
+                            if (insertError) {
+                                errors.push(`${fileName}: ${insertError.message}`);
+                            } else {
+                                totalFilesImported++;
+                            }
+                        }
+                    } catch (err) {
+                        if (!err.message.includes('not found') && !err.message.includes('404')) {
+                            errors.push(`${zona.kode}/${toko.kode}/${category}: ${err.message}`);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Audit log
+        await supabase.from('audit_logs').insert({
+            user_id: req.user.userId,
+            action: 'Sync Terabox to Database',
+            context: JSON.stringify({ totalFilesFound, totalFilesImported, totalFilesSkipped, errors: errors.slice(0, 10) })
+        });
+        
+        res.json({
+            success: true,
+            totalFilesFound,
+            totalFilesImported,
+            totalFilesSkipped,
+            errors: errors.length > 0 ? errors : null,
+            message: totalFilesImported > 0 
+                ? `Successfully imported ${totalFilesImported} files` 
+                : 'No new files to import'
+        });
+        
+    } catch (err) {
+        console.error('[Sync Error]', err);
+        res.status(500).json({ error: 'Sync failed: ' + err.message });
+    }
+});
+
 // POST/PUT /api/system/maintenance — Toggle maintenance mode
 app.all('/api/system/maintenance', authenticateToken, authorizeRole('super_admin', 'moderator'), async (req, res) => {
     if (req.method === 'GET') return res.json(await getMaintenanceStatus());
