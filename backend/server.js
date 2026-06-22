@@ -11,6 +11,10 @@ const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const archiver = require('archiver');
 const RcloneStorage = require('./rclone_wrapper');
+
+// Load environment variables FIRST (before using them)
+// In local development: loads from .env file
+// In production (Hugging Face): process.env is already set via Secrets
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
@@ -20,6 +24,15 @@ console.log('================================================');
 console.log(`[BOOT] Pusat Arsip Anka - v2.1.0-fixed`);
 console.log(`[BOOT] Time: ${new Date().toISOString()}`);
 console.log('================================================');
+
+// Log environment configuration
+console.log('[CONFIG] Reading environment variables...');
+console.log(`[CONFIG] PORT: ${process.env.PORT || 'default 4000'}`);
+console.log(`[CONFIG] NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+console.log(`[CONFIG] SUPABASE_URL: ${process.env.SUPABASE_URL ? 'SET (' + process.env.SUPABASE_URL.substring(0, 20) + '...)' : '❌ NOT SET'}`);
+console.log(`[CONFIG] SUPABASE_SERVICE_ROLE_KEY: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET (' + process.env.SUPABASE_SERVICE_ROLE_KEY.substring(0, 20) + '...)' : '❌ NOT SET'}`);
+console.log(`[CONFIG] JWT_SECRET: ${process.env.JWT_SECRET ? 'SET (' + process.env.JWT_SECRET.substring(0, 20) + '...)' : '❌ NOT SET'}`);
+console.log('[CONFIG] Environment configuration loaded.\n');
 
 app.use(cors());
 app.use(express.json());

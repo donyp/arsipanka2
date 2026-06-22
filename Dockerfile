@@ -54,7 +54,12 @@ ENV NODE_OPTIONS=--max-old-space-size=512
 EXPOSE 7860 5244
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+# Increased timeouts to handle Supabase connection delays
+# start-period: wait 60 seconds before first check (Supabase connection may be slow)
+# timeout: 15 seconds per check (some requests may take time)
+# interval: 30 seconds between checks
+# retries: 5 attempts before marking as unhealthy
+HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:7860/api/heartbeat || exit 1
 
 # Start application
