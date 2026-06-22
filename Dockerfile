@@ -32,8 +32,12 @@ COPY *.md ./
 
 # Copy backend application
 COPY backend ./backend
-COPY rclone.conf ./
 COPY start.sh ./
+
+# Copy rclone.conf if it exists (optional for local storage)
+# Note: This file is in .gitignore, so it won't be in HF build
+# For rclone support, mount config at runtime or provide via secrets
+RUN touch /app/rclone.conf || true
 
 # Ensure scripts are executable
 RUN chmod +x /app/start.sh
