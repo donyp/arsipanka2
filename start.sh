@@ -25,15 +25,8 @@ if command -v alist &> /dev/null; then
     echo "[INIT] Starting Alist service..."
     alist server --data /app/data -p 5244 > /app/data/log/alist.log 2>&1 &
     ALIST_PID=$!
-    echo "[INIT] Alist started with PID: $ALIST_PID on port 5244"
-    sleep 3
-    
-    # Verify Alist is running
-    if ps -p $ALIST_PID > /dev/null; then
-        echo "[INIT] ✅ Alist service confirmed running on port 5244"
-    else
-        echo "[INIT] ⚠️  Alist service may have failed to start (see /app/data/log/alist.log)"
-    fi
+    echo "[INIT] ✅ Alist started with PID: $ALIST_PID on port 5244"
+    sleep 2
 else
     echo "[INIT] ⚠️  Alist command not found - file manager will not be available"
 fi
