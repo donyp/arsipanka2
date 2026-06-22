@@ -1,39 +1,57 @@
-# Use Node.js 18 slim as base
+# Use Node.js 18 slim as base image
 FROM node:18-slim
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Set working directory early
+WORKDIR /app
+
+# Update apt and install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     unzip \
     ca-certificates \
     rclone \
-    && rm -rf /var/lib/apt/lists/*
+    git \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Alist
-RUN curl -L https://github.com/alist-org/alist/releases/latest/download/alist-linux-amd64.tar.gz -o alist.tar.gz \
-    && tar -zxvf alist.tar.gz \
-    && mv alist /usr/bin/alist \
-    && rm alist.tar.gz
+# Install Alist (optional, comment out if not needed)
+RUN curl -L https://github.com/alist-org/alist/releases/latest/download/alist-linux-amd64.tar.gz -o /tmp/alist.tar.gz \
+    && tar -zxvf /tmp/alist.tar.gz -C /tmp \
+    && mv /tmp/alist /usr/local/bin/alist \
+    && chmod +x /usr/local/bin/alist \
+    && rm /tmp/alist.tar.gz
 
-# Set working directory
-WORKDIR /app
-
-# Copy backend dependencies and install
+# Copy backend dependencies first (better layer caching)
 COPY backend/package*.json ./backend/
-RUN cd backend && npm install --production
+RUN cd backend && npm install --production && npm cache clean --force
 
-# Copy the rest of the application
-COPY . .
+# Copy frontend files
+COPY css ./css
+COPY js ./js
+COPY *.html ./
+COPY *.md ./
+
+# Copy backend application
+COPY backend ./backend
+COPY rclone.conf ./
+COPY start.sh ./
 
 # Ensure scripts are executable
-RUN chmod +x start.sh
+RUN chmod +x /app/start.sh
 
-# Alist config setup (using port 5244 internal)
-RUN mkdir -p /app/data
+# Create data directories
+RUN mkdir -p /app/data/log /app/data/temp /app/backend/data/log /app/backend/data/temp
 
-# Default port for Hugging Face Spaces
+# Environment variables
 ENV PORT=7860
+ENV NODE_ENV=production
+ENV NODE_OPTIONS=--max-old-space-size=512
+
+# Expose port (Hugging Face default)
 EXPOSE 7860
 
-# Start with our script
-CMD ["./start.sh"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:7860/api/heartbeat || exit 1
+
+# Start application
+CMD ["/bin/bash", "/app/start.sh"]
