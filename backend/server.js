@@ -47,7 +47,11 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/api/heartbeat', (req, res) => res.json({ status: 'alive', version: '2.0.1-fixed' }));
+app.get('/api/heartbeat', (req, res) => {
+    console.log('[HEARTBEAT] Health check request received');
+    res.json({ status: 'alive', version: '2.0.1-fixed' });
+    console.log('[HEARTBEAT] Response sent');
+});
 // Supabase Admin Client (for DB access, not for auth)
 const supabase = createClient(
     process.env.SUPABASE_URL,
