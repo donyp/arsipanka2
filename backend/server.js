@@ -122,30 +122,36 @@ function authenticateToken(req, res, next) {
         req.user = decoded;
 
         // --- MAINTENANCE MODE ENFORCEMENT ---
-        getMaintenanceStatus().then(sys => {
-            if (sys.isMaintenance && decoded.role === 'admin_zona') {
-                return res.status(503).json({
-                    error: 'Sistem Sedang Perbaikan',
-                    message: 'Akses Admin Zona ditangguhkan sementara untuk pemeliharaan teknis. Silakan coba lagi nanti.'
-                });
-            }
-
-            // Session Heartbeat (Asynchronous)
-            const sessionId = req.headers['x-session-id'];
-            if (sessionId) {
-                supabase.from('active_sessions')
-                    .update({ last_active: new Date().toISOString() })
-                    .eq('session_id', sessionId)
-                    .then(({ error }) => {
-                        if (error) console.warn('[HEARTBEAT] Error:', error.message);
+        getMaintenanceStatus()
+            .then(sys => {
+                if (sys && sys.isMaintenance && decoded.role === 'admin_zona') {
+                    return res.status(503).json({
+                        error: 'Sistem Sedang Perbaikan',
+                        message: 'Akses Admin Zona ditangguhkan sementara untuk pemeliharaan teknis. Silakan coba lagi nanti.'
                     });
-            }
+                }
 
-            next();
-        }).catch(err => {
-            console.error('[Maintenance Check Error]', err);
-            next(); // Proceed if check fails to avoid blocking legals
-        });
+                // Session Heartbeat (Asynchronous)
+                const sessionId = req.headers['x-session-id'];
+                if (sessionId) {
+                    supabase.from('active_sessions')
+                        .update({ last_active: new Date().toISOString() })
+                        .eq('session_id', sessionId)
+                        .then(({ error }) => {
+                            if (error) console.warn('[HEARTBEAT] Error updating session:', error.message);
+                        })
+                        .catch(err => {
+                            console.warn('[HEARTBEAT] Failed to update session:', err.message);
+                        });
+                }
+
+                next();
+            })
+            .catch(err => {
+                console.error('[Maintenance Check Error]', err.message || err);
+                // Fallback: assume no maintenance mode on error to unblock requests
+                next();
+            });
     });
 }
 
@@ -191,7 +197,7 @@ function authorizeZone(req, res, next) {
 }
 
 // Helper to create system notifications
-async function createNotification({ user_id, zona_id, title, message, type = 'info', link = null }) {
+async function createSystemNotification({ user_id, zona_id, title, message, type = 'info', link = null }) {
     try {
         const { error } = await supabase
             .from('system_notifications')
@@ -1763,7 +1769,7 @@ app.all('/api/system/maintenance', authenticateToken, authorizeRole('super_admin
 
         // Notification: Maintenance status change
         if (!isMaintenance && result) {
-            createNotification({ title: '✅ Perbaikan Selesai', message: 'Sistem kembali online: ' + (result.title || 'Selesai') + (result.details ? ' — ' + result.details : ''), type: 'success' });
+            createSystemNotification({ title: '✅ Perbaikan Selesai', message: 'Sistem kembali online: ' + (result.title || 'Selesai') + (result.details ? ' — ' + result.details : ''), type: 'success' });
         }
 
         res.json({ success: true, status });
@@ -2995,7 +3001,7 @@ app.put('/api/bugs/:id', authenticateToken, async (req, res) => {
         try {
             const { data: bugData } = await supabase.from('bug_reports').select('user_id').eq('id', req.params.id).single();
             if (bugData && bugData.user_id) {
-                createNotification({ user_id: bugData.user_id, title: '🔄 Status Bug Diperbarui', message: 'Laporan bug Anda kini berstatus "' + status + '".', type: 'info' });
+                await createNotification({ user_id: bugData.user_id, title: '🔄 Status Bug Diperbarui', message: 'Laporan bug Anda kini berstatus "' + status + '".', type: 'info' });
             }
         } catch (ne) { }
 
@@ -3247,10 +3253,98 @@ app.delete('/api/fleet/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.listen(port, () => {
+// ============================================================
+// SERVER STARTUP WITH COMPREHENSIVE ERROR HANDLING
+// ============================================================
+
+console.log(`🚀 Backend starting on port ${process.env.PORT || 4000}`);
+
+const server = app.listen(port, () => {
+    console.log(`✅ Backend listening on port ${port}`);
     console.log(`🚀 Pusat Arsip Anka Backend v2.1 running on http://localhost:${port}`);
     console.log(`   Auth: JWT (${JWT_EXPIRES_IN} expiry)`);
     console.log(`   Storage: Rclone (Terabox + Storj)`);
     console.log(`   DB: Supabase PostgreSQL`);
+});
+
+// Task 3.1: Error handler for port binding failures
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Error binding to port ${port}: address already in use (EADDRINUSE)`);
+        console.error(`   Port ${port} is already in use by another process.`);
+        console.error(`   Solution: Stop the other process or use a different PORT.`);
+        process.exit(1);
+    } else if (err.code === 'EACCES') {
+        console.error(`❌ Error binding to port ${port}: permission denied (EACCES)`);
+        console.error(`   Insufficient permissions to bind to port ${port}.`);
+        console.error(`   Solution: Use a port > 1024 or run with appropriate privileges.`);
+        process.exit(1);
+    } else if (err.code === 'ENOTFOUND') {
+        console.error(`❌ Error binding to port ${port}: hostname not found (ENOTFOUND)`);
+        console.error(`   Cannot resolve the hostname/IP address.`);
+        process.exit(1);
+    } else {
+        console.error(`❌ Error binding to port ${port}:`, err.message);
+        console.error(`   Stack trace:`, err.stack);
+        process.exit(1);
+    }
+});
+
+// Task 3.2: Server object error event listener (catches errors after binding)
+server.on('clientError', (err, socket) => {
+    console.error('[Server] Client error detected:', err.message);
+    if (err.code === 'ECONNRESET') {
+        console.warn('[Server] Connection reset by client');
+    } else if (err.code === 'HPE_INVALID_HEADER_TOKEN') {
+        console.warn('[Server] Invalid HTTP header from client');
+    } else {
+        console.error('[Server] Unexpected client error:', err);
+    }
+    if (socket.writable) {
+        socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+    }
+});
+
+// ============================================================
+// PROCESS-LEVEL ERROR HANDLERS (Task 3.3)
+// ============================================================
+
+// Handle uncaught synchronous errors
+process.on('uncaughtException', (err) => {
+    console.error('❌ UNCAUGHT EXCEPTION (Synchronous Error):');
+    console.error(`   Message: ${err.message}`);
+    console.error(`   Stack: ${err.stack}`);
+    if (err.filename) console.error(`   File: ${err.filename}:${err.lineno}:${err.colno}`);
+    console.error('   The application will exit gracefully.');
+    process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ UNHANDLED PROMISE REJECTION:');
+    console.error(`   Reason: ${reason instanceof Error ? reason.message : reason}`);
+    if (reason instanceof Error) {
+        console.error(`   Stack: ${reason.stack}`);
+    }
+    console.error(`   Promise: ${promise}`);
+    console.error('   The application will exit gracefully.');
+    process.exit(1);
+});
+
+// Handle process termination signals gracefully
+process.on('SIGTERM', () => {
+    console.log('📋 SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+        console.log('✅ HTTP server closed');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('📋 SIGINT signal received: closing HTTP server');
+    server.close(() => {
+        console.log('✅ HTTP server closed');
+        process.exit(0);
+    });
 });
 
