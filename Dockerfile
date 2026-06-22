@@ -50,8 +50,8 @@ ENV PORT=7860
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=512
 
-# Expose port (Hugging Face default)
-EXPOSE 7860
+# Expose ports (7860 for Node backend, 5244 for Alist file manager)
+EXPOSE 7860 5244
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
