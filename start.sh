@@ -29,13 +29,11 @@ node /app/generate-rclone-config.js
 ALIST_PID=""
 if command -v alist &> /dev/null; then
     echo "[INIT] Starting Alist service..."
-    # Create Alist config directory and initialize if needed
+    # Create Alist config directory if needed
     mkdir -p /root/.config/alist
     
-    # Try simple alist command first (will use default config location)
-    # Alist listens on port 5244 by default, but we need to set port via env or config
-    # For now, just try to start it with the -p flag
-    alist server -p 5244 > /app/data/log/alist.log 2>&1 &
+    # Use --port instead of -p (Alist may use different flag syntax)
+    alist server --port 5244 > /app/data/log/alist.log 2>&1 &
     ALIST_PID=$!
     echo "[INIT] ✅ Alist started with PID: $ALIST_PID"
     sleep 5
