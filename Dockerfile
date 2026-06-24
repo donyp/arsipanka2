@@ -45,18 +45,24 @@ RUN chmod +x /app/start.sh
 RUN mkdir -p /app/data/log /app/data/temp /app/backend/data/log /app/backend/data/temp
 
 # Environment variables
-ENV PORT=7860
+# Cloud Run uses PORT environment variable (default 8080)
+# But we keep 7860 as default for local/Hugging Face compatibility
+ENV PORT=${PORT:-8080}
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=512
 
-# Expose ports (7860 for Node backend, 5244 for Alist file manager)
-EXPOSE 7860 5244
+# Expose ports (8080 for Cloud Run / Node backend, 5244 for Alist file manager)
+EXPOSE 8080 5244
 
-# Note on Hugging Face Spaces:
-# - HF detects app is "running" when the container port is accessible
-# - The app must not exit/crash
-# - Health checks via HEALTHCHECK may not work reliably
-# - We rely on port binding as the signal that app is ready
+# Add Health Check for Cloud Run / Kubernetes environments
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8080}/api/heartbeat || exit 1
+
+# Note on Different Environments:
+# - Cloud Run: Uses PORT env var (8080), Health check enabled
+# - Hugging Face Spaces: Uses PORT=7860, relies on port binding
+# - Local/K8s: Uses PORT env var, Health check enabled
+# - The app handles all scenarios via PORT environment variable
 
 # Start application
 CMD ["/bin/bash", "/app/start.sh"]
