@@ -31,6 +31,9 @@ if command -v alist &> /dev/null; then
     ALIST_PID=$!
     echo "[INIT] ✅ Alist started with PID: $ALIST_PID on port 5244"
     sleep 2
+    
+    # Trap signals to ensure Alist is killed when container stops
+    trap "kill $ALIST_PID 2>/dev/null; exit 0" SIGTERM SIGINT
 else
     echo "[INIT] ⚠️  Alist command not found - file manager will not be available"
 fi
@@ -39,5 +42,16 @@ fi
 echo "[INIT] Starting Node.js backend server..."
 cd /app/backend
 
-# Start the main application with better error handling
-exec node server.js 2>&1
+# Start the main application without 'exec' so background processes remain alive
+# Use 'wait' to keep the script running and forward signals properly
+node server.js 2>&1 &
+NODE_PID=$!
+
+# Wait for both processes, if either dies, exit
+wait $NODE_PID
+EXIT_CODE=$?
+
+# Kill Alist if Node exits
+[ ! -z "$ALIST_PID" ] && kill $ALIST_PID 2>/dev/null
+
+exit $EXIT_CODE
