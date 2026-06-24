@@ -2007,10 +2007,11 @@ app.get('/api/stats/storage', authenticateToken, async (req, res) => {
         // Today's start in local time (then to UTC-like ISO)
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // 1. Total Bytes
+        // 1. Total Bytes (filtered by current user)
         const { data: allFiles, error: errTotal } = await supabase
             .from('files')
             .select('ukuran_bytes')
+            .eq('user_id', req.user.userId)
             .is('deleted_at', null);
 
         if (errTotal) {
@@ -2018,14 +2019,15 @@ app.get('/api/stats/storage', authenticateToken, async (req, res) => {
             throw errTotal;
         }
 
-        console.log(`[STATS] Found ${allFiles.length} active files.`);
+        console.log(`[STATS] Found ${allFiles.length} active files for user ${req.user.userId}.`);
         const totalUsed = allFiles.reduce((sum, f) => sum + (f.ukuran_bytes || 0), 0);
         console.log(`[STATS] Total bytes calculated: ${totalUsed}`);
 
-        // 2. Today's Bytes
+        // 2. Today's Bytes (filtered by current user)
         const { data: todayFiles, error: errToday } = await supabase
             .from('files')
             .select('ukuran_bytes')
+            .eq('user_id', req.user.userId)
             .gte('created_at', todayStr)
             .is('deleted_at', null);
 
