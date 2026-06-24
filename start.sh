@@ -29,24 +29,25 @@ node /app/generate-rclone-config.js
 ALIST_PID=""
 if command -v alist &> /dev/null; then
     echo "[INIT] Starting Alist service..."
-    # Alist default data directory is ~/.config/alist or /root/.config/alist
-    # We need to use the --data flag with absolute path, or set HOME
-    export ALIST_DATA_DIR=/app/data
+    # Create Alist config directory and initialize if needed
+    mkdir -p /root/.config/alist
     
-    # Start Alist with output going to both log and console
-    alist server --data /app/data -p 5244 --db-path /app/data/data.db 2>&1 | tee /app/data/log/alist.log &
+    # Try simple alist command first (will use default config location)
+    # Alist listens on port 5244 by default, but we need to set port via env or config
+    # For now, just try to start it with the -p flag
+    alist server -p 5244 > /app/data/log/alist.log 2>&1 &
     ALIST_PID=$!
-    echo "[INIT] ✅ Alist started with PID: $ALIST_PID on port 5244"
+    echo "[INIT] ✅ Alist started with PID: $ALIST_PID"
     sleep 5
     # Verify Alist started
     if ps -p $ALIST_PID > /dev/null 2>&1; then
-        echo "[INIT] ✅ Alist process verified running (PID $ALIST_PID)"
+        echo "[INIT] ✅ Alist process verified running (PID $ALIST_PID, port 5244)"
     else
-        echo "[INIT] ❌ Alist process died immediately, checking startup error..."
-        [ -f /app/data/log/alist.log ] && echo "[INIT] === Alist Log ===" && cat /app/data/log/alist.log | tail -20 && echo "[INIT] === End Log ===" || echo "[INIT] No log file found"
+        echo "[INIT] ⚠️  Alist process not running"
+        [ -f /app/data/log/alist.log ] && echo "=== Alist Startup Log ===" && cat /app/data/log/alist.log && echo "=== End Log ===" || echo "No log available"
     fi
 else
-    echo "[INIT] ⚠️  Alist command not found - file manager will not be available"
+    echo "[INIT] ⚠️  Alist command not found"
 fi
 
 # Function to clean up processes
