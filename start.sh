@@ -29,23 +29,24 @@ node /app/generate-rclone-config.js
 ALIST_PID=""
 if command -v alist &> /dev/null; then
     echo "[INIT] Starting Alist service..."
-    # Create Alist config directory if needed
+    # Create Alist config directory
     mkdir -p /root/.config/alist
     
-    # Use --port instead of -p (Alist may use different flag syntax)
-    alist server --port 5244 > /app/data/log/alist.log 2>&1 &
+    # Try starting Alist without port flag (Alist may use config file or env vars)
+    # Alist default port is 5244
+    alist server > /app/data/log/alist.log 2>&1 &
     ALIST_PID=$!
     echo "[INIT] ✅ Alist started with PID: $ALIST_PID"
     sleep 5
     # Verify Alist started
     if ps -p $ALIST_PID > /dev/null 2>&1; then
-        echo "[INIT] ✅ Alist process verified running (PID $ALIST_PID, port 5244)"
+        echo "[INIT] ✅ Alist process verified running (PID $ALIST_PID)"
     else
         echo "[INIT] ⚠️  Alist process not running"
-        [ -f /app/data/log/alist.log ] && echo "=== Alist Startup Log ===" && cat /app/data/log/alist.log && echo "=== End Log ===" || echo "No log available"
+        [ -f /app/data/log/alist.log ] && echo "=== Alist Log ===" && cat /app/data/log/alist.log | tail -30 && echo "=== End ===" || echo "No log"
     fi
 else
-    echo "[INIT] ⚠️  Alist command not found"
+    echo "[INIT] ⚠️  Alist not found"
 fi
 
 # Function to clean up processes
