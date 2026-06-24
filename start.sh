@@ -12,6 +12,7 @@ mkdir -p /app/data/log
 mkdir -p /app/data/temp
 mkdir -p /app/backend/data/log
 mkdir -p /app/backend/data/temp
+chmod 777 /app/data /app/data/log /app/data/temp
 
 # Export PORT for Hugging Face (default 7860)
 export PORT=${PORT:-7860}
@@ -28,15 +29,17 @@ node /app/generate-rclone-config.js
 ALIST_PID=""
 if command -v alist &> /dev/null; then
     echo "[INIT] Starting Alist service..."
-    nohup alist server --data /app/data -p 5244 > /app/data/log/alist.log 2>&1 &
+    # Run Alist with output going to both log and console
+    alist server --data /app/data -p 5244 2>&1 | tee /app/data/log/alist.log &
     ALIST_PID=$!
     echo "[INIT] ✅ Alist started with PID: $ALIST_PID on port 5244"
-    sleep 3
+    sleep 4
     # Verify Alist started
-    if ps -p $ALIST_PID > /dev/null; then
-        echo "[INIT] ✅ Alist process verified running"
+    if ps -p $ALIST_PID > /dev/null 2>&1; then
+        echo "[INIT] ✅ Alist process verified running (PID $ALIST_PID)"
     else
-        echo "[INIT] ❌ Alist process died immediately"
+        echo "[INIT] ❌ Alist process died immediately, checking logs..."
+        [ -f /app/data/log/alist.log ] && cat /app/data/log/alist.log | head -50
     fi
 else
     echo "[INIT] ⚠️  Alist command not found - file manager will not be available"
