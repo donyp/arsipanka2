@@ -29,17 +29,21 @@ node /app/generate-rclone-config.js
 ALIST_PID=""
 if command -v alist &> /dev/null; then
     echo "[INIT] Starting Alist service..."
-    # Run Alist with output going to both log and console
-    alist server --data /app/data -p 5244 2>&1 | tee /app/data/log/alist.log &
+    # Alist default data directory is ~/.config/alist or /root/.config/alist
+    # We need to use the --data flag with absolute path, or set HOME
+    export ALIST_DATA_DIR=/app/data
+    
+    # Start Alist with output going to both log and console
+    alist server --data /app/data -p 5244 --db-path /app/data/data.db 2>&1 | tee /app/data/log/alist.log &
     ALIST_PID=$!
     echo "[INIT] ✅ Alist started with PID: $ALIST_PID on port 5244"
-    sleep 4
+    sleep 5
     # Verify Alist started
     if ps -p $ALIST_PID > /dev/null 2>&1; then
         echo "[INIT] ✅ Alist process verified running (PID $ALIST_PID)"
     else
-        echo "[INIT] ❌ Alist process died immediately, checking logs..."
-        [ -f /app/data/log/alist.log ] && cat /app/data/log/alist.log | head -50
+        echo "[INIT] ❌ Alist process died immediately, checking startup error..."
+        [ -f /app/data/log/alist.log ] && echo "[INIT] === Alist Log ===" && cat /app/data/log/alist.log | tail -20 && echo "[INIT] === End Log ===" || echo "[INIT] No log file found"
     fi
 else
     echo "[INIT] ⚠️  Alist command not found - file manager will not be available"
