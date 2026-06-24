@@ -4,13 +4,38 @@
 const { execFile, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { getSecret } = require('./secretManager');
 
 
 let alistTokenCache = {
     token: null,
     expiry: 0
 };
+
+// Credential storage (loaded at startup via initializeRcloneCredentials)
+let alistCredentials = {
+    username: 'admin',
+    password: process.env.ALIST_ADMIN_PASSWORD || 'AdminArsip2026!',
+    source: 'ENV_VAR_OR_HARDCODED'
+};
+
 const createdDirsCache = new Set();
+
+/**
+ * Diagnostic logging helper with context information.
+ * Logs operation type, timestamp, credentials source, and custom details.
+ * @param {string} operation - Name of the operation (e.g., 'getRawUrl', 'uploadFile', 'listFiles')
+ * @param {object} details - Custom details to include in log
+ */
+function logOperation(operation, details = {}) {
+    const context = {
+        operation,
+        timestamp: new Date().toISOString(),
+        credentials_source: alistCredentials.source,
+        ...details
+    };
+    console.log(`[Operation]`, JSON.stringify(context));
+}
 
 // Rclone remote names (must match rclone.conf)
 const PRIMARY_REMOTE = process.env.RCLONE_PRIMARY_REMOTE || 'terabox';
@@ -20,6 +45,95 @@ const BASE_PATH = process.env.RCLONE_BASE_PATH || '/arsip';
 const isWindows = process.platform === 'win32';
 const rclonePath = isWindows ? path.resolve(__dirname, '..', 'rclone.exe') : 'rclone';
 const configPath = process.env.RCLONE_CONFIG || path.resolve(__dirname, '..', 'rclone.conf');
+
+/**
+ * Login to Alist with automatic retry logic and exponential backoff.
+ * @param {string} domain - Alist domain (e.g. 'http://127.0.0.1:5244')
+ * @param {object} credentials - Object with username and password
+ * @param {number} attempt - Current attempt number (default 1)
+ * @returns {Promise<string>} - Alist token on success
+ * @throws {Error} - After max retries exhausted
+ */
+async function loginToAlist(domain, credentials, attempt = 1) {
+    const maxRetries = 2;
+    const timeoutMs = 30000;
+    
+    try {
+        logOperation('loginToAlist', { 
+            action: 'Login attempt',
+            attempt: attempt,
+            max_attempts: maxRetries,
+            endpoint: domain,
+            username: credentials.username 
+        });
+        
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), timeoutMs);
+        
+        const response = await fetch(`${domain}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: credentials.username,
+                password: credentials.password
+            }),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeout);
+        const data = await response.json();
+        
+        if (!response.ok || !data.data?.token) {
+            throw new Error(`Login failed: ${data.message || 'No token returned'} (HTTP ${response.status})`);
+        }
+        
+        logOperation('loginToAlist', { 
+            status: '✅ Alist authenticated',
+            attempt: attempt,
+            endpoint: domain 
+        });
+        console.log(`✅ Alist authenticated on attempt ${attempt}`);
+        return data.data.token;
+        
+    } catch (err) {
+        const isRetryable = err.name === 'AbortError' || 
+                           (err.message?.includes('401')) ||
+                           (err.message?.includes('timeout'));
+        
+        if (isRetryable && attempt < maxRetries) {
+            const delayMs = 1000 * attempt;
+            logOperation('loginToAlist', { 
+                status: '⚠️ Login attempt failed (retryable)',
+                attempt: attempt,
+                max_attempts: maxRetries,
+                error: err.message,
+                retry_delay_ms: delayMs,
+                endpoint: domain
+            });
+            console.warn(`⚠️ Alist login attempt ${attempt} failed: ${err.message}. Retrying in ${delayMs}ms...`);
+            await new Promise(r => setTimeout(r, delayMs));
+            return loginToAlist(domain, credentials, attempt + 1);
+        }
+        
+        logOperation('loginToAlist', { 
+            status: '❌ Alist login failed',
+            attempts: attempt,
+            error: err.message,
+            domain: domain,
+            username: credentials.username,
+            credentials_source: alistCredentials.source,
+            endpoint: domain
+        });
+        console.error(`❌ Alist login failed after ${attempt} attempts:`, {
+            domain,
+            username: credentials.username,
+            error: err.message,
+            credentials_source: alistCredentials.source
+        });
+        
+        throw new Error(`Alist authentication failed: ${err.message}`);
+    }
+}
 
 /**
  * Execute an rclone command and return a promise.
@@ -60,22 +174,13 @@ const RcloneStorage = {
         const alistPath = '/terabox' + cleanPath;
         const alistDomain = 'http://127.0.0.1:5244';
 
-        const adminPassword = process.env.ALIST_ADMIN_PASSWORD || 'AdminArsip2026!';
         let token = alistTokenCache.token;
         if (!token || Date.now() > alistTokenCache.expiry) {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 30000); // Increased to 30s
-            const tokenResponse = await fetch(`${alistDomain}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'admin', password: adminPassword }),
-                signal: controller.signal
-            });
-            clearTimeout(timeout);
-            const tokenData = await tokenResponse.json();
-            token = tokenData.data?.token;
-            if (!token) throw new Error('Alist login failed: ' + tokenData.message);
+            logOperation('getRawUrl', { action: 'Need new token (cache expired)', path: alistPath });
+            token = await loginToAlist(alistDomain, alistCredentials);
             alistTokenCache = { token, expiry: Date.now() + 24 * 60 * 60 * 1000 };
+        } else {
+            logOperation('getRawUrl', { action: 'Checking cache: token valid', path: alistPath });
         }
 
         const ctrl = new AbortController();
@@ -103,9 +208,11 @@ const RcloneStorage = {
             if (fallbackData.code !== 200 || !fallbackData.data) {
                 throw new Error(`Alist Web API failed: ${fallbackData.message || fsGetData.message}`);
             }
+            logOperation('getRawUrl', { status: '✅ Got raw URL from Alist', path: alistPath });
             return fallbackData.data.raw_url;
         }
 
+        logOperation('getRawUrl', { status: '✅ Got raw URL from Alist', path: alistPath });
         return fsGetData.data.raw_url;
     },
 
@@ -189,45 +296,36 @@ const RcloneStorage = {
      * The internal upload method
      */
     async uploadDirect(fileBuffer, originalName, storagePath) {
-
-
         try {
-            console.log(`[Upload] Sending ${originalName} to Terabox via Alist API...`);
+            logOperation('uploadDirect', { 
+                action: 'Starting upload',
+                operation_type: 'upload',
+                filename: originalName, 
+                storagePath: storagePath 
+            });
 
             const alistDomain = 'http://127.0.0.1:5244';
 
             // 1. Get Token (with caching)
-            const adminPassword = process.env.ALIST_ADMIN_PASSWORD || 'AdminArsip2026!';
             let token = alistTokenCache.token;
             if (!token || Date.now() > alistTokenCache.expiry) {
-                console.log(`[Upload] Alist Token expired or missing. Logging in...`);
-                const tokenResponse = await fetch(`${alistDomain}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: 'admin', password: adminPassword })
-                });
-                const tokenData = await tokenResponse.json();
-                token = tokenData.data?.token;
-                if (!token) throw new Error('Alist login failed: ' + tokenData.message);
-
-                // Cache token for 24 hours (Alist default is long, but 24h is safe)
-                alistTokenCache = {
-                    token: token,
-                    expiry: Date.now() + 24 * 60 * 60 * 1000
-                };
+                logOperation('uploadDirect', { action: 'Logging in - token expired or missing', storagePath });
+                token = await loginToAlist(alistDomain, alistCredentials);
+                alistTokenCache = { token, expiry: Date.now() + 24 * 60 * 60 * 1000 };
             }
 
             // 1.5 Create Parent Directory using robust rclone mkdir
             const parentFolderPath = storagePath.substring(0, storagePath.lastIndexOf('/'));
 
             if (!createdDirsCache.has(parentFolderPath)) {
-                console.log(`[Upload] Ensuring directory exists: ${parentFolderPath}`);
+                logOperation('uploadDirect', { 
+                    action: 'Creating directory',
+                    path: parentFolderPath 
+                });
                 try {
-                    console.log(`[Upload] Running rclone mkdir for: ${parentFolderPath}`);
                     await rcloneExec(['mkdir', `${PRIMARY_REMOTE}:${parentFolderPath}`]);
 
                     // Recursive Alist Refresh (Optimized: Parallel Segment Refresh)
-                    console.log(`[Upload] Forcing Alist cache refresh for path: ${parentFolderPath}`);
                     const segments = parentFolderPath.split('/').filter(Boolean);
                     let currentSyncPathArr = [];
                     const refreshPromises = [];
@@ -269,6 +367,13 @@ const RcloneStorage = {
             while (attempt < retries && !success) {
                 attempt++;
                 try {
+                    logOperation('uploadDirect', { 
+                        action: 'Uploading file',
+                        filename: originalName,
+                        attempt: attempt,
+                        max_attempts: retries
+                    });
+                    
                     const c = new AbortController();
                     const tt = setTimeout(() => c.abort(), 600000); // 10 minutes
                     putResponse = await fetch(`${alistDomain}/api/fs/put`, {
@@ -298,7 +403,12 @@ const RcloneStorage = {
                 }
             }
 
-            console.log(`[Upload] Alist API upload success for: ${originalName} (Attempt ${attempt})`);
+            logOperation('uploadDirect', { 
+                status: '✅ Upload successful',
+                filename: originalName,
+                attempts: attempt,
+                storagePath: storagePath 
+            });
 
             // Backup to Storj (fire and forget via rcat)
             const backupDest = `${BACKUP_REMOTE}:${storagePath}`;
@@ -315,6 +425,11 @@ const RcloneStorage = {
 
             return { storagePath, size: fileBuffer.length };
         } catch (err) {
+            logOperation('uploadDirect', { 
+                status: '❌ Upload failed',
+                error: err.message,
+                storagePath: storagePath 
+            });
             console.error(`[Upload Error]`, err);
             throw err;
         }
@@ -326,34 +441,34 @@ const RcloneStorage = {
     async uploadMedia(fileBuffer, originalName, category) {
         const storagePath = `/ads-media/${category}/${originalName}`;
 
-
         try {
-            console.log(`[Upload] Sending Media ${originalName} to Terabox via Alist API...`);
+            logOperation('uploadMedia', { 
+                action: 'Starting media upload',
+                operation_type: 'upload-media',
+                category: category,
+                filename: originalName, 
+                storagePath: storagePath 
+            });
 
             const alistDomain = 'http://127.0.0.1:5244';
 
             // 1. Get Token (with caching)
-            const adminPassword = process.env.ALIST_ADMIN_PASSWORD || 'AdminArsip2026!';
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 30000); // 30s
-            const tokenResponse = await fetch(`${alistDomain}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'admin', password: adminPassword }),
-                signal: controller.signal
-            });
-            clearTimeout(timeout);
-            const tokenData = await tokenResponse.json();
-            const token = tokenData.data?.token;
-            if (!token) throw new Error('Alist login failed: ' + tokenData.message);
+            let token = alistTokenCache.token;
+            if (!token || Date.now() > alistTokenCache.expiry) {
+                logOperation('uploadMedia', { action: 'Logging in - token expired or missing', storagePath });
+                token = await loginToAlist(alistDomain, alistCredentials);
+                alistTokenCache = { token, expiry: Date.now() + 24 * 60 * 60 * 1000 };
+            }
 
             // 1.5 Create Parent Directory using robust rclone mkdir
             const parentFolderPath = storagePath.substring(0, storagePath.lastIndexOf('/'));
 
             if (!createdDirsCache.has(parentFolderPath)) {
-                console.log(`[Upload] Ensuring Media directory exists: ${parentFolderPath}`);
+                logOperation('uploadMedia', { 
+                    action: 'Creating directory',
+                    path: parentFolderPath 
+                });
                 try {
-                    console.log(`[Upload Media] Running rclone mkdir for: ${parentFolderPath}`);
                     await rcloneExec(['mkdir', `${PRIMARY_REMOTE}:${parentFolderPath}`]);
                     createdDirsCache.add(parentFolderPath);
                 } catch (err) {
@@ -369,6 +484,12 @@ const RcloneStorage = {
             }
 
             // 2. Put File directly with 10 minute timeout
+            logOperation('uploadMedia', { 
+                action: 'Uploading file',
+                filename: originalName,
+                category: category
+            });
+
             const c = new AbortController();
             const tt = setTimeout(() => c.abort(), 600000); // 10 minutes
             const putResponse = await fetch(`${alistDomain}/api/fs/put`, {
@@ -384,7 +505,12 @@ const RcloneStorage = {
             const putData = await putResponse.json();
             if (putData.code !== 200) throw new Error('Alist API upload failed: ' + putData.message);
 
-            console.log(`[Upload] Media API upload success for: ${originalName}`);
+            logOperation('uploadMedia', { 
+                status: '✅ Media upload successful',
+                filename: originalName,
+                category: category,
+                storagePath: storagePath 
+            });
 
             // Backup (fire and forget via rcat)
             const backupDest = `${BACKUP_REMOTE}:${storagePath}`;
@@ -399,6 +525,11 @@ const RcloneStorage = {
 
             return { storagePath, size: fileBuffer.length };
         } catch (err) {
+            logOperation('uploadMedia', { 
+                status: '❌ Media upload failed',
+                error: err.message,
+                storagePath: storagePath 
+            });
             console.error(`[Upload Media Error]`, err);
             throw err;
         }
@@ -435,23 +566,17 @@ const RcloneStorage = {
         let cleanPath = storagePath.startsWith('/') ? storagePath : '/' + storagePath;
         const alistPath = '/terabox' + cleanPath;
         const alistDomain = 'http://127.0.0.1:5244';
-        const adminPassword = process.env.ALIST_ADMIN_PASSWORD || 'AdminArsip2026!';
+
+        logOperation('deleteFile', { 
+            action: 'Starting file deletion',
+            operation_type: 'delete',
+            storagePath: storagePath 
+        });
 
         // Get or refresh Alist token
         let token = alistTokenCache.token;
         if (!token || Date.now() > alistTokenCache.expiry) {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 30000);
-            const tokenResponse = await fetch(`${alistDomain}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'admin', password: adminPassword }),
-                signal: controller.signal
-            });
-            clearTimeout(timeout);
-            const tokenData = await tokenResponse.json();
-            token = tokenData.data?.token;
-            if (!token) throw new Error('Alist login failed: ' + tokenData.message);
+            token = await loginToAlist(alistDomain, alistCredentials);
             alistTokenCache = { token, expiry: Date.now() + 24 * 60 * 60 * 1000 };
         }
 
@@ -459,7 +584,11 @@ const RcloneStorage = {
         const dir = path.posix.dirname(alistPath);
         const fileName = path.posix.basename(alistPath);
 
-        console.log(`[RcloneStorage] Deleting via Alist: dir="${dir}" file="${fileName}"`);
+        logOperation('deleteFile', { 
+            action: 'Deleting file',
+            filename: fileName,
+            directory: dir
+        });
 
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 30000);
@@ -479,11 +608,19 @@ const RcloneStorage = {
 
         const deleteData = await deleteResponse.json();
         if (deleteData.code !== 200) {
+            logOperation('deleteFile', { 
+                status: '❌ Delete failed',
+                error: deleteData.message,
+                storagePath: storagePath 
+            });
             console.error(`[RcloneStorage] Alist delete failed:`, deleteData);
             throw new Error(`Alist delete failed: ${deleteData.message || 'Unknown error'}`);
         }
 
-        console.log(`[RcloneStorage] Successfully deleted: ${alistPath}`);
+        logOperation('deleteFile', { 
+            status: '✅ Delete successful',
+            storagePath: storagePath 
+        });
         return true;
     },
 
@@ -506,18 +643,16 @@ const RcloneStorage = {
         let cleanPath = storagePath.startsWith('/') ? storagePath : '/' + storagePath;
         const alistPath = '/terabox' + cleanPath;
         const alistDomain = 'http://127.0.0.1:5244';
-        const adminPassword = process.env.ALIST_ADMIN_PASSWORD || 'AdminArsip2026!';
+
+        logOperation('listFiles', { 
+            action: 'Listing files',
+            operation_type: 'list',
+            path: storagePath 
+        });
 
         let token = alistTokenCache.token;
         if (!token || Date.now() > alistTokenCache.expiry) {
-            const tokenResponse = await fetch(`${alistDomain}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'admin', password: adminPassword })
-            });
-            const tokenData = await tokenResponse.json();
-            token = tokenData.data?.token;
-            if (!token) throw new Error('Alist login failed: ' + tokenData.message);
+            token = await loginToAlist(alistDomain, alistCredentials);
             alistTokenCache = { token, expiry: Date.now() + 24 * 60 * 60 * 1000 };
         }
 
@@ -533,11 +668,100 @@ const RcloneStorage = {
 
         const listData = await listResponse.json();
         if (listData.code !== 200) {
+            logOperation('listFiles', { 
+                status: '❌ List failed',
+                error: listData.message,
+                path: storagePath 
+            });
             throw new Error(`Alist list failed: ${listData.message}`);
         }
+
+        const fileCount = listData.data.content ? listData.data.content.length : 0;
+        logOperation('listFiles', { 
+            status: '✅ List successful',
+            path: storagePath,
+            file_count: fileCount 
+        });
 
         return listData.data.content || [];
     }
 };
 
+/**
+ * Initialize Rclone credentials from Secret Manager at server startup.
+ * This function should be called from server.js during initialization.
+ * 
+ * @returns {Promise<Object>} - Status object: { success, source, message }
+ */
+async function initializeRcloneCredentials() {
+    console.log('🔐 [RcloneStorage] Initializing storage credentials...');
+
+    try {
+        // Try to fetch from Secret Manager (Cloud Run environment)
+        const password = await getSecret(
+            'arsip-alist-password',
+            'ALIST_ADMIN_PASSWORD',
+            'AdminArsip2026!'  // Fallback for local dev
+        );
+
+        alistCredentials.password = password;
+
+        // Determine which source the secret came from
+        if (process.env.GCP_PROJECT_ID) {
+            alistCredentials.source = 'SECRET_MANAGER';
+            logOperation('initializeRcloneCredentials', { 
+                status: '✅ Credentials loaded from SECRET_MANAGER',
+                credentials_source: 'SECRET_MANAGER'
+            });
+            console.log('✅ [RcloneStorage] Storage credentials loaded from SECRET_MANAGER');
+        } else if (process.env.ALIST_ADMIN_PASSWORD) {
+            alistCredentials.source = 'ENV';
+            logOperation('initializeRcloneCredentials', { 
+                status: '✅ Credentials loaded from ENV',
+                credentials_source: 'ENV'
+            });
+            console.log('✅ [RcloneStorage] Storage credentials loaded from ENV');
+        } else {
+            alistCredentials.source = 'FALLBACK';
+            logOperation('initializeRcloneCredentials', { 
+                status: '✅ Credentials loaded from FALLBACK (local development)',
+                credentials_source: 'FALLBACK'
+            });
+            console.log('✅ [RcloneStorage] Storage credentials loaded from FALLBACK (local development)');
+        }
+
+        return {
+            success: true,
+            source: alistCredentials.source,
+            message: `Credentials loaded from ${alistCredentials.source}`
+        };
+    } catch (err) {
+        logOperation('initializeRcloneCredentials', { 
+            status: '⚠️ Failed to initialize credentials',
+            error: err.message
+        });
+        console.warn('⚠️ [RcloneStorage] Failed to initialize credentials:', err.message);
+        console.log('ℹ️ [RcloneStorage] Using default fallback credentials for local development');
+
+        // Use hardcoded fallback
+        alistCredentials.password = 'AdminArsip2026!';
+        alistCredentials.source = 'FALLBACK_ERROR';
+
+        return {
+            success: false,
+            source: 'FALLBACK_ERROR',
+            message: `Credential initialization failed: ${err.message}`
+        };
+    }
+}
+
 module.exports = RcloneStorage;
+module.exports.initializeRcloneCredentials = initializeRcloneCredentials;
+module.exports.loginToAlist = loginToAlist;
+
+/**
+ * Reset token cache for testing purposes
+ */
+module.exports.__resetCache = function() {
+    alistTokenCache = { token: null, expiry: 0 };
+};

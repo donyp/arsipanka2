@@ -11,11 +11,15 @@ const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const archiver = require('archiver');
 const RcloneStorage = require('./rclone_wrapper');
+const { initializeClient: initializeSecretManager } = require('./secretManager');
 
 // Load environment variables FIRST (before using them)
 // In local development: loads from .env file
 // In production (Hugging Face): process.env is already set via Secrets
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Initialize Secret Manager client (if on Cloud Run)
+initializeSecretManager();
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -3484,80 +3488,90 @@ console.log(`🚀 Backend starting on port ${process.env.PORT || 4000}`);
 // Must bind to 0.0.0.0 to be accessible from outside the container
 const HOST = '0.0.0.0';
 
-const server = app.listen(port, HOST, () => {
-    // Task 3.4: Log successful port binding
-    console.log(`✅ Backend listening on port ${port}`);
-    console.log(`✅ External access: http://localhost:${port}`);
-    console.log(`🚀 Pusat Arsip Anka Backend v2.1 running on http://localhost:${port}`);
-    console.log(`   Auth: JWT (${JWT_EXPIRES_IN} expiry)`);
-    console.log(`   Storage: Rclone (Terabox + Storj)`);
-    console.log(`   DB: Supabase PostgreSQL`);
-});
-
-// Task 3.1: Error handler for port binding failures
-server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        console.error(`Error binding to port ${port}: address already in use`);
-        process.exit(1);
-    } else if (err.code === 'EACCES') {
-        console.error(`Error binding to port ${port}: permission denied`);
-        process.exit(1);
-    } else if (err.code === 'ENOTFOUND') {
-        console.error(`Error binding to port ${port}: ${err.message}`);
-        process.exit(1);
-    } else {
-        console.error(`Error binding to port ${port}: ${err.message}`);
-        process.exit(1);
+// Initialize storage credentials at startup
+(async () => {
+    try {
+        const result = await RcloneStorage.initializeRcloneCredentials();
+        if (result.success) {
+            console.log(`✅ Storage credentials loaded from ${result.source}`);
+        } else {
+            console.warn(`⚠️ Storage credentials unavailable (using defaults): ${result.message}`);
+        }
+    } catch (err) {
+        console.error(`❌ Credential initialization error:`, err.message);
+        console.warn('ℹ️ Continuing with default fallback credentials...');
     }
-});
 
-// Task 3.2: Server object error event listener (catches errors after binding)
-// Handles client connection errors (invalid HTTP, connection resets, etc.)
-server.on('clientError', (err, socket) => {
-    console.error('[Server] Client error detected:', err.message);
-    console.error('[Server] Error code:', err.code);
-    console.error('[Server] Stack trace:', err.stack);
-    
-    if (err.code === 'ECONNRESET') {
-        console.warn('[Server] Connection reset by client - this is usually harmless');
-    } else if (err.code === 'HPE_INVALID_HEADER_TOKEN' || err.code === 'HPE_INVALID_METHOD' || err.code === 'HPE_INVALID_VERSION') {
-        console.warn('[Server] Invalid HTTP protocol from client');
-    } else if (err.code === 'ETIMEDOUT') {
-        console.warn('[Server] Client connection timed out');
-    } else {
-        console.error('[Server] Unexpected client error - full details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
-    }
-    
-    // Send 400 Bad Request if socket is still writable
-    if (socket && socket.writable && !socket.destroyed) {
-        socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
-    }
-});
+    // Start server after credentials are initialized
+    const server = app.listen(port, HOST, () => {
+        // Task 3.4: Log successful port binding
+        console.log(`✅ Backend listening on port ${port}`);
+        console.log(`✅ External access: http://localhost:${port}`);
+        console.log(`🚀 Pusat Arsip Anka Backend v2.1 running on http://localhost:${port}`);
+        console.log(`   Auth: JWT (${JWT_EXPIRES_IN} expiry)`);
+        console.log(`   Storage: Rclone (Terabox + Storj)`);
+        console.log(`   DB: Supabase PostgreSQL`);
+    });
 
-// Task 3.2: Handle TLS/SSL client errors if using HTTPS
-server.on('tlsClientError', (err, socket) => {
-    console.error('[Server] TLS/SSL client error:', err.message);
-    console.error('[Server] TLS error code:', err.code);
-    console.error('[Server] Stack trace:', err.stack);
-});
+    // Task 3.1: Error handler for port binding failures
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`Error binding to port ${port}: address already in use`);
+            process.exit(1);
+        } else if (err.code === 'EACCES') {
+            console.error(`Error binding to port ${port}: permission denied`);
+            process.exit(1);
+        } else if (err.code === 'ENOTFOUND') {
+            console.error(`Error binding to port ${port}: ${err.message}`);
+            process.exit(1);
+        } else {
+            console.error(`Error binding to port ${port}: ${err.message}`);
+            process.exit(1);
+        }
+    });
 
-// Task 3.2: Log when connections are established (useful for debugging)
-server.on('connection', (socket) => {
-    const remoteAddress = socket.remoteAddress;
-    const remotePort = socket.remotePort;
-    
-    // Only log connections in development/debug mode to avoid log spam
-    if (process.env.NODE_ENV === 'development' || process.env.DEBUG_CONNECTIONS === 'true') {
-        console.log(`[Server] New connection established from ${remoteAddress}:${remotePort}`);
-    }
-    
-    // Handle socket-level errors (always active regardless of environment)
-    socket.on('error', (err) => {
-        console.error(`[Server] Socket error from ${remoteAddress}:${remotePort}:`, err.message);
-        console.error('[Server] Socket error code:', err.code);
+    // Task 3.2: Handle TLS/SSL client errors if using HTTPS
+    server.on('tlsClientError', (err, socket) => {
+        console.error('[Server] TLS/SSL client error:', err.message);
+        console.error('[Server] TLS error code:', err.code);
         console.error('[Server] Stack trace:', err.stack);
     });
-});
+
+    // Task 3.2: Log when connections are established (useful for debugging)
+    server.on('connection', (socket) => {
+        const remoteAddress = socket.remoteAddress;
+        const remotePort = socket.remotePort;
+        
+        // Only log connections in development/debug mode to avoid log spam
+        if (process.env.NODE_ENV === 'development' || process.env.DEBUG_CONNECTIONS === 'true') {
+            console.log(`[Server] New connection established from ${remoteAddress}:${remotePort}`);
+        }
+        
+        // Handle socket-level errors (always active regardless of environment)
+        socket.on('error', (err) => {
+            console.error(`[Server] Socket error from ${remoteAddress}:${remotePort}:`, err.message);
+            console.error('[Server] Socket error code:', err.code);
+            console.error('[Server] Stack trace:', err.stack);
+        });
+    });
+
+    // Handle process termination signals gracefully
+    process.on('SIGTERM', () => {
+        console.log('📋 SIGTERM signal received: closing HTTP server');
+        server.close(() => {
+            console.log('✅ HTTP server closed');
+            process.exit(0);
+        });
+    });
+
+    process.on('SIGINT', () => {
+        console.log('📋 SIGINT signal received: closing HTTP server');
+        server.close(() => {
+            console.log('✅ HTTP server closed');
+            process.exit(0);
+        });
+    });
+})();
 
 // ============================================================
 // PROCESS-LEVEL ERROR HANDLERS (Task 3.3)
@@ -3583,22 +3597,5 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error(`   Promise: ${promise}`);
     console.error('   The application will exit gracefully.');
     process.exit(1);
-});
-
-// Handle process termination signals gracefully
-process.on('SIGTERM', () => {
-    console.log('📋 SIGTERM signal received: closing HTTP server');
-    server.close(() => {
-        console.log('✅ HTTP server closed');
-        process.exit(0);
-    });
-});
-
-process.on('SIGINT', () => {
-    console.log('📋 SIGINT signal received: closing HTTP server');
-    server.close(() => {
-        console.log('✅ HTTP server closed');
-        process.exit(0);
-    });
 });
 
