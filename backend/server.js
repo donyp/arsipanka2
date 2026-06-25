@@ -708,24 +708,39 @@ app.get('/api/files/:id/view', authenticateToken, async (req, res) => {
             }
         }
 
-        // Stream file via temp download (more reliable than direct rclone stream)
+        // Stream file via temp download with retry (rclone can be slow with WebDAV)
         let fileStream;
-        try {
-            console.log(`[Preview] Downloading file to temp: ${file.storage_path}`);
-            const tempPath = await RcloneStorage.download(file.storage_path);
-            console.log(`[Preview] File ready at: ${tempPath}`);
-            fileStream = require('fs').createReadStream(tempPath);
-            
-            // Clean up temp file after streaming complete
-            fileStream.on('end', () => {
-                console.log(`[Preview] Stream complete, cleaning up temp file`);
-                require('fs').unlink(tempPath, (err) => {
-                    if (err) console.warn('[Preview Cleanup] Failed to delete:', err);
+        let retries = 3;
+        let lastError;
+        
+        while (retries > 0) {
+            try {
+                console.log(`[Preview] Downloading file to temp: ${file.storage_path} (attempt ${4 - retries})`);
+                const tempPath = await RcloneStorage.download(file.storage_path);
+                console.log(`[Preview] File ready at: ${tempPath}`);
+                fileStream = require('fs').createReadStream(tempPath);
+                
+                // Clean up temp file after streaming complete
+                fileStream.on('end', () => {
+                    console.log(`[Preview] Stream complete, cleaning up temp file`);
+                    require('fs').unlink(tempPath, (err) => {
+                        if (err) console.warn('[Preview Cleanup] Failed to delete:', err);
+                    });
                 });
-            });
-        } catch (downloadErr) {
-            console.error(`[Preview Download Error] Path: ${file.storage_path}`, downloadErr);
-            return res.status(500).json({ error: 'Gagal memuat file dari storage: ' + downloadErr.message });
+                break; // Success, exit retry loop
+            } catch (downloadErr) {
+                lastError = downloadErr;
+                retries--;
+                console.warn(`[Preview Download Error] Attempt failed, retries left: ${retries}`, downloadErr.message);
+                if (retries > 0) {
+                    await new Promise(r => setTimeout(r, 2000)); // Wait 2s before retry
+                }
+            }
+        }
+        
+        if (!fileStream) {
+            console.error(`[Preview] All download attempts failed:`, lastError);
+            return res.status(503).json({ error: 'File terlalu besar atau Terabox tidak responsif. Coba lagi dalam beberapa saat.' });
         }
 
         // Mark as read
