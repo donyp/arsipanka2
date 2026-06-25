@@ -708,13 +708,24 @@ app.get('/api/files/:id/view', authenticateToken, async (req, res) => {
             }
         }
 
-        // Stream directly from Alist via Fetch Proxy
+        // Stream file via temp download (more reliable than direct rclone stream)
         let fileStream;
         try {
-            fileStream = await RcloneStorage.getStream(file.storage_path);
+            console.log(`[Preview] Downloading file to temp: ${file.storage_path}`);
+            const tempPath = await RcloneStorage.download(file.storage_path);
+            console.log(`[Preview] File ready at: ${tempPath}`);
+            fileStream = require('fs').createReadStream(tempPath);
+            
+            // Clean up temp file after streaming complete
+            fileStream.on('end', () => {
+                console.log(`[Preview] Stream complete, cleaning up temp file`);
+                require('fs').unlink(tempPath, (err) => {
+                    if (err) console.warn('[Preview Cleanup] Failed to delete:', err);
+                });
+            });
         } catch (downloadErr) {
-            console.error(`[Alist Stream Error] Path: ${file.storage_path}`, downloadErr);
-            return res.status(500).json({ error: 'Gagal memuat data dari storage.' });
+            console.error(`[Preview Download Error] Path: ${file.storage_path}`, downloadErr);
+            return res.status(500).json({ error: 'Gagal memuat file dari storage: ' + downloadErr.message });
         }
 
         // Mark as read
@@ -742,29 +753,13 @@ app.get('/api/files/:id/view', authenticateToken, async (req, res) => {
             res.setHeader('Content-Length', file.ukuran_bytes);
         }
 
-        // Handle stream - check if it has stdout (process) or is direct stream
-        if (fileStream && typeof fileStream.pipe === 'function') {
-            // Direct stream
-            fileStream.pipe(res);
-            fileStream.on('error', (err) => {
-                console.error('[Stream error]', err);
-                if (!res.headersSent) res.status(500).send('Stream error');
-            });
-        } else if (fileStream && fileStream.stdout) {
-            // Process stream (from rcloneSpawn)
-            fileStream.stdout.pipe(res);
-            fileStream.on('error', (err) => {
-                console.error('[Rclone stream error]', err);
-                if (!res.headersSent) res.status(500).send('Stream error');
-            });
-            fileStream.stdout.on('error', (err) => {
-                console.error('[Stdout stream error]', err);
-                if (!res.headersSent) res.status(500).send('Stream error');
-            });
-        } else {
-            console.error('[Stream] Invalid fileStream object:', fileStream);
-            res.status(500).json({ error: 'Stream format not supported' });
-        }
+        // Stream the file
+        fileStream.pipe(res);
+
+        fileStream.on('error', (err) => {
+            console.error('[Preview Stream Error]', err);
+            if (!res.headersSent) res.status(500).send('Stream error');
+        });
 
     } catch (err) {
         console.error('View File Absolute Error:', err);
