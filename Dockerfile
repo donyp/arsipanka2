@@ -13,12 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Alist (optional, comment out if not needed)
-RUN curl -L https://github.com/alist-org/alist/releases/latest/download/alist-linux-amd64.tar.gz -o /tmp/alist.tar.gz \
-    && tar -zxvf /tmp/alist.tar.gz -C /tmp \
-    && mv /tmp/alist /usr/local/bin/alist \
-    && chmod +x /usr/local/bin/alist \
-    && rm /tmp/alist.tar.gz
+# Removed: Alist installation
+# Using direct Rclone WebDAV connection to Terabox instead
+# Rclone is already installed via apt-get above
 
 # Copy backend dependencies first (better layer caching)
 COPY backend/package*.json ./backend/
@@ -51,8 +48,9 @@ ENV PORT=${PORT:-8080}
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=512
 
-# Expose ports (8080 for Cloud Run / Node backend, 5244 for Alist file manager)
-EXPOSE 8080 5244
+# Expose port (8080 for Cloud Run / Node backend)
+# Rclone connects directly to Terabox WebDAV (no local service needed)
+EXPOSE 8080
 
 # Add Health Check for Cloud Run / Kubernetes environments
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

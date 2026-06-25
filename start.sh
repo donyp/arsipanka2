@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Pusat Arsip Anka - Startup Script for Hugging Face Spaces
-# This script handles all services startup
+# Pusat Arsip Anka - Startup Script
+# This script starts the Node.js backend with Rclone WebDAV (no Alist service)
 
 echo "=========================================="
 echo "Starting Pusat Arsip Anka"
@@ -14,7 +14,7 @@ mkdir -p /app/backend/data/log
 mkdir -p /app/backend/data/temp
 chmod 777 /app/data /app/data/log /app/data/temp
 
-# Export PORT for Hugging Face (default 7860)
+# Export PORT for Hugging Face (default 7860) / Cloud Run (8080)
 export PORT=${PORT:-7860}
 export NODE_ENV=production
 
@@ -25,34 +25,9 @@ echo "[INIT] NODE_ENV is set to: $NODE_ENV"
 echo "[INIT] Generating rclone.conf from environment variables..."
 node /app/generate-rclone-config.js
 
-# Start Alist in background (optional, on port 5244)
-ALIST_PID=""
-if command -v alist &> /dev/null; then
-    echo "[INIT] Starting Alist service..."
-    # Create Alist config directory
-    mkdir -p /root/.config/alist
-    
-    # Try starting Alist without port flag (Alist may use config file or env vars)
-    # Alist default port is 5244
-    alist server > /app/data/log/alist.log 2>&1 &
-    ALIST_PID=$!
-    echo "[INIT] ✅ Alist started with PID: $ALIST_PID"
-    sleep 5
-    # Verify Alist started
-    if ps -p $ALIST_PID > /dev/null 2>&1; then
-        echo "[INIT] ✅ Alist process verified running (PID $ALIST_PID)"
-    else
-        echo "[INIT] ⚠️  Alist process not running"
-        [ -f /app/data/log/alist.log ] && echo "=== Alist Log ===" && cat /app/data/log/alist.log | tail -30 && echo "=== End ===" || echo "No log"
-    fi
-else
-    echo "[INIT] ⚠️  Alist not found"
-fi
-
 # Function to clean up processes
 cleanup() {
     echo "[SHUTDOWN] Cleaning up processes..."
-    [ ! -z "$ALIST_PID" ] && kill $ALIST_PID 2>/dev/null
     exit 0
 }
 
@@ -63,8 +38,8 @@ trap cleanup SIGTERM SIGINT
 echo "[INIT] Starting Node.js backend server..."
 cd /app/backend
 
-# Start Node without exec - run in foreground
-# This way, when the container receives a signal, this script can forward it
+# Start Node in foreground
+# Rclone will connect directly to Terabox WebDAV (no Alist middleware)
 node server.js 2>&1
 
 # Node exited, clean up and exit
