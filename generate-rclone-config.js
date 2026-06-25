@@ -10,10 +10,15 @@ const path = require('path');
 
 // Default values (can be overridden by environment variables)
 const config = {
-    // Terabox WebDAV config
+    // Terabox WebDAV config (localhost for Alist, no longer used)
     terabox_url: process.env.TERABOX_WEBDAV_URL || 'http://localhost:5244/dav/terabox',
     terabox_user: process.env.TERABOX_USER || 'admin',
     terabox_pass: process.env.TERABOX_PASS || 'jQWUqfvMZ6pXuG8G4epx4upNt6M-Soje9zIJZBecww',
+    
+    // Terabox Direct WebDAV (direct connection to Terabox API)
+    terabox_direct_url: process.env.TERABOX_DIRECT_URL || 'https://pan.baidu.com/api/publicweb/terabox.php',
+    terabox_direct_user: process.env.TERABOX_DIRECT_USER || process.env.TERABOX_USER || 'ptggianka@gmail.com',
+    terabox_direct_pass: process.env.TERABOX_DIRECT_PASS || process.env.TERABOX_PASS || 'ptggianka2022',
     
     // Terabox Crypt config
     terabox_crypt_password: process.env.TERABOX_CRYPT_PASSWORD || 'uR-oRsbNnnKcfycXNO_4o4i5luHbnE-ncDCN3JaRvC4',
@@ -32,9 +37,16 @@ vendor = other
 user = ${config.terabox_user}
 pass = ${config.terabox_pass}
 
+[terabox_direct]
+type = webdav
+url = ${config.terabox_direct_url}
+vendor = other
+user = ${config.terabox_direct_user}
+pass = ${config.terabox_direct_pass}
+
 [terabox_crypt]
 type = crypt
-remote = terabox:/arsip_encrypted
+remote = terabox_direct:/arsip_encrypted
 filename_encryption = standard
 directory_name_encryption = true
 password = ${config.terabox_crypt_password}
@@ -53,7 +65,8 @@ const configPath = path.join(__dirname, 'rclone.conf');
 fs.writeFileSync(configPath, rcloneConfig, 'utf8');
 
 console.log('[RcloneConfig] Generated rclone.conf from environment variables');
-console.log(`[RcloneConfig] Terabox URL: ${config.terabox_url}`);
-console.log(`[RcloneConfig] Terabox User: ${config.terabox_user}`);
+console.log(`[RcloneConfig] Terabox (Alist) URL: ${config.terabox_url}`);
+console.log(`[RcloneConfig] Terabox Direct URL: ${config.terabox_direct_url}`);
+console.log(`[RcloneConfig] Terabox Direct User: ${config.terabox_direct_user}`);
 console.log(`[RcloneConfig] Storj Endpoint: ${config.storj_endpoint}`);
 console.log(`[RcloneConfig] Config written to: ${configPath}`);
