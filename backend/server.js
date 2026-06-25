@@ -742,12 +742,29 @@ app.get('/api/files/:id/view', authenticateToken, async (req, res) => {
             res.setHeader('Content-Length', file.ukuran_bytes);
         }
 
-        fileStream.pipe(res);
-
-        fileStream.on('error', (err) => {
-            console.error('[Stream error]', err);
-            if (!res.headersSent) res.status(500).send('Stream error');
-        });
+        // Handle stream - check if it has stdout (process) or is direct stream
+        if (fileStream && typeof fileStream.pipe === 'function') {
+            // Direct stream
+            fileStream.pipe(res);
+            fileStream.on('error', (err) => {
+                console.error('[Stream error]', err);
+                if (!res.headersSent) res.status(500).send('Stream error');
+            });
+        } else if (fileStream && fileStream.stdout) {
+            // Process stream (from rcloneSpawn)
+            fileStream.stdout.pipe(res);
+            fileStream.on('error', (err) => {
+                console.error('[Rclone stream error]', err);
+                if (!res.headersSent) res.status(500).send('Stream error');
+            });
+            fileStream.stdout.on('error', (err) => {
+                console.error('[Stdout stream error]', err);
+                if (!res.headersSent) res.status(500).send('Stream error');
+            });
+        } else {
+            console.error('[Stream] Invalid fileStream object:', fileStream);
+            res.status(500).json({ error: 'Stream format not supported' });
+        }
 
     } catch (err) {
         console.error('View File Absolute Error:', err);
