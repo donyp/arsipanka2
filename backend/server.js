@@ -543,9 +543,12 @@ app.get('/api/files', authenticateToken, authorizeZone, async (req, res) => {
             query = query.eq('category', req.query.category);
         }
 
-        // Toko filter
-        if (req.query.toko_id) {
+        // Toko filter - only apply if toko_id is valid number
+        if (req.query.toko_id && !isNaN(parseInt(req.query.toko_id))) {
+            console.log(`[/api/files] Filtering by toko_id: ${req.query.toko_id}`);
             query = query.eq('toko_id', parseInt(req.query.toko_id));
+        } else if (req.query.toko_id) {
+            console.log(`[/api/files] WARNING: Invalid toko_id parameter: ${req.query.toko_id} (ignoring)`);
         }
 
         // Filter by Tipe PPN (PPN/NON)
