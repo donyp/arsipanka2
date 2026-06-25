@@ -580,6 +580,7 @@ app.get('/api/files', authenticateToken, authorizeZone, async (req, res) => {
         const from = (page - 1) * limit;
         const to = from + limit - 1;
 
+        // IMPORTANT: Apply range AFTER all filters and before fetch
         query = query.range(from, to);
 
         const { data, error, count } = await query;
