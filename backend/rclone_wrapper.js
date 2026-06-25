@@ -331,42 +331,58 @@ const RcloneStorage = {
 
     /**
      * Download a file from storage to temporary location
-     * Uses cat + file write for better control and timeout handling
+     * Uses rclone copyto with better error handling
      */
     async download(storagePath) {
         const tmpDir = path.join(__dirname, 'tmp');
         if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir);
 
-        const tempFilePath = path.join(tmpDir, `download-${Date.now()}-${path.basename(storagePath)}`);
+        const tempFileName = `download-${Date.now()}-${path.basename(storagePath)}`;
+        const tempFilePath = path.join(tmpDir, tempFileName);
         const remotePath = `${PRIMARY_REMOTE}:${storagePath}`;
         
         logOperation('download', { 
             storagePath: storagePath,
             tempPath: tempFilePath,
-            action: 'Starting download via rclone cat'
+            action: 'Starting download via rclone copyto'
         });
 
         return new Promise((resolve, reject) => {
-            // Use rclone cat with timeout handling
-            const child = spawn(rclonePath, ['--config', configPath, 'cat', remotePath, '--timeout=5m']);
-            const writeStream = fs.createWriteStream(tempFilePath);
+            // Use rclone copyto with verbose logging
+            const args = [
+                '--config', configPath,
+                '--verbose',
+                '--progress',
+                '--timeout=10m',
+                '--retries=3',
+                'copyto',
+                remotePath,
+                tempFilePath
+            ];
             
-            let timeoutHandle;
-            const timeout = 600000; // 10 minutes for large files
+            const child = spawn(rclonePath, args);
+            let stderr = '';
+            let stdout = '';
             
-            // Set timeout
-            timeoutHandle = setTimeout(() => {
+            const timeout = 600000; // 10 minutes
+            let timeoutHandle = setTimeout(() => {
                 child.kill('SIGTERM');
-                writeStream.destroy();
-                fs.unlink(tempFilePath, () => {}); // Clean up
+                fs.unlink(tempFilePath, () => {});
                 reject(new Error('Download timeout after 10 minutes'));
             }, timeout);
             
-            child.stdout.pipe(writeStream);
+            child.stderr.on('data', (data) => {
+                const msg = data.toString();
+                stderr += msg;
+                console.log('[Rclone stderr]', msg);
+            });
+            
+            child.stdout.on('data', (data) => {
+                stdout += data.toString();
+            });
             
             child.on('error', (err) => {
                 clearTimeout(timeoutHandle);
-                writeStream.destroy();
                 fs.unlink(tempFilePath, () => {});
                 logOperation('download', { 
                     status: '❌ Download spawn error',
@@ -376,24 +392,35 @@ const RcloneStorage = {
                 reject(err);
             });
             
-            writeStream.on('error', (err) => {
-                clearTimeout(timeoutHandle);
-                child.kill('SIGTERM');
-                fs.unlink(tempFilePath, () => {});
-                logOperation('download', { 
-                    status: '❌ Download write error',
-                    error: err.message,
-                    storagePath
-                });
-                reject(err);
-            });
-            
-            writeStream.on('finish', () => {
+            child.on('close', (code) => {
                 clearTimeout(timeoutHandle);
                 
-                // Verify file was written
+                if (code !== 0) {
+                    fs.unlink(tempFilePath, () => {});
+                    logOperation('download', { 
+                        status: '❌ Download failed',
+                        code: code,
+                        stderr: stderr.substring(0, 500),
+                        storagePath
+                    });
+                    reject(new Error(`Rclone copyto exited with code ${code}: ${stderr}`));
+                    return;
+                }
+                
+                // Verify file exists and has content
                 try {
+                    if (!fs.existsSync(tempFilePath)) {
+                        reject(new Error('Downloaded file does not exist after rclone copyto completed'));
+                        return;
+                    }
+                    
                     const stats = fs.statSync(tempFilePath);
+                    if (stats.size === 0) {
+                        fs.unlink(tempFilePath, () => {});
+                        reject(new Error('Downloaded file is empty (0 bytes)'));
+                        return;
+                    }
+                    
                     logOperation('download', { 
                         status: '✅ Download successful',
                         storagePath,
@@ -403,16 +430,7 @@ const RcloneStorage = {
                     resolve(tempFilePath);
                 } catch (err) {
                     fs.unlink(tempFilePath, () => {});
-                    reject(new Error('Downloaded file not found or unreadable'));
-                }
-            });
-            
-            child.on('close', (code) => {
-                clearTimeout(timeoutHandle);
-                if (code !== 0) {
-                    writeStream.destroy();
-                    fs.unlink(tempFilePath, () => {});
-                    reject(new Error(`Rclone cat exited with code ${code}`));
+                    reject(new Error('Failed to verify downloaded file: ' + err.message));
                 }
             });
         });
