@@ -12,7 +12,8 @@ mkdir -p /app/data/log
 mkdir -p /app/data/temp
 mkdir -p /app/backend/data/log
 mkdir -p /app/backend/data/temp
-chmod 777 /app/data /app/data/log /app/data/temp
+mkdir -p /app/backend/tmp
+chmod 777 /app/data /app/data/log /app/data/temp /app/backend/tmp
 
 # Export PORT for Hugging Face (default 7860) / Cloud Run (8080)
 export PORT=${PORT:-7860}

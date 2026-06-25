@@ -335,7 +335,17 @@ const RcloneStorage = {
      */
     async download(storagePath) {
         const tmpDir = path.join(__dirname, 'tmp');
-        if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir);
+        
+        // Ensure tmp directory exists
+        if (!fs.existsSync(tmpDir)) {
+            try {
+                fs.mkdirSync(tmpDir, { recursive: true });
+                console.log(`[Download] Created tmp directory: ${tmpDir}`);
+            } catch (err) {
+                console.error(`[Download] Failed to create tmp directory:`, err);
+                throw new Error(`Cannot create tmp directory: ${err.message}`);
+            }
+        }
 
         const tempFileName = `download-${Date.now()}-${path.basename(storagePath)}`;
         const tempFilePath = path.join(tmpDir, tempFileName);
@@ -344,6 +354,7 @@ const RcloneStorage = {
         logOperation('download', { 
             storagePath: storagePath,
             tempPath: tempFilePath,
+            tmpDir: tmpDir,
             action: 'Starting download via rclone copyto'
         });
 
