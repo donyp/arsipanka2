@@ -16,9 +16,11 @@ const config = {
     terabox_pass: process.env.TERABOX_PASS || 'jQWUqfvMZ6pXuG8G4epx4upNt6M-Soje9zIJZBecww',
     
     // Terabox Direct WebDAV (direct connection to Terabox API)
+    // IMPORTANT: Password must be obscured using: rclone obscure "password"
     terabox_direct_url: process.env.TERABOX_DIRECT_URL || 'https://pan.baidu.com/api/publicweb/terabox.php',
     terabox_direct_user: process.env.TERABOX_DIRECT_USER || process.env.TERABOX_USER || 'ptggianka@gmail.com',
-    terabox_direct_pass: process.env.TERABOX_DIRECT_PASS || process.env.TERABOX_PASS || 'ptggianka2022',
+    // Pre-obscured: rclone obscure "ptggianka2022" => IvFf-goPigjVmVBFyCed7xA3PhyqttMDByo0UOk
+    terabox_direct_pass: process.env.TERABOX_DIRECT_PASS || 'IvFf-goPigjVmVBFyCed7xA3PhyqttMDByo0UOk',
     
     // Terabox Crypt config
     terabox_crypt_password: process.env.TERABOX_CRYPT_PASSWORD || 'uR-oRsbNnnKcfycXNO_4o4i5luHbnE-ncDCN3JaRvC4',
