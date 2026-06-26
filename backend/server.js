@@ -11,6 +11,7 @@ const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const archiver = require('archiver');
 const RcloneStorage = require('./rclone_wrapper');
+const LocalStorage = require('./local_storage');
 const { initializeClient: initializeSecretManager } = require('./secretManager');
 
 // Load environment variables FIRST (before using them)
@@ -708,75 +709,40 @@ app.get('/api/files/:id/view', authenticateToken, async (req, res) => {
             }
         }
 
-        // Stream file via temp download with retry (rclone can be slow with WebDAV)
-        let fileStream;
-        let retries = 5; // Increased from 3 to 5 attempts
-        let lastError;
-        
-        while (retries > 0) {
-            try {
-                console.log(`[Preview] Downloading file to temp: ${file.storage_path} (attempt ${6 - retries})`);
-                const tempPath = await RcloneStorage.download(file.storage_path);
-                console.log(`[Preview] File ready at: ${tempPath}`);
-                fileStream = require('fs').createReadStream(tempPath);
-                
-                // Clean up temp file after streaming complete
-                fileStream.on('end', () => {
-                    console.log(`[Preview] Stream complete, cleaning up temp file`);
-                    require('fs').unlink(tempPath, (err) => {
-                        if (err) console.warn('[Preview Cleanup] Failed to delete:', err);
-                    });
-                });
-                break; // Success, exit retry loop
-            } catch (downloadErr) {
-                lastError = downloadErr;
-                retries--;
-                console.warn(`[Preview Download Error] Attempt failed, retries left: ${retries}`, downloadErr.message);
-                if (retries > 0) {
-                    const delay = Math.min(5000 * (6 - retries), 20000); // 5s, 10s, 15s, 20s, 20s
-                    console.log(`[Preview] Waiting ${delay}ms before retry...`);
-                    await new Promise(r => setTimeout(r, delay));
-                }
-            }
+        // Download file from Local Storage
+        try {
+            console.log(`[Preview] Downloading from local storage: ${file.storage_path}`);
+            const fileBuffer = await LocalStorage.downloadBuffer(file.storage_path);
+            
+            // Mark as read
+            await supabase.from('files').update({ status: 'Read' }).eq('id', file.id);
+
+            // Audit
+            await supabase.from('audit_logs').insert({
+                user_id: req.user.userId,
+                action: 'View File',
+                context: `Viewed ${file.nama_file}`
+            });
+
+            // Dynamic Mime Type handling
+            const ext = file.nama_file.split('.').pop().toLowerCase();
+            let mimeType = 'application/octet-stream';
+            if (ext === 'pdf') mimeType = 'application/pdf';
+            else if (['jpg', 'jpeg', 'jpe'].includes(ext)) mimeType = 'image/jpeg';
+            else if (ext === 'png') mimeType = 'image/png';
+            else if (ext === 'gif') mimeType = 'image/gif';
+            else if (ext === 'webp') mimeType = 'image/webp';
+
+            res.setHeader('Content-Type', mimeType);
+            res.setHeader('Content-Disposition', `inline; filename="${file.nama_file}"`);
+            res.setHeader('Content-Length', fileBuffer.length);
+
+            res.send(fileBuffer);
+            
+        } catch (err) {
+            console.error('[Preview] Download error:', err.message);
+            return res.status(503).json({ error: 'File tidak dapat diakses. Coba lagi dalam beberapa saat.' });
         }
-        
-        if (!fileStream) {
-            console.error(`[Preview] All download attempts failed:`, lastError);
-            return res.status(503).json({ error: 'File terlalu besar atau Terabox tidak responsif. Coba lagi dalam beberapa saat.' });
-        }
-
-        // Mark as read
-        await supabase.from('files').update({ status: 'Read' }).eq('id', file.id);
-
-        // Audit
-        await supabase.from('audit_logs').insert({
-            user_id: req.user.userId,
-            action: 'View File',
-            context: `Viewed ${file.nama_file}`
-        });
-
-        // Dynamic Mime Type handling
-        const ext = file.nama_file.split('.').pop().toLowerCase();
-        let mimeType = 'application/octet-stream';
-        if (ext === 'pdf') mimeType = 'application/pdf';
-        else if (['jpg', 'jpeg', 'jpe'].includes(ext)) mimeType = 'image/jpeg';
-        else if (ext === 'png') mimeType = 'image/png';
-        else if (ext === 'gif') mimeType = 'image/gif';
-        else if (ext === 'webp') mimeType = 'image/webp';
-
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Content-Disposition', `inline; filename="${file.nama_file}"`);
-        if (file.ukuran_bytes) {
-            res.setHeader('Content-Length', file.ukuran_bytes);
-        }
-
-        // Stream the file
-        fileStream.pipe(res);
-
-        fileStream.on('error', (err) => {
-            console.error('[Preview Stream Error]', err);
-            if (!res.headersSent) res.status(500).send('Stream error');
-        });
 
     } catch (err) {
         console.error('View File Absolute Error:', err);
@@ -1243,13 +1209,20 @@ app.post('/api/files/upload', authenticateToken, requireUploadPermission, upload
 
         // Background Upload (Fire and FORGET to unblock UI)
         const fileBuffer = Buffer.from(req.file.buffer);
+        
+        // Primary: Upload to Local Storage (reliable, immediate)
+        LocalStorage.uploadDirect(fileBuffer, req.file.originalname, storagePath)
+            .then(() => console.log(`[Upload] Local storage upload complete for: ${req.file.originalname}`))
+            .catch(err => console.error(`[Upload] Local storage upload failed:`, err.message));
+        
+        // Secondary: Try Rclone/Terabox for backup
         RcloneStorage.uploadInBackground(
             fileBuffer,
             req.file.originalname,
             zona.kode,
             tokoKode,
             category || 'PPN'
-        ).catch(err => console.error("Critical background upload error:", err));
+        ).catch(err => console.warn(`[Upload] Rclone backup upload failed:`, err.message));
 
         // Insert metadata into DB immediately so it appears on dashboard/history
         const { data: fileRecord, error: dbError } = await supabase
