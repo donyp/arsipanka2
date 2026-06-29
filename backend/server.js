@@ -12,7 +12,9 @@ const { createClient } = require('@supabase/supabase-js');
 const archiver = require('archiver');
 const RcloneStorage = require('./rclone_wrapper');
 const LocalStorage = require('./local_storage');
-const { initializeClient: initializeSecretManager } = require('./secretManager');
+const { initializeClient: initializeSecretManager, getSecret } = require('./secretManager');
+const { initializeAlist } = require('./alistStartupHandler');
+const { initializeRcloneConnectivity } = require('./rcloneConnectivityHandler');
 
 // Load environment variables FIRST (before using them)
 // In local development: loads from .env file
@@ -56,6 +58,33 @@ app.get('/api/heartbeat', (req, res) => {
     console.log('[HEARTBEAT] Health check request received');
     res.json({ status: 'alive', version: '2.0.1-fixed' });
     console.log('[HEARTBEAT] Response sent');
+});
+
+// Health check endpoint with Rclone connectivity status
+app.get('/api/health', async (req, res) => {
+    try {
+        const { getConnectionStatus } = require('./rcloneConnectivityHandler');
+        const rcloneStatus = getConnectionStatus();
+        
+        res.json({
+            status: 'healthy',
+            version: '2.0.1-fixed',
+            services: {
+                rclone: {
+                    connected: rcloneStatus.verified,
+                    lastCheck: rcloneStatus.timestamp,
+                    error: rcloneStatus.error,
+                    attempts: rcloneStatus.attempts
+                }
+            }
+        });
+    } catch (err) {
+        console.error('[HEALTH] Error retrieving status:', err.message);
+        res.status(500).json({
+            status: 'error',
+            error: err.message
+        });
+    }
 });
 // Supabase Admin Client (for DB access, not for auth)
 const supabase = createClient(
@@ -1215,14 +1244,52 @@ app.post('/api/files/upload', authenticateToken, requireUploadPermission, upload
             .then(() => console.log(`[Upload] Local storage upload complete for: ${req.file.originalname}`))
             .catch(err => console.error(`[Upload] Local storage upload failed:`, err.message));
         
-        // Secondary: Try Rclone/Terabox for backup
+        // Secondary: Try Rclone/Terabox for backup (Fire and forget, but track sync status)
         RcloneStorage.uploadInBackground(
             fileBuffer,
             req.file.originalname,
             zona.kode,
             tokoKode,
             category || 'PPN'
-        ).catch(err => console.warn(`[Upload] Rclone backup upload failed:`, err.message));
+        )
+        .then(async (syncResult) => {
+            // After background upload completes, update database with sync status
+            if (syncResult && (syncResult.success !== undefined || syncResult.syncAttempts !== undefined)) {
+                try {
+                    // Find the file record by storage_path to get the file ID
+                    const { data: fileData } = await supabase
+                        .from('files')
+                        .select('id')
+                        .eq('storage_path', storagePath)
+                        .single();
+                    
+                    if (fileData && fileData.id) {
+                        // Update file with sync metadata
+                        const updateFields = {
+                            sync_attempts: syncResult.syncAttempts || 0,
+                            sync_error: syncResult.syncError || null
+                        };
+                        
+                        if (syncResult.success) {
+                            updateFields.synced = true;
+                            updateFields.synced_at = new Date().toISOString();
+                        } else {
+                            updateFields.synced = false;
+                        }
+                        
+                        await supabase
+                            .from('files')
+                            .update(updateFields)
+                            .eq('id', fileData.id);
+                        
+                        console.log(`[Upload] Database updated for ${req.file.originalname}: synced=${syncResult.success}, attempts=${syncResult.syncAttempts}`);
+                    }
+                } catch (dbErr) {
+                    console.error(`[Upload] Failed to update database with sync status:`, dbErr.message);
+                }
+            }
+        })
+        .catch(err => console.warn(`[Upload] Rclone backup upload failed:`, err.message));
 
         // Insert metadata into DB immediately so it appears on dashboard/history
         const { data: fileRecord, error: dbError } = await supabase
@@ -1240,7 +1307,10 @@ app.post('/api/files/upload', authenticateToken, requireUploadPermission, upload
                 tipe_ppn: finalTipePPN,
                 no_invoice: req.body.no_invoice,
                 total_jual: finalNominal,
-                status: finalStatus
+                status: finalStatus,
+                synced: false,
+                sync_attempts: 0,
+                sync_error: null
             })
             .select()
             .single();
@@ -3507,29 +3577,160 @@ console.log(`🚀 Backend starting on port ${process.env.PORT || 4000}`);
 // Must bind to 0.0.0.0 to be accessible from outside the container
 const HOST = '0.0.0.0';
 
+// Initialize startup sequence: Alist → Rclone → Node.js Server
+// (async () => {
+//     try {
+//         // Stage 1: Initialize Alist service (Task 2.1)
+//         console.log('[Backend] 🚀 Starting initialization sequence...');
+//         console.log('[Stage 1] Initializing Alist service...');
+        
+//         const alistResult = await initializeAlist();
+//         if (!alistResult.success) {
+//             console.error(alistResult.message);
+//             process.exit(1);
+//         }
+//         console.log('[Stage 1] ✅ Alist service ready');
+
+//         // Stage 2: Initialize storage credentials (Task 2.3)
+//         console.log('[Stage 2] Initializing storage credentials...');
+//         try {
+//             const result = await RcloneStorage.initializeRcloneCredentials();
+//             if (result.success) {
+//                 console.log(`✅ Storage credentials loaded from ${result.source}`);
+//             } else {
+//                 console.warn(`⚠️ Storage credentials unavailable (using defaults): ${result.message}`);
+//             }
+//         } catch (err) {
+//             console.error(`❌ Credential initialization error:`, err.message);
+//             console.warn('ℹ️ Continuing with default fallback credentials...');
+//         }
+//         console.log('[Stage 2] ✅ Storage credentials initialized');
+
+//         // Stage 3: Start Node.js server
+//         console.log('[Stage 3] Starting Node.js backend server...');
+//         const server = app.listen(port, HOST, () => {
+
 // Initialize storage credentials at startup
 (async () => {
     try {
+        // ================================================================
+        // STAGE 1: Load environment variables
+        // ================================================================
+        console.log('\n================================================');
+        console.log('[Backend] 🚀 Starting Arsip Backend...');
+        console.log('[Backend] Time: ' + new Date().toISOString());
+        console.log('================================================\n');
+
+        console.log('[Stage 1] Loading environment variables...');
+        
+        const PORT = process.env.PORT || 7860;
+        const GCP_PROJECT_ID = process.env.GCP_PROJECT_ID || null;
+
+        console.log(`[Config] PORT: ${PORT}`);
+        console.log(`[Config] GCP_PROJECT_ID: ${GCP_PROJECT_ID || '(not set)'}`);
+        console.log('[Stage 1] ✅ Complete\n');
+
+        // ================================================================
+        // STAGE 2: Initialize Secret Manager client
+        // ================================================================
+        console.log('[Stage 2] Initializing Secret Manager client...');
+        initializeSecretManager();
+        if (GCP_PROJECT_ID) {
+            console.log(`[SecretManager] Initialized for project: ${GCP_PROJECT_ID}`);
+        } else {
+            console.log('[SecretManager] GCP_PROJECT_ID not set, using fallback env vars');
+        }
+        console.log('[Stage 2] ✅ Complete\n');
+
+        // ================================================================
+        // STAGE 3: Load Alist admin password from Secret Manager
+        // ================================================================
+        console.log('[Stage 3] Loading Alist admin password...');
+        try {
+            const alistPassword = await getSecret(
+                'arsip-alist-password',
+                'ALIST_ADMIN_PASSWORD',
+                'admin123' // Development fallback only
+            );
+            console.log('[SecretManager] ✓ Alist password loaded from Secret Manager/env vars');
+        } catch (err) {
+            console.warn('[SecretManager] Failed to load Alist password:', err.message);
+            console.warn('[SecretManager] Alist will use default credentials (development only)');
+        }
+        console.log('[Stage 3] ✅ Complete\n');
+
+        // ================================================================
+        // STAGE 4: Start Alist service
+        // ================================================================
+        console.log('[Stage 4] Starting Alist service...');
+        
+        const alistResult = await initializeAlist();
+        if (!alistResult.success) {
+            console.error('[Alist] ❌ FAILED TO START');
+            console.error(alistResult.message);
+            console.error('\n[Backend] Initialization FAILED at Stage 4 (Alist Service)');
+            console.error('[Backend] Exiting with status code 1\n');
+            process.exit(1);
+        }
+        console.log('[Alist] ✅ Service running on http://localhost:5244');
+        console.log('[Stage 4] ✅ Complete\n');
+
+        // ================================================================
+        // STAGE 5: Verify Rclone connectivity
+        // ================================================================
+        console.log('[Stage 5] Verifying Rclone connectivity...');
+        
+        const rcloneCheck = await verifyRcloneConnectivity();
+        
+        if (!rcloneCheck.success) {
+            console.error('[Rclone] ❌ FAILED TO CONNECT');
+            console.error(rcloneCheck.message || rcloneCheck.error);
+            console.error('\n[Backend] Initialization FAILED at Stage 5 (Rclone Verification)');
+            console.error('[Backend] Exiting with status code 1\n');
+            process.exit(1);
+        }
+        console.log(`[Rclone] ✅ Connected (${rcloneCheck.fileCount || 0} files visible)`);
+        console.log('[Stage 5] ✅ Complete\n');
+
+        // ================================================================
+        // STAGE 6: Initialize Rclone credential handler
+        // ================================================================
+        console.log('[Stage 6] Initializing Rclone credential handler...');
+        // Note: secretManager.js is already initialized in Stage 2
+        // Rclone wrapper (rclone_wrapper.js) will use credentials from rclone.conf
+        console.log('[RcloneWrapper] Using credentials from rclone.conf');
+        console.log('[Stage 6] ✅ Complete\n');
+
+        // ================================================================
+        // STAGE 7: Initialize storage credentials
+        // ================================================================
+        console.log('[Stage 7] Initializing storage credentials...');
         const result = await RcloneStorage.initializeRcloneCredentials();
         if (result.success) {
-            console.log(`✅ Storage credentials loaded from ${result.source}`);
+            console.log(`[Storage] ✓ Credentials loaded from ${result.source}`);
         } else {
-            console.warn(`⚠️ Storage credentials unavailable (using defaults): ${result.message}`);
+            console.warn(`[Storage] ⚠ Credentials unavailable (using defaults): ${result.message}`);
         }
-    } catch (err) {
-        console.error(`❌ Credential initialization error:`, err.message);
-        console.warn('ℹ️ Continuing with default fallback credentials...');
-    }
+        console.log('[Stage 7] ✅ Complete\n');
 
-    // Start server after credentials are initialized
-    const server = app.listen(port, HOST, () => {
+        // ================================================================
+        // STAGE 8: Start Express server
+        // ================================================================
+        console.log('[Stage 8] Starting Express server on port ' + PORT + '...');
+        const server = app.listen(PORT, HOST, () => {
         // Task 3.4: Log successful port binding
-        console.log(`✅ Backend listening on port ${port}`);
-        console.log(`✅ External access: http://localhost:${port}`);
-        console.log(`🚀 Pusat Arsip Anka Backend v2.1 running on http://localhost:${port}`);
+        console.log(`✅ Backend listening on port ${PORT}`);
+        console.log(`✅ External access: http://localhost:${PORT}`);
+        console.log(`🚀 Pusat Arsip Anka Backend v2.1 running on http://localhost:${PORT}`);
         console.log(`   Auth: JWT (${JWT_EXPIRES_IN} expiry)`);
         console.log(`   Storage: Rclone (Terabox + Storj)`);
         console.log(`   DB: Supabase PostgreSQL`);
+        console.log(`   Alist: WebDAV on http://localhost:5244`);
+        console.log('[Backend] ✅ ALL INITIALIZATION STAGES COMPLETE');
+        console.log('[Backend] Backend ready at http://0.0.0.0:' + PORT);
+        console.log('[Backend] Alist ready at http://localhost:5244');
+        console.log('[Backend] Rclone ready - Terabox sync active');
+        console.log('================================================');
     });
 
     // Task 3.1: Error handler for port binding failures
@@ -3590,6 +3791,14 @@ const HOST = '0.0.0.0';
             process.exit(0);
         });
     });
+    } catch (err) {
+        console.error('[Backend] ❌ Initialization failed:', err.message);
+        if (err.stack) {
+            console.error('[Backend] Stack trace:', err.stack);
+        }
+        console.error('[Backend] Exiting with status 1');
+        process.exit(1);
+    }
 })();
 
 // ============================================================

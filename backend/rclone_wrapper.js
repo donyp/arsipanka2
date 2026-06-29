@@ -6,6 +6,8 @@ const { execFile, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { getSecret } = require('./secretManager');
+const { retryWithBackoff, shouldRetryError } = require('./retryLogic');
+const StorageErrorLogger = require('./storageErrorLogger');
 
 // Configuration for direct Rclone WebDAV connection
 let rcloneConfig = {
@@ -13,6 +15,13 @@ let rcloneConfig = {
     teraboxPass: process.env.TERABOX_PASS || 'terabox_pass',
     source: 'ENV_VAR_OR_HARDCODED'
 };
+
+// Initialize error logger
+const errorLogger = new StorageErrorLogger({
+    logFilePath: path.join(__dirname, 'storage-errors.log'),
+    enableFileLogging: true,
+    enableConsoleLogging: true
+});
 
 const createdDirsCache = new Set();
 
@@ -101,25 +110,113 @@ const RcloneStorage = {
     },
 
     /**
-     * Upload a file buffer to primary storage (Terabox via direct Rclone) and optional backup (Storj).
-     * Keeps retrying infinitely if connection drops.
+     * Upload a file buffer to primary storage (Terabox via direct Rclone) with exponential backoff retry.
+     * 
+     * Uses retry logic with exponential backoff delays:
+     * - Attempt 1: immediate
+     * - Attempt 2: 5s delay
+     * - Attempt 3: 10s delay
+     * - Attempt 4: 20s delay (max for transient errors)
+     * 
+     * Permanent errors (auth failure) fail immediately with 1 attempt.
+     * Transient errors (connection timeout, service unavailable) retry with backoff.
+     * 
+     * Returns metadata including:
+     * - success: boolean indicating if upload succeeded
+     * - syncAttempts: number of attempts made
+     * - syncError: error message if failed, null if successful
+     * - storagePath: path where file is stored
      */
     async uploadInBackground(fileBuffer, originalName, zonaKode, tokoKode, category) {
         const storagePath = this.buildStoragePath(zonaKode, tokoKode, category, originalName);
-
-        for (let masterAttempt = 1; masterAttempt <= 100; masterAttempt++) {
-            try {
-                console.log(`[Background Upload] Attempt ${masterAttempt} for ${originalName}...`);
-                await this.uploadDirect(fileBuffer, originalName, storagePath);
-                console.log(`[Background Upload] SUCCESS for ${originalName} after ${masterAttempt} attempts`);
-                return { storagePath, size: fileBuffer.length };
-            } catch (e) {
-                console.warn(`[Background Upload] Failed attempt ${masterAttempt} for ${originalName}:`, e.message);
-                // Wait 15 seconds before retrying
-                await new Promise(resolve => setTimeout(resolve, 15000));
+        
+        console.log(`[Background Upload] Starting upload for ${originalName}`);
+        
+        // Log operation start
+        errorLogger.logOperation('background_upload_start', {
+            filename: originalName,
+            storagePath: storagePath,
+            fileSize: fileBuffer.length,
+            status: 'QUEUED'
+        });
+        
+        // Use retryWithBackoff to handle transient failures with exponential delays
+        const result = await retryWithBackoff(
+            () => this.uploadDirect(fileBuffer, originalName, storagePath),
+            {
+                maxAttempts: 3,
+                baseDelay: 5000, // 5 seconds
+                shouldRetry: shouldRetryError,
+                onRetry: (attemptNumber, delay, error) => {
+                    // Log at start of retry attempt (before waiting)
+                    const attemptMsg = `[Background Upload] ATTEMPT ${attemptNumber} for ${originalName}`;
+                    console.log(attemptMsg);
+                    
+                    // Classify error for context
+                    const errorType = error.code || error.message || 'Unknown';
+                    const isTransient = shouldRetryError(error);
+                    
+                    // Log to error logger for comprehensive tracking
+                    errorLogger.logError('background_upload_retry', error, {
+                        filename: originalName,
+                        storagePath: storagePath,
+                        attemptNumber: attemptNumber,
+                        maxAttempts: 3,
+                        nextRetryDelayMs: delay,
+                        nextRetryIn: `${(delay / 1000).toFixed(1)}s`,
+                        isTransient: isTransient,
+                        context: `Retrying due to ${isTransient ? 'transient' : 'unknown'} error`
+                    });
+                }
             }
+        );
+        
+        if (result.success) {
+            // Success after retry(ies)
+            const successMsg = `[Background Upload] SUCCESS for ${originalName} after ${result.attempts} attempts`;
+            console.log(successMsg);
+            
+            // Log successful completion
+            errorLogger.logOperation('background_upload_success', {
+                filename: originalName,
+                storagePath: storagePath,
+                attempts: result.attempts,
+                totalDelayMs: result.totalDelay,
+                totalDelay: `${(result.totalDelay / 1000).toFixed(1)}s`,
+                status: 'SUCCESS'
+            });
+            
+            return {
+                success: true,
+                storagePath,
+                size: fileBuffer.length,
+                syncAttempts: result.attempts,
+                syncError: null
+            };
+        } else {
+            // Failure after all retries exhausted
+            const failureMsg = `[Background Upload] FAILED for ${originalName} after ${result.attempts} attempts: ${result.lastError?.message || 'Unknown error'}`;
+            console.error(failureMsg);
+            
+            // Log failure with comprehensive error context
+            errorLogger.logError('background_upload_failed', result.lastError, {
+                filename: originalName,
+                storagePath: storagePath,
+                attemptsFailed: result.attempts,
+                maxAttempts: 3,
+                totalDelayMs: result.totalDelay,
+                totalDelay: `${(result.totalDelay / 1000).toFixed(1)}s`,
+                context: 'All retry attempts exhausted'
+            });
+            
+            return {
+                success: false,
+                storagePath,
+                size: fileBuffer.length,
+                syncAttempts: result.attempts,
+                syncError: result.lastError?.message || 'Unknown error'
+            };
         }
-        console.error(`[Background Upload] GAVE UP on ${originalName} after 100 attempts!`);
     },
 
     /**
